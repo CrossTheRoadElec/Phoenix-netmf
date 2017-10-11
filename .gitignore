@@ -1,0 +1,7 @@
+/CTRE/bin/Debug
+/CTRE/obj/Debug
+/release
+/.vs/CTRE-SDK/v14
+/.vs/CTRE-SDK/v15/sqlite3
+/.vs/CTRE-SDK/v15/*.suo
+/.gradle

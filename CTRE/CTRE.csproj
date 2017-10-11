@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <AssemblyName>CTRE</AssemblyName>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CTRE.Phoenix</RootNamespace>
+    <ProjectTypeGuids>{b69e3092-b931-443c-abe7-7e7b65f2a37f};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{033C1A94-38BF-48B7-9E67-381468F762EB}</ProjectGuid>
+    <TargetFrameworkVersion>v4.4</TargetFrameworkVersion>
+    <NetMfTargetsBaseDir Condition="'$(NetMfTargetsBaseDir)'==''">$(MSBuildExtensionsPath32)\Microsoft\.NET Micro Framework\</NetMfTargetsBaseDir>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE,MF_FRAMEWORK_VERSION_V_</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE,MF_FRAMEWORK_VERSION_V_</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE,MF_FRAMEWORK_VERSION_V_</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE,MF_FRAMEWORK_VERSION_V_</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CANifier.cs" />
+    <Compile Include="CAN\CANBusDevice.cs" />
+    <Compile Include="Containers\ByteRingBuffer.cs" />
+    <Compile Include="Containers\CharRingBuffer.cs" />
+    <Compile Include="Controller\AbstractLocalGamepad.cs" />
+    <Compile Include="Controller\IGameControllerValuesProvider.cs" />
+    <Compile Include="Controller\LogitechGamepad.cs" />
+    <Compile Include="Controller\LogitechJoystick.cs" />
+    <Compile Include="Controller\Xbox360Gamepad.cs" />
+    <Compile Include="Drive\Styles.cs" />
+    <Compile Include="FRC\DriverStation.cs" />
+    <Compile Include="FRC\IRobotStateProvider.cs" />
+    <Compile Include="FRC\IterativeApplication.cs" />
+    <Compile Include="Gadgeteer\Gadgeteer.cs" />
+    <Compile Include="HERO\HERO.IO.cs" />
+    <Compile Include="Gadgeteer\Modules\DisplayModule.cs" />
+    <Compile Include="Gadgeteer\Modules\DriverModule.cs" />
+    <Compile Include="Drive\IDrivetrain.cs" />
+    <Compile Include="Drive\ISmartDrivetrain.cs" />
+    <Compile Include="Drive\Mecanum.cs" />
+    <Compile Include="Drive\SensoredMecanum.cs" />
+    <Compile Include="Drive\SensoredTank.cs" />
+    <Compile Include="Drive\Tank.cs" />
+    <Compile Include="Controller\GameController.cs" />
+    <Compile Include="Controller\GameControllerValues.cs" />
+    <Compile Include="Gadgeteer\Modules\WiFiESP12F.cs" />
+    <Compile Include="HERO\OnboardEEPROM.cs" />
+    <Compile Include="HsvToRgb.cs" />
+    <Compile Include="IGadgeteerUartClient.cs" />
+    <Compile Include="LEDStripController.cs" />
+    <Compile Include="LinearInterpolation.cs" />
+    <Compile Include="LowLevel\LowLevel_CANifier.cs" />
+    <Compile Include="LowLevel\LowLevel_Pcm.cs" />
+    <Compile Include="LowLevel\LowLevel_TalonSrx.cs" />
+    <Compile Include="LowLevel\ParamContainer.cs" />
+    <Compile Include="LowLevel\TrajectoryBuffer.cs" />
+    <Compile Include="Math.cs" />
+    <Compile Include="Mechanical\AndMark_PickOne.cs" />
+    <Compile Include="Mechanical\Gearbox.cs" />
+    <Compile Include="Mechanical\Linkage.cs" />
+    <Compile Include="Mechanical\SensoredGearbox.cs" />
+    <Compile Include="Mechanical\VersaPlanetaryWithMagEnc.cs" />
+    <Compile Include="Mechanical\VexBallShifter.cs" />
+    <Compile Include="Motion\IMotionMagical.cs" />
+    <Compile Include="Motion\Path\PathGen.cs" />
+    <Compile Include="Motion\PID.cs" />
+    <Compile Include="Motion\Profile\AbstractMotionProfilerFeeder.cs" />
+    <Compile Include="Motion\Profile\CanBusMotionProfileFeeder.cs" />
+    <Compile Include="Motion\Profile\SoftwareMotionProfilerFeeder.cs" />
+    <Compile Include="Motion\Profile\TrajectoryPoint.cs" />
+    <Compile Include="Motion\ServoGoStraight.cs" />
+    <Compile Include="Motion\ServoGoStraightWithImu.cs" />
+    <Compile Include="Motion\ServoGoStraightWithImuSmart.cs" />
+    <Compile Include="Motion\ServoStraightDistanceSpecial.cs" />
+    <Compile Include="Motion\ServoStraightDistance.cs" />
+    <Compile Include="Motion\ServoStraightDistanceWithImu.cs" />
+    <Compile Include="Motion\ServoVelocity.cs" />
+    <Compile Include="Motion\ServoZeroTurn.cs" />
+    <Compile Include="Motion\ServoZeroTurnWithImu.cs" />
+    <Compile Include="MotorControllers\ControlMode.cs" />
+    <Compile Include="MotorControllers\Cyclone.cs" />
+    <Compile Include="MotorControllers\IFollower.cs" />
+    <Compile Include="IInvertable.cs" />
+    <Compile Include="MotorControllers\GroupMotorControllers.cs" />
+    <Compile Include="MotorControllers\IMotorController.cs" />
+    <Compile Include="MotorControllers\PWMSpeedController.cs" />
+    <Compile Include="MotorControllers\SimpleMotorController.cs" />
+    <Compile Include="MotorControllers\SmartMotorController.cs" />
+    <Compile Include="PigeonImu.cs" />
+    <Compile Include="Plot\Plotter.cs" />
+    <Compile Include="Power\Voltage.cs" />
+    <Compile Include="RCRadio3Ch.cs" />
+    <Compile Include="RobotApplication.cs" />
+    <Compile Include="ServoParameters.cs" />
+    <Compile Include="Signals\IInputSignal.cs" />
+    <Compile Include="Signals\IOutputSignal.cs" />
+    <Compile Include="Signals\Median.cs" />
+    <Compile Include="Signals\MovingAverage.cs" />
+    <Compile Include="StatusCodes.cs" />
+    <Compile Include="Tasking\ButtonMonitor.cs" />
+    <Compile Include="Tasking\ILoopable.cs" />
+    <Compile Include="Tasking\IProcessable.cs" />
+    <Compile Include="Tasking\PeriodicThread.cs" />
+    <Compile Include="Tasking\ProcessableGroup.cs" />
+    <Compile Include="Tasking\Schedulers\ConcurrentScheduler.cs" />
+    <Compile Include="Tasking\Schedulers\IAbstractScheduler.cs" />
+    <Compile Include="Tasking\Schedulers\ScheduledStateMachine.cs" />
+    <Compile Include="Tasking\Schedulers\SequentialScheduler.cs" />
+    <Compile Include="Tasking\StateMachine.cs" />
+    <Compile Include="ThirdParty\PixyCamera.cs" />
+    <Compile Include="ThirdParty\SonarModule.cs" />
+    <Compile Include="Time\Stopwatch.cs" />
+    <Compile Include="Time\TimeScheduler.cs" />
+    <Compile Include="Reporting.cs" />
+    <Compile Include="Pneumatics\PneumaticControlModule.cs" />
+    <Compile Include="Power\PowerDistributionPanel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MotorControllers\TalonSrx.cs" />
+    <Compile Include="Watchdog\SafeOutputPort.cs" />
+    <Compile Include="USB\UsbDeviceConnection.cs" />
+    <Compile Include="USB\UsbHostDevice.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="Watchdog\Watchdog.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ctre_netmf_native, Version=1.2.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.SPOT.Graphics" />
+    <Reference Include="Microsoft.SPOT.Hardware" />
+    <Reference Include="Microsoft.SPOT.Hardware.PWM" />
+    <Reference Include="Microsoft.SPOT.Hardware.SerialPort" />
+    <Reference Include="Microsoft.SPOT.Native" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Condition="EXISTS('$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets')" Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
+  <Import Condition="!EXISTS('$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets')" Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
