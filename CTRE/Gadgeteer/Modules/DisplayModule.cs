@@ -496,6 +496,9 @@ namespace CTRE
                 private PortDefinition _port;
                 private new readonly char kModulePortType = 'S';
 
+				/** set to true to use C# implementation of pixel raster routine */
+                public bool UseManagedBitmapConverter { get; set; }
+
                 /** ctor */
                 public DisplayModule(IPortSPI port, OrientationType orientation)
                 {
@@ -667,11 +670,15 @@ namespace CTRE
                 private int BitmapConverter(byte[] bmp, byte[] pixelBytes)
                 {
                     /* pick between native and managed implementation */
-
-                    //int er = CTRE.Native.Misc.Bitmap_ConvertBPP(bmp, pixelBytes, 8);    /* implem in native */
-                    //return bmp.Length / 2;
-
-                    return ManagedBitmap_ConvertBPP(bmp, pixelBytes);             /* implem in managed */
+                    if (false == UseManagedBitmapConverter)
+                    {
+                        int er = CTRE.Native.Misc.Bitmap_ConvertBPP(bmp, pixelBytes, 7);    /* implem in native */
+                        return bmp.Length / 2;
+                    }
+                    else
+                    {
+                        return ManagedBitmap_ConvertBPP(bmp, pixelBytes);             /* implem in managed */
+                    }
                 }
 
                 private static int ManagedBitmap_ConvertBPP(byte[] bimap, byte[] pixelBytes)
