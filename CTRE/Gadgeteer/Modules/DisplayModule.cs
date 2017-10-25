@@ -46,6 +46,7 @@ namespace CTRE
                     Magenta = 0x00ff00ff,
                     Orange = 0x00008fff,
                     White = 0x00ffffff,
+                    Gray = 0x00a0a0a0,
                 }
 
                 public enum OrientationType
