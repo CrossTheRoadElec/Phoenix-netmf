@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
+    <DocumentationFile>bin\Debug\CTRE.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -75,7 +76,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CANifier.cs" />
-    <Compile Include="CAN\CANBusDevice.cs" />
+    <Compile Include="LowLevel\Device_LowLevel.cs" />
     <Compile Include="Containers\ByteRingBuffer.cs" />
     <Compile Include="Containers\CharRingBuffer.cs" />
     <Compile Include="Controller\AbstractLocalGamepad.cs" />
@@ -92,7 +93,7 @@
     <Compile Include="Gadgeteer\Modules\DisplayModule.cs" />
     <Compile Include="Gadgeteer\Modules\DriverModule.cs" />
     <Compile Include="Drive\IDrivetrain.cs" />
-    <Compile Include="Drive\ISmartDrivetrain.cs" />
+    <Compile Include="Drive\ISensoredDrivetrain.cs" />
     <Compile Include="Drive\Mecanum.cs" />
     <Compile Include="Drive\SensoredMecanum.cs" />
     <Compile Include="Drive\SensoredTank.cs" />
@@ -105,16 +106,21 @@
     <Compile Include="IGadgeteerUartClient.cs" />
     <Compile Include="LEDStripController.cs" />
     <Compile Include="LinearInterpolation.cs" />
-    <Compile Include="LowLevel\LowLevel_CANifier.cs" />
-    <Compile Include="LowLevel\LowLevel_Pcm.cs" />
-    <Compile Include="LowLevel\LowLevel_TalonSrx.cs" />
+    <Compile Include="LowLevel\CANifier_LowLevel.cs" />
+    <Compile Include="LowLevel\Pcm_LowLevel.cs" />
+    <Compile Include="LowLevel\MotControllerWithBuffer_LowLevel.cs" />
+    <Compile Include="LowLevel\MotController_LowLevel.cs" />
     <Compile Include="LowLevel\ParamContainer.cs" />
+    <Compile Include="LowLevel\ParamEnum.cs" />
+    <Compile Include="LowLevel\ResetStats.cs" />
     <Compile Include="LowLevel\TrajectoryBuffer.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="Mechanical\AndMark_PickOne.cs" />
     <Compile Include="Mechanical\Gearbox.cs" />
     <Compile Include="Mechanical\Linkage.cs" />
+    <Compile Include="Mechanical\CurrentLimitedSensorGearbox.cs" />
     <Compile Include="Mechanical\SensoredGearbox.cs" />
+    <Compile Include="Mechanical\RemoteSensoredGearbox.cs" />
     <Compile Include="Mechanical\VersaPlanetaryWithMagEnc.cs" />
     <Compile Include="Mechanical\VexBallShifter.cs" />
     <Compile Include="Motion\IMotionMagical.cs" />
@@ -123,7 +129,7 @@
     <Compile Include="Motion\Profile\AbstractMotionProfilerFeeder.cs" />
     <Compile Include="Motion\Profile\CanBusMotionProfileFeeder.cs" />
     <Compile Include="Motion\Profile\SoftwareMotionProfilerFeeder.cs" />
-    <Compile Include="Motion\Profile\TrajectoryPoint.cs" />
+    <Compile Include="Motion\TrajectoryPoint.cs" />
     <Compile Include="Motion\ServoGoStraight.cs" />
     <Compile Include="Motion\ServoGoStraightWithImu.cs" />
     <Compile Include="Motion\ServoGoStraightWithImuSmart.cs" />
@@ -133,26 +139,44 @@
     <Compile Include="Motion\ServoVelocity.cs" />
     <Compile Include="Motion\ServoZeroTurn.cs" />
     <Compile Include="Motion\ServoZeroTurnWithImu.cs" />
-    <Compile Include="MotorControllers\ControlMode.cs" />
-    <Compile Include="MotorControllers\Cyclone.cs" />
-    <Compile Include="MotorControllers\IFollower.cs" />
+    <Compile Include="Motion\SetValueMotionProfile.cs" />
+    <Compile Include="Motion\MotionProfileStatus.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="MotorControl\NeutralMode.cs" />
+    <Compile Include="MotorControl\IMotorControllerEnhanced.cs" />
+    <Compile Include="MotorControl\LimitSwitchType.cs" />
+    <Compile Include="MotorControl\ControlMode.cs" />
+    <Compile Include="MotorControl\CAN\BaseMotorController.cs" />
+    <Compile Include="MotorControl\CAN\Cyclone.cs" />
+    <Compile Include="MotorControl\IFollower.cs" />
     <Compile Include="IInvertable.cs" />
-    <Compile Include="MotorControllers\GroupMotorControllers.cs" />
-    <Compile Include="MotorControllers\IMotorController.cs" />
-    <Compile Include="MotorControllers\PWMSpeedController.cs" />
-    <Compile Include="MotorControllers\SimpleMotorController.cs" />
-    <Compile Include="MotorControllers\SmartMotorController.cs" />
+    <Compile Include="DeviceCatalog.cs" />
+    <Compile Include="MotorControl\IMotorController.cs" />
+    <Compile Include="MotorControl\PWM\PWMSpeedController.cs" />
+    <Compile Include="MotorControl\FeedbackDevice.cs" />
+    <Compile Include="MotorControl\SensorCollection.cs" />
+    <Compile Include="MotorControl\Faults.cs" />
+    <Compile Include="MotorControl\ControlFrame.cs" />
+    <Compile Include="MotorControl\ZeroSensorCriteria.cs" />
+    <Compile Include="MotorControl\VelocityMeasPeriod.cs" />
+    <Compile Include="MotorControl\StatusFrame.cs" />
     <Compile Include="PigeonImu.cs" />
     <Compile Include="Plot\Plotter.cs" />
     <Compile Include="Power\Voltage.cs" />
     <Compile Include="RCRadio3Ch.cs" />
     <Compile Include="RobotApplication.cs" />
     <Compile Include="ServoParameters.cs" />
+    <Compile Include="Signals\IBoolInputSignal.cs" />
     <Compile Include="Signals\IInputSignal.cs" />
+    <Compile Include="Signals\IBoolOutputSignal.cs" />
     <Compile Include="Signals\IOutputSignal.cs" />
     <Compile Include="Signals\Median.cs" />
+    <Compile Include="Signals\MomentaryBool.cs" />
+    <Compile Include="Signals\MinMaxTracker.cs" />
+    <Compile Include="Signals\MomentaryBoolHardwareInput.cs" />
     <Compile Include="Signals\MovingAverage.cs" />
-    <Compile Include="StatusCodes.cs" />
+    <Compile Include="Signals\DebouncedBool.cs" />
+    <Compile Include="ErrorCode.cs" />
     <Compile Include="Tasking\ButtonMonitor.cs" />
     <Compile Include="Tasking\ILoopable.cs" />
     <Compile Include="Tasking\IProcessable.cs" />
@@ -171,7 +195,7 @@
     <Compile Include="Pneumatics\PneumaticControlModule.cs" />
     <Compile Include="Power\PowerDistributionPanel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MotorControllers\TalonSrx.cs" />
+    <Compile Include="MotorControl\CAN\TalonSRX.cs" />
     <Compile Include="Watchdog\SafeOutputPort.cs" />
     <Compile Include="USB\UsbDeviceConnection.cs" />
     <Compile Include="USB\UsbHostDevice.cs" />

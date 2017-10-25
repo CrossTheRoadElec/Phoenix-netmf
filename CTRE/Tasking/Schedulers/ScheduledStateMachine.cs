@@ -5,7 +5,6 @@ namespace CTRE.Phoenix.Tasking
 {
     public abstract class ScheduledStateMachine : StateMachine, ILoopable
     {
-        bool _running;
         Enum _initalState;
 
         public ScheduledStateMachine(Enum initalState) : base(initalState)
@@ -20,19 +19,16 @@ namespace CTRE.Phoenix.Tasking
 
         public void OnLoop()
         {
-            if(_running)
-                this.Process();
+            this.Process();
         }
 
         public void OnStart()
         {
             ChangeState(_initalState, 0);
-            _running = true;
         }
 
         public void OnStop()
         {
-            _running = false;
         }
     }
 }

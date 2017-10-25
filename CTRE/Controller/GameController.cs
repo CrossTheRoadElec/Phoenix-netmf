@@ -14,7 +14,7 @@ namespace CTRE.Phoenix.Controller
         private uint _index;
 
 
-        public GameController(IGameControllerValuesProvider provider, uint idx)
+        public GameController(IGameControllerValuesProvider provider, uint idx = 0)
         {
             _provider = provider;
             if (_provider is CTRE.Phoenix.FRC.DriverStation)

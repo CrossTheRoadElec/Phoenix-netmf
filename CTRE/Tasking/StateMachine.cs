@@ -5,35 +5,44 @@ namespace CTRE.Phoenix.Tasking
 {
     public abstract class StateMachine : IProcessable
     {
-        Enum _state; //!< The current state the SM is in.
+        public Enum CurrentState { get; private set; }
+
+        public int TimeInStateMs
+        {
+            get
+            {
+                return (int)_stopWatch.DurationMs;
+            }
+        }
+
         uint _stateTimeout; //!< How long to wait before calling ProcessState().
 
         Stopwatch _stopWatch;
 
         public StateMachine(Enum initalState)
         {
-            _state = initalState;
+            CurrentState = initalState;
             _stateTimeout = 0;
             _stopWatch = new Stopwatch();
             _stopWatch.Start();
-        }
-        public void Start()
-        {
-
         }
         public void Process()
         {
             if (_stopWatch.DurationMs >= _stateTimeout)
             {
-                ProcessState(_state, (int)_stopWatch.DurationMs);
+                ProcessState(CurrentState, TimeInStateMs);
             }
         }
 
         public void ChangeState(Enum newState, UInt16 newTimeout = 0)
         {
-            _state = newState;
+			/* did the state change? */
+            bool stateChanged = (CurrentState != newState);
+			/* save current state and timeout */
+            CurrentState = newState;
             _stateTimeout = newTimeout;
-            _stopWatch.Start();
+            /* restart time-in-state stopwatch iff state has changed */
+            if (stateChanged) { _stopWatch.Start(); }
         }
 
         /**

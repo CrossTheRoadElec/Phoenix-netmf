@@ -1,10 +1,11 @@
-﻿using System;
+﻿using CTRE.Phoenix.LowLevel;
+using System;
 
 namespace CTRE.Phoenix
 {
     public class PneumaticControlModule
     {
-        private CTRE.Phoenix.LowLevel_Pcm m_impl;
+        private Pcm_LowLevel m_impl;
         private bool[] _solen = new bool[16];
         /**
          * Constructor for the PneumaticControlModule device.
@@ -12,7 +13,7 @@ namespace CTRE.Phoenix
          */
         public PneumaticControlModule(int deviceNumber)
         {
-            m_impl = new CTRE.Phoenix.LowLevel_Pcm((ushort)deviceNumber);
+            m_impl = new Pcm_LowLevel((ushort)deviceNumber);
             m_impl.SetCloseLoopEnable(true);
         }
         /** report any comm/CAN errors if any occur */
@@ -194,6 +195,6 @@ namespace CTRE.Phoenix
         /**
          * @return low level object for advanced control.
          */
-        public CTRE.Phoenix.LowLevel_Pcm GetLowLevelObject() { return m_impl; }
+        public Pcm_LowLevel GetLowLevelObject() { return m_impl; }
     }
 }

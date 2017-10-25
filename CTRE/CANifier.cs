@@ -10,12 +10,13 @@
  */
 using System;
 using Microsoft.SPOT;
+using CTRE.Phoenix.LowLevel;
 
 namespace CTRE.Phoenix
 {
     public class CANifier
     {
-        LowLevel_CANifier _ll;
+        CANifier_LowLevel _ll;
 
         public enum LEDChannel
         {
@@ -77,10 +78,10 @@ namespace CTRE.Phoenix
 
         public CANifier(UInt16 deviceId, bool externalEnable = false)
         {
-            _ll = new LowLevel_CANifier(deviceId, externalEnable);
+            _ll = new CANifier_LowLevel(deviceId, externalEnable);
         }
 
-        public int SetLEDOutput(float percentOutput, LEDChannel ledChannel)
+        public ErrorCode SetLEDOutput(float percentOutput, LEDChannel ledChannel)
         {
             /* convert float to integral fixed pt */
             if (percentOutput > 1) { percentOutput = 1; }
@@ -90,18 +91,18 @@ namespace CTRE.Phoenix
             return _ll.SetLEDOutput(dutyCycle, (uint)ledChannel);
         }
 
-        public int SetGeneralOutput(GeneralPin outputPin, bool outputValue, bool outputEnable)
+        public ErrorCode SetGeneralOutput(GeneralPin outputPin, bool outputValue, bool outputEnable)
         {
-            return _ll.SetGeneralOutput((LowLevel_CANifier.GeneralPin)outputPin, outputValue, outputEnable);
+            return _ll.SetGeneralOutput((CANifier_LowLevel.GeneralPin)outputPin, outputValue, outputEnable);
         }
-        public int SetGeneralOutputs(UInt32 outputBits, UInt32 isOutputBits)
+        public ErrorCode SetGeneralOutputs(UInt32 outputBits, UInt32 isOutputBits)
         {
             return _ll.SetGeneralOutputs(outputBits, isOutputBits);
         }
 
-        public int GetGeneralInputs(PinValues allPins)
+        public ErrorCode GetGeneralInputs(PinValues allPins)
         {
-            int err = _ll.GetGeneralInputs(_tempPins);
+            ErrorCode err = _ll.GetGeneralInputs(_tempPins);
             allPins.LIMF = _tempPins[(int)GeneralPin.LIMF] != 0;
             allPins.LIMR = _tempPins[(int)GeneralPin.LIMR] != 0;
             allPins.QUAD_A = _tempPins[(int)GeneralPin.QUAD_A] != 0;
@@ -122,30 +123,26 @@ namespace CTRE.Phoenix
          */
         public bool GetGeneralInput(GeneralPin inputPin)
         {
-            return _ll.GetGeneralInput((LowLevel_CANifier.GeneralPin)inputPin);
+            return _ll.GetGeneralInput((CANifier_LowLevel.GeneralPin)inputPin);
         }
-        public int GetLastError()
+        public ErrorCode SetStatusFramePeriod(StatusFrameRate statusFrame, uint newPeriodMs, uint timeoutMs = 0)
         {
-            return _ll.GetLastError();
-        }
-        public int SetStatusFrameRate(StatusFrameRate statusFrame, uint newPeriodMs, uint timeoutMs = 0)
-        {
-            return _ll.SetStatusFrameRate((uint)statusFrame, newPeriodMs, timeoutMs);
+            return (ErrorCode) _ll.SetStatusFramePeriod((uint)statusFrame, newPeriodMs, timeoutMs);
         }
 
-        public int SetPWMOutput(uint pwmChannel, float dutyCycle)
+        public ErrorCode SetPWMOutput(uint pwmChannel, float dutyCycle)
         {
             if (dutyCycle < 0) { dutyCycle = 0; } else if(dutyCycle > 1) { dutyCycle = 1; }
 
             int dutyCyc10bit = (int)(1023 * dutyCycle);
 
-            return _ll.SetPWMOutput((uint)pwmChannel, dutyCyc10bit);
+            return (ErrorCode)_ll.SetPWMOutput((uint)pwmChannel, dutyCyc10bit);
         }
 
 
-        public int GetPwmInput(PWMChannel pwmChannel, float[] dutyCycleAndPeriod)
+        public ErrorCode GetPwmInput(PWMChannel pwmChannel, float[] dutyCycleAndPeriod)
         {
-            return _ll.GetPwmInput((uint)pwmChannel, dutyCycleAndPeriod);
+            return (ErrorCode)_ll.GetPwmInput((uint)pwmChannel, dutyCycleAndPeriod);
         }
     }
 }

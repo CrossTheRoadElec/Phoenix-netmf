@@ -5,35 +5,49 @@ namespace CTRE.Phoenix
 {
     public class Reporting
     {
+        /**
+         * Prints to Visual Studio console.
+         * @param message 
+         *                  Message to print.
+         */
         public static void ConsolePrint(String message)
         {
             Debug.Print(message);
+        }
+        public static void SetError(ErrorCode status, int unused)
+        {
+            SetError((int)status, unused);
         }
         public static void SetError(int status, int unused)
         {
             SetError(status);
         }
-        public static void SetError(int status)
+        public static void SetError(ErrorCode status)
         {
-            if(status < 0)
-                switch (status)
-                {
-                    case StatusCodes.PORT_MODULE_TYPE_MISMATCH:
+            SetError((int)status);
+        }
+        private static void SetError(int status)
+        {
+            // if(status < 0)
+
+            switch ((ErrorCode)status)
+            {
+                case ErrorCode.PORT_MODULE_TYPE_MISMATCH:
                     {
-                            Debug.Print("The selected Gadgeteer Port does not support the Socket Type required by this Module.");
+                        Debug.Print("The selected Gadgeteer Port does not support the Socket Type required by this Module.");
                         break;
                     }
-                    case StatusCodes.MODULE_NOT_INIT_SET_ERROR:
+                case ErrorCode.MODULE_NOT_INIT_SET_ERROR:
                     {
-                            Debug.Print("The Module parameter cannot be set - Module is not initialized.");
+                        Debug.Print("The Module parameter cannot be set - Module is not initialized.");
                         break;
                     }
-                    case StatusCodes.MODULE_NOT_INIT_GET_ERROR:
+                case ErrorCode.MODULE_NOT_INIT_GET_ERROR:
                     {
-                            Debug.Print("The Module parameter could not be read - Module is not initialized.");
+                        Debug.Print("The Module parameter could not be read - Module is not initialized.");
                         break;
                     }
-                    default:
+                default:
                     {
                         Debug.Print("CTRE.Reporting.SetError called with status " + status);
                         break;

@@ -1,86 +1,104 @@
 using System;
 using Microsoft.SPOT;
 using CTRE.Phoenix.Mechanical;
-using CTRE.Phoenix.MotorControllers;
+using CTRE.Phoenix.MotorControl;
 
 namespace CTRE.Phoenix.Drive
 {
-    public class SensoredTank : ISmartDrivetrain
+    public class SensoredTank : Tank, ISensoredDrivetrain
     {
-        SensoredGearbox _left;
-        SensoredGearbox _right;
+        RemoteSensoredGearbox _left;
+        RemoteSensoredGearbox _right;
+        RemoteSensoredGearbox[] _gearBoxes;
+
 
         /** Encoder heading properties */
-        public float distanceBetweenWheels { get; set; }
+        public float DistanceBetweenWheels { get; set; }
         public uint ticksPerRev { get; set; }
         public float wheelRadius { get; set; }
-        float tinyScalor = 1;   /* Not sure if I should make this setable */
+        float ScrubCoefficient = 1;   /* Not sure if I should make this setable */
 
         /* Sensored Tank constructor (uses two gearboxes)*/
-        public SensoredTank(SensoredGearbox left, SensoredGearbox right, bool leftInverted, bool rightInverted, float wheelRadius)
+        public SensoredTank(RemoteSensoredGearbox left, RemoteSensoredGearbox right, bool leftInverted, bool rightInverted, float wheelRadius) : base(left, right, leftInverted, rightInverted)
         {
-            GroupMotorControllers.Register(left.GetMaster());
             _left = left;
             _right = right;
-
-            _left.SetInverted(leftInverted);
-            _right.SetInverted(rightInverted);
+            _gearBoxes = new RemoteSensoredGearbox[] { _left, _right };
 
             if (wheelRadius < 0.01)
                 Debug.Print("CTR: Wheel radius must be greater than 0.01");
             this.wheelRadius = wheelRadius;
         }
-
-        public SensoredTank(SmartMotorController m1, SmartMotorController m2, SmartMotorController.FeedbackDevice feedbackDevice,  bool leftInverted, bool rightInverted, float wheelRadius)
+        public SensoredTank(SensoredGearbox left, SensoredGearbox right, bool leftInverted, bool rightInverted, float wheelRadius)
+          : this((RemoteSensoredGearbox)left, (RemoteSensoredGearbox)right, leftInverted, rightInverted, wheelRadius)
         {
-            GroupMotorControllers.Register(m1);
-
-            /* Create 2 single motor gearboxes */
-            SensoredGearbox temp1 = new SensoredGearbox(1, m1, feedbackDevice);
-            SensoredGearbox temp2 = new SensoredGearbox(1, m2, feedbackDevice);
-
-            _left = temp1;
-            _right = temp2;
-
-            _left.SetInverted(leftInverted);
-            _right.SetInverted(rightInverted);
-
-            if (wheelRadius < 0.01)
-                Debug.Print("CTR: Wheel radius must be greater than 0.01");
-            this.wheelRadius = wheelRadius;
         }
 
-        /** Part of IDrivetrain; Takes control mode, forward output and turn output */
-        public void Set(Styles.Smart mode, float forward, float turn)
+        //------ Access motor controller  ----------//
+
+        //------ Set output routines. ----------//
+        public void Set(Styles.AdvancedStyle driveStyle, float forward, float turn)
         {
+            /* calc the left and right demand */
             float l, r;
             Util.Split_1(forward, turn, out l, out r);
-
-            Drive(mode, l, r);
+            /* lookup control mode to match caller's selected style */
+            ControlMode cm = Styles.Routines.LookupCM(driveStyle);
+            /* apply it */
+            _left.Set(cm, l);
+            _right.Set(cm, r);
         }
-        public void Set(Styles.Basic basicStyle, float forward, float turn)
+        //------ Invert behavior ----------//
+        /* this is done in ctors */
+
+        //----- general output shaping ------------------//
+        public ErrorCode ConfigClosedloopRamp(float secondsFromNeutralToFull, int timeoutMs = 0)
         {
-            Set(Styles.StylesRoutines.Promote(basicStyle), forward, turn);
+            /* clear code(s) */
+            _lastError.Clear();
+            /* call each GB and save error codes */
+            foreach (var gb in _gearBoxes)
+            {
+                /*for this gearbox */
+                var errorCode = gb.ConfigClosedloopRamp(secondsFromNeutralToFull, timeoutMs);
+                /* save the error for this GB */
+                _lastError.Push(errorCode);
+            }
+            /* return the first/worst one */
+            return _lastError.LastError;
         }
-        
 
-        /* Set the currentlimit with Amps and a timeout */
-        public void SetCurrentLimit(uint currentAmps, uint timeoutMs)
+        //------ Voltage Compensation ----------//
+        /* in parent */
+
+        //------ General Status ----------//
+        /* not applicable */
+
+        //------ sensor selection ----------//
+        /* done in c'tor */
+
+        //------- sensor status --------- //
+        public ErrorCode SetPosition(float sensorPos, int timeoutMs = 0)
         {
-            _left.SetCurrentLimit(currentAmps, timeoutMs);
-            _right.SetCurrentLimit(currentAmps, timeoutMs);
+            /* clear code(s) */
+            _lastError.Clear();
+            /* call each GB and save error codes */
+            foreach (var gb in _gearBoxes)
+            {
+                /*for this gearbox */
+                var errorCode = gb.SetPosition(sensorPos, timeoutMs);
+                /* save the error for this GB */
+                _lastError.Push(errorCode);
+            }
+            /* return the first/worst one */
+            return _lastError.LastError;
         }
-
-        /* Grab the position throught the talons' Smart features */
-        public float GetDistance()
+        public float GetPosition()
         {
             float l = _left.GetPosition();
             float r = _right.GetPosition();
-
             return (l + r) * 0.5f;
         }
-
-        /* Grab the velocity throught the talons' Smart features */
         public float GetVelocity()
         {
             float l = _left.GetVelocity();
@@ -89,7 +107,7 @@ namespace CTRE.Phoenix.Drive
             return (l + r) * 0.5f;
         }
 
-        public float GetEncoderHeading()
+        public float GetSensorDerivedAngle()
         {
             float l = _left.GetPosition();
             float r = _right.GetPosition();
@@ -106,84 +124,70 @@ namespace CTRE.Phoenix.Drive
                 return 0;
             }
 
-            if (distanceBetweenWheels < 0.01)
+            if (DistanceBetweenWheels < 0.01)
             {
                 Debug.Print("CTR: Sensored Tank has too small of a distance between wheels, cannot get heading");
                 return 0;
             }
 
             float unitsPerTick = (float)(2 * System.Math.PI * wheelRadius) / ticksPerRev;
-            float theta = ((r-l) / (distanceBetweenWheels / unitsPerTick) * (float)(180 / System.Math.PI)) * tinyScalor;
+            float theta = ((r - l) / (DistanceBetweenWheels / unitsPerTick) * (float)(180 / System.Math.PI)) * ScrubCoefficient;
+
+            return theta;
+        }
+        public float GetSensorDerivedAngularVelocity()
+        {
+            float l = _left.GetVelocity();
+            float r = _right.GetVelocity();
+
+            if (wheelRadius < 0.01)
+            {
+                Debug.Print("CTR: Sensored Tank has too small of a wheel radius, cannot get heading");
+                return 0;
+            }
+
+            if (ticksPerRev == 0)
+            {
+                Debug.Print("CTR: Sensored Tank has not set ticks per wheel revolution, cannot get heading");
+                return 0;
+            }
+
+            if (DistanceBetweenWheels < 0.01)
+            {
+                Debug.Print("CTR: Sensored Tank has too small of a distance between wheels, cannot get heading");
+                return 0;
+            }
+
+            float unitsPerTick = (float)(2 * System.Math.PI * wheelRadius) / ticksPerRev;
+            float theta = ((r - l) / (DistanceBetweenWheels / unitsPerTick) * (float)(180 / System.Math.PI)) * ScrubCoefficient;
 
             return theta;
         }
 
-        /* Reset the encoders on both side of the TankDrivetrain */
-        public void SetPosition(float position)
-        {
-            _left.SetSensor(position);
-            _right.SetSensor(position);
-        }
 
-        /** Sensored Tank drive that takes the mode, left, and right side */
-        private void Drive(Styles.Smart mode, float left, float right)
-        {
-            if(mode == Styles.Smart.Voltage)
-            {
-                _left.SetControlMode(ControlMode.kVoltage);
-                _right.SetControlMode(ControlMode.kVoltage);
-            }
-            else if (mode == Styles.Smart.PercentOutput)
-            {
-                _left.SetControlMode(ControlMode.kPercentVbus);
-                _right.SetControlMode(ControlMode.kPercentVbus);
-            }
-            else if(mode == Styles.Smart.VelocityClosedLoop)
-            {
-                _left.SetControlMode(ControlMode.kSpeed);
-                _right.SetControlMode(ControlMode.kSpeed);
-            }
+        //----- velocity signal conditionaing ------//
+        /* not applicable for now */
 
-            _left.Set(left);
-            _right.Set(right);
-        }
+        //------ remote limit switch ----------//
+        //------ local limit switch ----------//
+        //------ soft limit ----------//
+        /* not applicable */
 
-        public void ConfigNominalPercentOutputVoltage(float forwardVoltage, float reverseVoltage)
-        {
-            _left.ConfigNominalOutputVoltage(forwardVoltage, reverseVoltage);
-            _right.ConfigNominalOutputVoltage(forwardVoltage, reverseVoltage);
-        }
+        //------ Current Lim ----------//
+        /* not required, subclasses will do this */
 
-        public void ConfigPeakPercentOutputVoltage(float forwardVoltage, float reverseVoltage)
-        {
-            _left.ConfigPeakOutputVoltage(forwardVoltage, reverseVoltage);
-            _right.ConfigPeakOutputVoltage(forwardVoltage, reverseVoltage);
-        }
+        //------ General Close loop ----------//
+        /* caller can get the masters */
 
-        public void SetVoltageCompensationRampRate(float rampRate)
-        {
-            _left.SetVoltageCompensationRampRate(rampRate);
-            _right.SetVoltageCompensationRampRate(rampRate);
-        }
+        //------ Motion Profile Settings used in Motion Magic and Motion Profile ----------//
+		/* TODO, how to handle left vs right */
+        //ErrorCode SetMotionCruiseVelocity(int sensorUnitsPer100ms, int timeoutMs = 0);
+        //ErrorCode SetMotionAcceleration(int sensorUnitsPer100msPerSec, int timeoutMs = 0);
 
-        public void SetVoltageRampRate(float rampRate)
-        {
-            _left.SetVoltageRampRate(rampRate);
-            _right.SetVoltageRampRate(rampRate);
-        }
-
-        /* IMotionMagical */
-        public void SetMotionMagicAcceleration(float rotationsPerMinPerSec)
-        {
-            /* RPMPS?? */
-            _left.SetMotionMagicAcceleration(rotationsPerMinPerSec);
-            _right.SetMotionMagicAcceleration(rotationsPerMinPerSec);
-        }
-
-        public void SetMotionMagicCruiseVelocity(float rotationsPerMin)
-        {
-            _left.SetMotionMagicCruiseVelocity(rotationsPerMin);
-            _right.SetMotionMagicCruiseVelocity(rotationsPerMin);
-        }
+        ////------ Motion Profile Buffer ----------//
+        //void ClearMotionProfileTrajectories();
+        //ErrorCode GetMotionProfileTopLevelBufferCount();
+        //ErrorCode PushMotionProfileTrajectory(Motion.TrajectoryPoint trajPt);
+        //bool IsMotionProfileTopLevelBufferFull();
     }
 }

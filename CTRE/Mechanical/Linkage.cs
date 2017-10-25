@@ -1,112 +1,162 @@
 using System;
 using Microsoft.SPOT;
-using CTRE.Phoenix.MotorControllers;
 using CTRE.Phoenix.Signals;
+using CTRE.Phoenix.MotorControl;
 
 namespace CTRE.Phoenix.Mechanical
 {
-    public class Linkage : IOutputSignal, IInvertable
+    public class Linkage : IInvertable
     {
-        MotorControllers.IMotorController _motor = null;
-        MotorControllers.IFollower[] _follower = { null, null, null };
-        int _followerCount = 0;
-        bool _isInverted = false;
+        protected IMotorController _motor = null;
+        protected IFollower[] _followers = new IFollower[0];
 
+        //--------------------- Constructors -----------------------------//
         /* Multiple constructors that take 1 to 4 motors per gearbox */
-        public Linkage(MotorControllers.IMotorController mc1)
+        public Linkage(IMotorController mc0)
         {
-            _motor = mc1;
+            _motor = mc0;
 
             Setup();
         }
-        public Linkage(MotorControllers.IMotorController mc1, MotorControllers.IFollower mc2)
+        public Linkage(IMotorController master, IFollower[] followers)
         {
-            _motor = mc1;
-            _follower[_followerCount++] = mc2;
+            _motor = master;
+            _followers = new IFollower[followers.Length];
+
+            for (int i = 0; i < _followers.Length; ++i)
+            {
+                _followers[i] = followers[i];
+            }
 
             Setup();
         }
-        public Linkage(MotorControllers.IMotorController mc1, MotorControllers.IFollower mc2, MotorControllers.IFollower mc3)
-        {
-            _motor = mc1;
-            _follower[_followerCount++] = mc2;
-            _follower[_followerCount++] = mc3;
+        public Linkage(IMotorController mc0, IFollower mc1) : this(mc0, new IFollower[] { mc1 }) { }
+        public Linkage(IMotorController mc0, IFollower mc1, IFollower mc2) : this(mc0, new IFollower[] { mc1, mc2 }) { }
+        public Linkage(IMotorController mc0, IFollower mc1, IFollower mc2, IFollower mc3) : this(mc0, new IFollower[] { mc1, mc2, mc3 }) { }
 
-            Setup();
-        }
-        public Linkage(MotorControllers.IMotorController mc1, MotorControllers.IFollower mc2, MotorControllers.IFollower mc3, MotorControllers.IFollower mc4)
-        {
-            _motor = mc1;
-            _follower[_followerCount++] = mc2;
-            _follower[_followerCount++] = mc3;
-            _follower[_followerCount++] = mc4;
+        public IMotorController MasterMotorController { get { return _motor; } }
 
-            Setup();
-        }
+        public IFollower [] Followers { get { return _followers; } }
 
-        /** Set all follower SimpleMotorcontrollers to follow the Master SimpleMotorcontroller */
+        /** Set all follower SimpleMotorControl to follow the Master SimpleMotorcontroller */
         private void Setup()
         {
-            for(int i = 0; i < _followerCount; i++)
-            {
-                _follower[i].Follow(_motor);
-            }
+            foreach (var follower in _followers) { follower.Follow(_motor); }
         }
+
+        //------ Set output routines. ----------//
 
         /** Sets the motor output and takes inversion into account */
-        public void Set(float output)
+        public virtual void Set(ControlMode controlMode, float output0, float output1 = 0)
         {
-            if (_isInverted)
-                output = -output;
+            _motor.Set(controlMode, output0, output1);
 
-            _motor.Set(output);
-
-            for(int i = 0; i < _followerCount; i++)
-            {
-                _follower[i].ValueUpdated();
-            }
+            foreach (var follower in _followers) { follower.ValueUpdated(); }
         }
 
-        public void SetControlMode(BasicControlMode Mode)
+        public virtual void NeutralOutput() { Set(ControlMode.PercentOutput, 0); }
+
+        public virtual void SetNeutralMode(NeutralMode neutralMode) { _motor.SetNeutralMode(neutralMode); }
+
+        //------ Invert behavior ----------//
+        public virtual void SetSensorPhase(bool PhaseSensor) { _motor.SetSensorPhase(PhaseSensor); }
+
+        public virtual void SetInverted(bool invert) { _motor.SetInverted(invert); }
+
+        public virtual bool GetInverted() { return _motor.GetInverted(); }
+
+
+        //----- general output shaping ------------------//
+        public virtual ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs = 0)
         {
-            _motor.SetControlMode(Mode);
+            return _motor.ConfigOpenloopRamp(secondsFromNeutralToFull, timeoutMs);
+        }
+        public virtual ErrorCode ConfigClosedloopRamp(float secondsFromNeutralToFull, int timeoutMs = 0)
+        {
+            return _motor.ConfigClosedloopRamp(secondsFromNeutralToFull, timeoutMs);
+        }
+        public virtual ErrorCode ConfigPeakOutputForward(float percentOut, int timeoutMs = 0)
+        {
+            return _motor.ConfigPeakOutputForward(percentOut, timeoutMs);
+        }
+        public virtual ErrorCode ConfigPeakOutputReverse(float percentOut, int timeoutMs = 0)
+        {
+            return _motor.ConfigPeakOutputReverse(percentOut, timeoutMs);
+        }
+        public virtual ErrorCode ConfigNominalOutputForward(float percentOut, int timeoutMs = 0)
+        {
+            return _motor.ConfigNominalOutputForward(percentOut, timeoutMs);
+        }
+        public virtual ErrorCode ConfigNominalOutputReverse(float percentOut, int timeoutMs = 0)
+        {
+            return _motor.ConfigNominalOutputReverse(percentOut, timeoutMs);
+        }
+        public virtual ErrorCode ConfigOpenLoopNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0)
+        {
+            return _motor.ConfigOpenLoopNeutralDeadband(percentDeadband, timeoutMs);
+        }
+        public virtual ErrorCode ConfigClosedLoopNeutralDeadband(float percentDeadband = 0, int timeoutMs = 0)
+        {
+            return _motor.ConfigClosedLoopNeutralDeadband(percentDeadband, timeoutMs);
         }
 
-        /** IInvertable **/
-        public void SetInverted(bool invert)
+        //------ Voltage Compensation ----------//
+        public virtual ErrorCode ConfigVoltageCompSaturation(float voltage, int timeoutMs = 0)
         {
-            _isInverted = invert;
+            return _motor.ConfigVoltageCompSaturation(voltage, timeoutMs);
+        }
+        public virtual ErrorCode ConfigVoltageMeasurementFilter(int filterWindowSamples, int timeoutMs = 0)
+        {
+            return _motor.ConfigVoltageCompSaturation(filterWindowSamples, timeoutMs);
+        }
+        public virtual void EnableVoltageCompensation(bool enable) { _motor.EnableVoltageCompensation(enable); }
+
+        //------ General Status ----------//
+        public virtual ErrorCode GetBusVoltage(out float param) { return _motor.GetBusVoltage(out param); }
+        public virtual ErrorCode GetMotorOutputPercent(out float param) { return _motor.GetMotorOutputPercent(out param); }
+        public virtual ErrorCode GetMotorOutputVoltage(out float param) { return _motor.GetMotorOutputVoltage(out param); }
+        public virtual ErrorCode GetOutputCurrent(out float param) { return _motor.GetOutputCurrent(out param); }
+        public virtual ErrorCode GetTemperature(out float param) { return _motor.GetTemperature(out param); }
+
+        //------ sensor selection ----------//
+        /* not supported */
+
+        //------- sensor status --------- //
+        /* not supported */
+
+        //------ status frame period changes ----------//
+        public virtual ErrorCode SetControlFramePeriod(ControlFrame frame, int periodMs)
+        {
+            return _motor.SetControlFramePeriod(frame, periodMs);
+        }
+        public virtual ErrorCode SetStatusFramePeriod(StatusFrame frame, int periodMs, int timeoutMs = 0)
+        {
+            return _motor.SetStatusFramePeriod(frame, periodMs, timeoutMs);
         }
 
-        public bool GetInverted()
+        //------ limit switch ----------//
+        public virtual ErrorCode ConfigForwardLimitSwitchSource(RemoteLimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceID)
         {
-            return _isInverted;
+            return _motor.ConfigForwardLimitSwitchSource(type, normalOpenOrClose, deviceID);
+        }
+        public virtual ErrorCode ConfigReverseLimitSwitchSource(RemoteLimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceID)
+        {
+            return _motor.ConfigReverseLimitSwitchSource(type, normalOpenOrClose, deviceID);
+        }
+        public virtual void EnableLimitSwitches(bool enable)
+        {
+            _motor.EnableLimitSwitches(enable);
         }
 
-        /* Voltage stuff */
-        public void SetVoltageRampRate(float rampRate)
-        {
-            _motor.SetVoltageRampRate(rampRate);
-        }
+        //------ soft limit ----------//
+        /* not sensored */
 
-        public void SetVoltageCompensationRampRate(float rampRate)
-        {
-            _motor.SetVoltageCompensationRampRate(rampRate);
-        }
+        //------ Current Lim ----------//
+        /* not supported */
 
-        public void ConfigNominalOutputVoltage(float forwardVoltage, float reverseVoltage)
-        {
-            _motor.ConfigNominalOutputVoltage(forwardVoltage, reverseVoltage);
-        }
-
-        public void ConfigPeakOutputVoltage(float forwardVoltage, float reverseVoltage)
-        {
-            _motor.ConfigPeakOutputVoltage(forwardVoltage, reverseVoltage);
-        }
-
-        public IMotorController GetMaster()
-        {
-            return _motor;
-        }
+        //------ General Close loop ----------//
+        //------ Motion Profile Settings used in Motion Magic and Motion Profile ----------//
+        //------ Motion Profile Buffer ----------//
+        /* not sensored */
     }
 }

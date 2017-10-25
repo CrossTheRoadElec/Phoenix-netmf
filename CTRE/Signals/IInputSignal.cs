@@ -5,6 +5,6 @@ namespace CTRE.Phoenix.Signals
 {
     public interface IInputSignal
     {
-        float Get();
+        float Value { get; }
     }
 }

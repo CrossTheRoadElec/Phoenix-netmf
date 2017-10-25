@@ -1,7 +1,7 @@
 using System;
 using Microsoft.SPOT;
 
-namespace CTRE.Phoenix
+namespace CTRE.Phoenix.LowLevel
 {
     using TALON_Control_6_MotProfAddTrajPoint_huff0_t = UInt64;
     using TALON_Control_6_MotProfAddTrajPoint_t = UInt64;

@@ -10,9 +10,20 @@ namespace CTRE.Phoenix
         public ProcessableGroup()
         {
         }
+        public ProcessableGroup(params IProcessable [] procs)
+        {
+            Add(procs);
+        }
         public void Add(IProcessable proc)
         {
             _proc.Add(proc);
+        }
+        public void Add(params IProcessable[] procs)
+        {
+            foreach (var proc in procs)
+            {
+                _proc.Add(proc);
+            }
         }
         public void RemoveAll()
         {

@@ -16,7 +16,7 @@ namespace CTRE.Phoenix
             new float[] { 0, 0 }
         };
 
-        private int[] _errorCodes = new int[4];
+        private ErrorCode[] _errorCodes = new ErrorCode[4];
 
         public enum Channel
         {
@@ -36,10 +36,10 @@ namespace CTRE.Phoenix
         {
             _canifier = canifier;
 
-            _canifier.SetStatusFrameRate(CANifier.StatusFrameRate.Status3_PwmInput0, 8, 100);
-            _canifier.SetStatusFrameRate(CANifier.StatusFrameRate.Status4_PwmInput1, 8, 100);
-            _canifier.SetStatusFrameRate(CANifier.StatusFrameRate.Status5_PwmInput2, 8, 100);
-            _canifier.SetStatusFrameRate(CANifier.StatusFrameRate.Status6_PwmInput3, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status3_PwmInput0, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status4_PwmInput1, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status5_PwmInput2, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status6_PwmInput3, 8, 100);
         }
 
         public Status CurrentStatus { get; private set; }

@@ -1,6 +1,6 @@
 using System;
 using Microsoft.SPOT;
-using CTRE.Phoenix.MotorControllers;
+using CTRE.Phoenix.MotorControl;
 
 namespace CTRE.Phoenix.Power
 {
@@ -20,8 +20,13 @@ namespace CTRE.Phoenix.Power
         {
             get
             {
-                if (GroupMotorControllers.MotorControllerCount == 0) { return 0; }
-                return GroupMotorControllers.Get(1).GetBusVoltage();
+                float retval = 0;
+                /* grab first device battery voltage */
+                if (DeviceCatalog.MotorControllerCount != 0)
+                {
+                    DeviceCatalog.Get(1).GetBusVoltage(out retval);
+                }
+                return retval;
             }
         }
 

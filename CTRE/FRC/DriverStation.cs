@@ -76,7 +76,7 @@ namespace CTRE.Phoenix.FRC
             process
         }
 
-        private static int status;
+        private ErrorCodeVar status;
 
         public DriverStation(PortDefinition wifiPort)
         {
@@ -91,7 +91,7 @@ namespace CTRE.Phoenix.FRC
             }
             else
             {
-                status = StatusCodes.PORT_MODULE_TYPE_MISMATCH;
+                status = ErrorCode.PORT_MODULE_TYPE_MISMATCH;
                 Reporting.SetError(status);
             }
 

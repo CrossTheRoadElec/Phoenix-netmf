@@ -165,7 +165,7 @@ namespace CTRE.Phoenix
             return SyncGet(ref toFill, numDwords);
         }
 
-        public static UsbHostDevice GetInstance(uint idx)
+        public static UsbHostDevice GetInstance(uint idx = 0)
         {
             if (_instance == null)
             {

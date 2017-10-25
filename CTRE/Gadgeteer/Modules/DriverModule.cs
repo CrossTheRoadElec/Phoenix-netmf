@@ -19,40 +19,47 @@ namespace CTRE
                 private PortDefinition port;
                 private OutputPort[] output = new OutputPort[7];
                 private bool[] outputStates = new bool[7];
-                private int status;
+
+                ErrorCodeVar _lastError = new ErrorCodeVar();
 
                 public DriverModule(PortDefinition port)
                 {
-                   if (CTRE.Phoenix.Util.Contains(port.types, kModulePortType))
+                    if (CTRE.Phoenix.Util.Contains(port.types, kModulePortType))
                     {
-                        status = StatusCodes.OK;
+                        _lastError.SetLastError(ErrorCode.OK);
                         this.port = port;
                         InitializePort((IPortGpio7)this.port);
                     }
-                   else
+                    else
                     {
-                        status = StatusCodes.PORT_MODULE_TYPE_MISMATCH;
-                        CTRE.Phoenix.Reporting.SetError(status);
+                        _lastError.SetLastError(ErrorCode.PORT_MODULE_TYPE_MISMATCH);
+                        CTRE.Phoenix.Reporting.SetError(_lastError.GetLastError());
                     }
                 }
 
                 public void Set(int outputNum, bool outputState)
                 {
-                    if (status == StatusCodes.OK)
+                    if (_lastError == ErrorCode.OK)
                     {
                         output[outputNum - 1].Write(outputState);
                         outputStates[outputNum - 1] = outputState;
                     }
-                    else if (status == StatusCodes.PORT_MODULE_TYPE_MISMATCH)
-                        CTRE.Phoenix.Reporting.SetError(StatusCodes.MODULE_NOT_INIT_SET_ERROR);
+                    else if (_lastError == ErrorCode.PORT_MODULE_TYPE_MISMATCH)
+                    {
+                        CTRE.Phoenix.Reporting.SetError(ErrorCode.MODULE_NOT_INIT_SET_ERROR);
+                    }
                 }
 
                 public bool Get(int outputNum)
                 {
-                    if (status == StatusCodes.OK)
+                    if (_lastError == ErrorCode.OK)
+                    {
                         return outputStates[outputNum - 1];
-                    else if (status == StatusCodes.PORT_MODULE_TYPE_MISMATCH)
-                        CTRE.Phoenix.Reporting.SetError(StatusCodes.MODULE_NOT_INIT_GET_ERROR);
+                    }
+                    else if (_lastError == ErrorCode.PORT_MODULE_TYPE_MISMATCH)
+                    {
+                        CTRE.Phoenix.Reporting.SetError(ErrorCode.MODULE_NOT_INIT_GET_ERROR);
+                    }
                     
                     return false;
                 }

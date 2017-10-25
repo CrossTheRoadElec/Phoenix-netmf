@@ -5,24 +5,37 @@ namespace CTRE.Phoenix.Drive
 {
     public class Styles
     {
-        public enum Smart
+        /**
+         * Drive styles made available by adding sensors 
+         */
+        public enum AdvancedStyle
         {
-            Voltage = 0,
-            PercentOutput = 1,
+            PercentOutput = 0,
+            Position = 1,
             VelocityClosedLoop = 2,
+            Follower = 5,
+            MotionProfile = 6,
+            MotionMagic = 7,
+            MotionMagicArc = 8,
+            TimedPercentOutput = 9,
+
+            Disabled = 15,
+        }
+        /**
+         * Drive styles that are available when there are no sensors.
+         */
+        public enum BasicStyle
+        {
+            PercentOutput = 0,
+            TimedPercentOutput = 9,
         }
 
-        public enum Basic
+        internal static class Routines
         {
-            Voltage = 0,
-            PercentOutput = 1,
-        }
-        public static class StylesRoutines
-        {
-            public static Styles.Smart Promote(Basic basicStyle)
-            {
-                return (Styles.Smart)basicStyle;
-            }
+            public static Styles.AdvancedStyle Promote(BasicStyle basicStyle) { return (Styles.AdvancedStyle)basicStyle; }
+
+            public static MotorControl.ControlMode LookupCM(AdvancedStyle basicStyle) { return (MotorControl.ControlMode)(basicStyle); }
+            public static MotorControl.ControlMode LookupCM(BasicStyle basicStyle) { return (MotorControl.ControlMode)(basicStyle); }
         }
     }
 }

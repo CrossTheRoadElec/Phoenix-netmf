@@ -3,7 +3,6 @@ using System.Text;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 
-
 namespace CTRE
 {
     namespace Gadgeteer
@@ -12,11 +11,11 @@ namespace CTRE
         {
             public class WiFiESP12F : ModuleBase
             {
-                public readonly char kModulePortType = 'U';
+                public new readonly char kModulePortType = 'U';
 
                 PortDefinition port;
                 System.IO.Ports.SerialPort uart;
-                int status;
+                ErrorCodeVar status;
 
                 int baud = 115200;
                 String SSID;
@@ -66,7 +65,7 @@ namespace CTRE
                 {
                     if (Contains(port.types, kModulePortType))
                     {
-                        status = StatusCodes.OK;
+                        status = ErrorCode.OK;
                         this.port = port;
 
                         processState = READY;
@@ -82,7 +81,7 @@ namespace CTRE
                     }
                     else
                     {
-                        status = StatusCodes.PORT_MODULE_TYPE_MISMATCH;
+                        status = ErrorCode.PORT_MODULE_TYPE_MISMATCH;
                         //Reporting.SetError(status);
                     }
                 }
@@ -528,9 +527,9 @@ namespace CTRE
                     lines.Clear();
                 }
 
-                bool waitForResponse(String toSearch, int timeoutms, bool failEarlyIfBadIo = true)
+                bool waitForResponse(String toSearch, int timeoutMs, bool failEarlyIfBadIo = true)
                 {
-                    _timeSched.Restart(timeoutms);
+                    _timeSched.Restart(timeoutMs);
 
                     while (_timeSched.Process() == false)
                     {
@@ -543,7 +542,7 @@ namespace CTRE
                         System.Threading.Thread.Sleep(1);
                         if (uart.BytesToRead > 0)
                         {
-                            _timeSched.Restart(timeoutms);
+                            _timeSched.Restart(timeoutMs);
 
                             int readCnt = uart.Read(_rx, 0, _rx.Length);
                             process(_rx, readCnt);
@@ -553,9 +552,9 @@ namespace CTRE
                     return false;
                 }
 
-                bool waitForDone(int timeoutms, bool failEarlyIfBadIo = true)
+                bool waitForDone(int timeoutMs, bool failEarlyIfBadIo = true)
                 {
-                    _timeSched.Restart(timeoutms);
+                    _timeSched.Restart(timeoutMs);
 
                     while (_timeSched.Process() == false)
                     {
@@ -568,7 +567,7 @@ namespace CTRE
                         System.Threading.Thread.Sleep(1);
                         if (uart.BytesToRead > 0)
                         {
-                            _timeSched.Restart(timeoutms);
+                            _timeSched.Restart(timeoutMs);
 
                             int readCnt = uart.Read(_rx, 0, _rx.Length);
                             process(_rx, readCnt);

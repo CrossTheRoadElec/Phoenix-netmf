@@ -160,7 +160,14 @@ namespace CTRE
                     {
                         get { return _newPos[1]; }
                     }
-
+                    public int Width
+                    {
+                        get { return _size[0]; }
+                    }
+                    public int Height
+                    {
+                        get { return _size[1]; }
+                    }
                     public Sprite SetWidth(int width)
                     {
                         if( _size[0] != width)
@@ -286,6 +293,13 @@ namespace CTRE
 
                         ForceRefresh();
                         return this;
+                    }
+                    public Font Font
+                    {
+                        get
+                        {
+                            return _font;
+                        }
                     }
 
                     public override void Paint(byte[] vram)
@@ -493,7 +507,7 @@ namespace CTRE
                 private ushort[] _cache_2W;
 
                 /* some Module Information */
-                private int status;
+                private ErrorCodeVar status = new ErrorCodeVar();
                 private PortDefinition _port;
                 private new readonly char kModulePortType = 'S';
 
@@ -505,7 +519,7 @@ namespace CTRE
                 {
                     if (CTRE.Phoenix.Util.Contains(((PortDefinition)port).types, kModulePortType))
                     {
-                        status = StatusCodes.OK;
+                        status = ErrorCode.OK;
                         _port = (PortDefinition)port;
 
                         bool port1F = port is Port1Definition;
@@ -567,7 +581,7 @@ namespace CTRE
                     }
                     else
                     {
-                        status = StatusCodes.PORT_MODULE_TYPE_MISMATCH;
+                        status = ErrorCode.PORT_MODULE_TYPE_MISMATCH;
                         CTRE.Phoenix.Reporting.SetError(status);
                     }
                 }
