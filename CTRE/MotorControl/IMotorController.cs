@@ -102,7 +102,7 @@ namespace CTRE.Phoenix.MotorControl
         ErrorCode Config_kF(int slotIdx, float value, int timeoutMs = 0);
         ErrorCode Config_IntegralZone(int slotIdx, int izone, int timeoutMs = 0);
         ErrorCode ConfigAllowableClosedloopError(int slotIdx, int allowableCloseLoopError, int timeoutMs = 0);
-        ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum = 0, int timeoutMs = 0);
+        ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum, int timeoutMs = 0);
 
         ErrorCode SetIntegralAccumulator(float iaccum = 0, int timeoutMs = 0);
 

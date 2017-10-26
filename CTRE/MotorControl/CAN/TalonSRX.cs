@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.SPOT;
 
-namespace CTRE.Phoenix.MotorControl
+namespace CTRE.Phoenix.MotorControl.CAN
 {
     public class TalonSRX : BaseMotorController, IMotorControllerEnhanced
     {

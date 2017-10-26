@@ -1,5 +1,6 @@
 using System;
 using Microsoft.SPOT;
+using CTRE.Phoenix.MotorControl.CAN;
 
 namespace CTRE.Phoenix.MotorControl
 {

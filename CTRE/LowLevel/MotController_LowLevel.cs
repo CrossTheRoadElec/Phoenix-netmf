@@ -576,7 +576,7 @@ namespace CTRE.Phoenix.LowLevel
         {
             return ConfigSetParameter(ParamEnum.ProfileParamSlot_AllowableClosedLoopErr, allowableCloseLoopError, 0x00, slotIdx, timeoutMs);
         }
-        public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum = 0, int timeoutMs = 0)
+        public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum , int timeoutMs = 0)
         {
             return ConfigSetParameter(ParamEnum.ProfileParamSlot_MaxIAccum, iaccum, 0x00, slotIdx, timeoutMs);
         }

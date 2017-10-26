@@ -4,7 +4,7 @@ using Microsoft.SPOT.Hardware;
 using CTRE.Phoenix.Motion;
 using CTRE.Phoenix.LowLevel;
 
-namespace CTRE.Phoenix.MotorControl
+namespace CTRE.Phoenix.MotorControl.CAN
 {
     public abstract class BaseMotorController : IMotorController
     {
@@ -344,7 +344,7 @@ namespace CTRE.Phoenix.MotorControl
         {
             return _ll.ConfigAllowableClosedloopError(slotIdx, allowableCloseLoopError, timeoutMs);
         }
-        public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum = 0, int timeoutMs = 0)
+        public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum , int timeoutMs = 0)
         {
             return _ll.ConfigMaxIntegralAccumulator(slotIdx, iaccum, timeoutMs);
         }
