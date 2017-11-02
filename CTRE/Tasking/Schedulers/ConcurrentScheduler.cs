@@ -5,8 +5,8 @@ namespace CTRE.Phoenix.Tasking
 {
     public class ConcurrentScheduler : IProcessable, ILoopable
     {
-        bool _running = false;
         System.Collections.ArrayList _loops = new System.Collections.ArrayList();
+        System.Collections.ArrayList _enabs = new System.Collections.ArrayList();
         int _periodMs;
         PeriodicTimeout _timeout;
 
@@ -15,51 +15,105 @@ namespace CTRE.Phoenix.Tasking
             _periodMs = periodMs;
             _timeout = new PeriodicTimeout(periodMs);
         }
-        public void Add(ILoopable aLoop)
+        public void Add(ILoopable newLoop, bool bEnabled = true)
         {
-            _loops.Add(aLoop);
+            foreach (var loop in _loops)
+            {
+                if (loop == newLoop)
+                    return; /* already here */
+            }
+            _loops.Add(newLoop);
+            _enabs.Add(bEnabled);
+            /* call the start routine now, and next process call will be it's first process */
+            if (bEnabled)
+                Start(newLoop);
         }
 
-        public ILoopable GetCurrent()
+        public void Start(ILoopable toStart)
         {
-            return null;
+            for (int i = 0; i < _loops.Count; ++i)
+            {
+                ILoopable lp = (ILoopable)_loops[i];
+
+                if (lp == toStart)
+                {
+                    lp.OnStart();
+                    _enabs[i] = true;
+                 
+                    return;
+                }
+            }
+            Debug.Print("CTR: Could not find object in scheduler");
+        }
+        public void Stop(ILoopable toStart)
+        {
+            for (int i = 0; i < _loops.Count; ++i)
+            {
+                ILoopable lp = (ILoopable)_loops[i];
+                bool en = (bool)_enabs[i];
+
+                if (lp == toStart)
+                {
+                    if (en == true)
+                    {
+                        lp.OnStop();
+                        _enabs[i] = false;
+                    }
+                    return;
+                }
+            }
+            Debug.Print("CTR: Could not find object in scheduler");
         }
 
         public void RemoveAll()
         {
             _loops.Clear();
+            _enabs.Clear();
         }
+		public void StartAll()
+        {
+            for (int i = 0; i < _loops.Count; ++i)
+            {
+                ILoopable lp = (ILoopable)_loops[i];
 
-        public void Start()
-        {
-            foreach (ILoopable lp in _loops)
-            {
                 lp.OnStart();
+                _enabs[i] = true;
             }
-            _running = true;
         }
-        public void Stop()
+        public void StopAll()
         {
-            foreach (ILoopable lp in _loops)
+            for (int i = 0; i < _loops.Count; ++i)
             {
+                ILoopable lp = (ILoopable)_loops[i];
+
                 lp.OnStop();
+                _enabs[i] = false;
             }
-            _running = false;
         }
         public void Process()
         {
             if (_timeout.Process())
             {
-                foreach (ILoopable lp in _loops)
+                for (int i = 0; i < _loops.Count; ++i)
                 {
-                    lp.OnLoop();
+                    ILoopable lp = (ILoopable)_loops[i];
+                    bool en = (bool)_enabs[i];
+
+                    if (en)
+	                {
+	                    lp.OnLoop();
+	                }
+                    else
+                    {
+                        /* this loopable is turned off, don't call it */
+                    }
                 }
             }
         }
         //--- Loopable ---/
         public void OnStart()
         {
-            Start();
+            StartAll();
         }
 
         public void OnLoop()
@@ -69,14 +123,13 @@ namespace CTRE.Phoenix.Tasking
 
         public bool IsDone()
         {
-            /* Should this be this? */
-            //return _isRunning;
+            /* TODO poll all the tasks, if all tasks are enabled and done, then return true */
             return false;
         }
 
         public void OnStop()
         {
-            Stop();
+            StopAll();
         }
     }
 }
