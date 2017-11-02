@@ -29,19 +29,29 @@ namespace CTRE.HERO
 {
     public class OnboardEEPROM
     {
-        private SPI _SPIDevice;
         private const Cpu.Pin _ChipSelFlash = (Cpu.Pin)0x25;
-        private SPI.Configuration _Configuration = new SPI.Configuration(_ChipSelFlash, false, 0, 0, false, true, 8000, SPI.SPI_module.SPI1);
+        public const int CapacityBytes = 16 * 1024 * 1024 / 8; /* 16MBIT */
+
+        const int kMaxByteProgramTimeMs = 3;
+        const int kMaxByteErase4KTimeMs = 25;
+
+        //byte kWriteStatusRegValue = 0x40; /* enable AAI */
+        byte kWriteStatusRegValue = 0x00; /* enable byte mode*/
+
+        private SPI _SPIDevice;
+        private SPI.Configuration _Configuration;
+
         private static OnboardEEPROM _instance = null;
+
+        byte[] _temp_4b = new byte[4];
+        byte[] _temp_5b = new byte[5];
+        byte[] _temp_6b = new byte[6];
 
         public static OnboardEEPROM Instance
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = new OnboardEEPROM();
-                }
+                if (_instance == null) { _instance = new OnboardEEPROM(); }
                 return _instance;
             }
         }
@@ -51,6 +61,18 @@ namespace CTRE.HERO
         {
             _Configuration = new SPI.Configuration(_ChipSelFlash, false, 0, 0, false, true, 8000, SPI.SPI_module.SPI1);
             _SPIDevice = new SPI(_Configuration);
+        }
+
+        private enum StatusRegisterBits
+        {
+            BUSY_BIT0 = 0x1,
+            WriteEnabled_WEL_BIT1 = 0x02,
+            BlockWriteProtect_BP0_BIT2 = 0x04,
+            BlockWriteProtect_BP1_BIT3 = 0x08,
+            BlockWriteProtect_BP2_BIT4 = 0x10,
+            BlockWriteProtect_BP3_BIT5 = 0x20,
+            AutoAddressIncrementProgrammingStatus_AAI_BIT6 = 0x40,
+            BPReadOnly_BIT7 = 0x80,
         }
 
         private enum OpCode //Instuctions from SST25VF016B-75-4I-QAF
@@ -71,6 +93,7 @@ namespace CTRE.HERO
             RDID_ReadId = 0xab,
             JEDECID = 0x9f,
         };
+        //---------------------- Registers ---------------------//
         //Read the status register and returns the byte
         private byte ReadStatusRegister()
         {
@@ -80,54 +103,92 @@ namespace CTRE.HERO
             _SPIDevice.WriteRead(Temp, 0, 1, TempIn, 0, 1, 1);
             return TempIn[0];
         }
-        //Good
 
         //Enables Write Status Register
-        private void EWSR()
+        private void EnableWriteStatusRegister()
         {
             byte[] Temp = new byte[1];
             Temp[0] = (byte)OpCode.EWSR_EnableWriteStatReg;
             _SPIDevice.Write(Temp);
-            Delay();
         }
-        //Good
 
         //Writes a byte to the status register
-        private void WRSR(byte StatusIn)
+        private void WriteStatusRegister(byte StatusIn)
         {
             byte[] Temp = new byte[2];
             Temp[0] = (byte)OpCode.WRSR_WriteStatusReg;
             Temp[1] = StatusIn;
             _SPIDevice.Write(Temp);
-            Delay();
         }
-        //Good
 
         //Enables the Write Enable latch. Can also be used in place of EWSR
-        private void WREN()
+        private void WriteEnableLatch()
         {
             byte[] Temp = new byte[1];
             Temp[0] = (byte)OpCode.WREN_WriteEn;
             _SPIDevice.Write(Temp);
-            Delay();
         }
-        //Good
 
-        //Disables the Write Enable latch
-        private void WRDI()
+        ////Disables the Write Enable latch
+        //private void WriteDisable()
+        //{
+        //    byte[] Temp = new byte[1];
+        //    Temp[0] = (byte)OpCode.WRDI_WriteDisable;
+        //    _SPIDevice.Write(Temp);
+        //}
+
+
+        //---------------------- Info routines ---------------------//
+        public ErrorCode ReadInfo(out int jedecID_BF_25_41, out byte ManufactureId_BF, out byte DeviceID_41)
         {
-            byte[] Temp = new byte[1];
-            Temp[0] = (byte)OpCode.WRDI_WriteDisable;
-            _SPIDevice.Write(Temp);
-            Delay();
-        }
-        //Good
+            _temp_4b[0] = (byte)OpCode.JEDECID;
+            _temp_4b[1] = 0;
+            _temp_4b[2] = 0;
+            _temp_4b[3] = 0;
+            _SPIDevice.WriteRead(_temp_4b, _temp_4b);
 
-        //Read multiple address and store data into byte buffer;
-        public void ReadMultiple(ulong Address, int Numb_of_Bytes, byte[] DestBuffer)
+            jedecID_BF_25_41 = _temp_4b[1];
+            jedecID_BF_25_41 <<= 8;
+            jedecID_BF_25_41 |= _temp_4b[2];
+            jedecID_BF_25_41 <<= 8;
+            jedecID_BF_25_41 |= _temp_4b[3];
+
+            _temp_6b[0] = (byte)OpCode.RDID_ReadId;
+            _temp_6b[1] = 0;
+            _temp_6b[2] = 0;
+            _temp_6b[3] = 0;
+            _temp_6b[4] = 0;
+            _temp_6b[5] = 0;
+            _SPIDevice.WriteRead(_temp_6b, _temp_6b);
+
+            ManufactureId_BF = _temp_6b[4];
+            DeviceID_41 = _temp_6b[5];
+
+            if (jedecID_BF_25_41 != 0xBF2541)
+                return ErrorCode.EEPROM_ERROR;
+            if (ManufactureId_BF != 0xBF)
+                return ErrorCode.EEPROM_ERROR;
+            if (DeviceID_41 != 0x41)
+                return ErrorCode.EEPROM_ERROR;
+
+            return ErrorCode.OK;
+        }
+        public ErrorCode CheckHealth()
+        {
+            int jedecID_BF_25_41;
+            byte ManufactureId_BF;
+            byte DeviceID_41;
+            return ReadInfo(out jedecID_BF_25_41, out ManufactureId_BF, out DeviceID_41);
+        }
+        //---------------------- Read routines ---------------------//
+
+        public ErrorCode Read(ulong Address, byte[] toFill)
+        {
+            return Read(Address, toFill, toFill.Length);
+        }
+        public ErrorCode Read(ulong Address, byte[] toFill, int numBytesToRead)
         {
             byte[] Temp = new byte[4];
-            Wait_Busy();
             byte Byte1 = (byte)((Address & 0xFFFFFF) >> 16);
             byte Byte2 = (byte)((Address & 0xFFFF) >> 8);
             byte Byte3 = (byte)(Address & 0xFF);
@@ -135,13 +196,126 @@ namespace CTRE.HERO
             Temp[1] = Byte1;
             Temp[2] = Byte2;
             Temp[3] = Byte3;
-            _SPIDevice.WriteRead(Temp, 0, 4, DestBuffer, 0, Numb_of_Bytes, 4);
+            _SPIDevice.WriteRead(Temp, 0, 4, toFill, 0, numBytesToRead, 4);
+            return ErrorCode.OK;
         }
-        //Good
+
+        //---------------------- Erase routines ---------------------//
+        public ErrorCode Erase4KB(ulong Address)
+        {
+            byte read = 0;
+            /* check inputs */
+            if ((Address + 4096) > CapacityBytes)
+                return ErrorCode.CAN_INVALID_PARAM;
+            /* must enable write first */
+            WriteEnableLatch();
+            /* make sure AAI and BPs are correct */
+            WriteStatusRegister(kWriteStatusRegValue);
+            /* must enable write first */
+            WriteEnableLatch();
+            /* read to make sure WEL is set */
+            read = ReadStatusRegister();
+            if ((read & (int)StatusRegisterBits.WriteEnabled_WEL_BIT1) == 0)
+            {
+                /* device is not in memory write enabled mode, something went wrong */
+                return ErrorCode.EEPROM_ERROR;
+            }
+            /* clock erase command */
+            byte[] Temp = new byte[4];
+            Temp[0] = (byte)OpCode._4KBErase;
+            Temp[1] = (byte)(Address >> 16);
+            Temp[2] = (byte)(Address >> 8);
+            Temp[3] = (byte)(Address);
+            _SPIDevice.Write(Temp);
+            /* wait for busy bit to clear */
+            for (int i = 0; i < kMaxByteErase4KTimeMs; ++i)
+            {
+                /* small yield */
+                Thread.Sleep(1);
+                /* read status reg */
+                read = ReadStatusRegister();
+                if ((read & (int)StatusRegisterBits.BUSY_BIT0) != 0)
+                {
+                    /* busy bit is set, write is in progress */
+                }
+                else
+                {
+                    /* busy bit is cleared, NO write is in progress */
+                    break;
+                }
+            }
+            /* is it clear */
+            if ((read & (int)StatusRegisterBits.BUSY_BIT0) == 0)
+            {
+                /* busy bit is cleared, NO write is in progress */
+                return ErrorCode.OK;
+            }
+            return ErrorCode.EEPROM_ERROR;
+        }
+
+        //---------------------- Write routines ---------------------//
+        public ErrorCode Write(ulong Address, params byte[] toWrite)
+        {
+            ErrorCode retval = ErrorCode.OK;
+            byte read;
+            /* check inputs */
+            if ((Address + (ulong)toWrite.Length) > CapacityBytes)
+                return ErrorCode.CAN_INVALID_PARAM;
+            /* for each byte */
+            foreach (byte byteValueToWrite in toWrite)
+            {
+                /* must enable write first */
+                WriteEnableLatch();
+                /* make sure AAI and BPs are correct */
+                WriteStatusRegister(kWriteStatusRegValue);
+                /* must enable write first */
+                WriteEnableLatch();
+                /* read to make sure WEL is set */
+                read = ReadStatusRegister();
+                if ((read & (int)StatusRegisterBits.WriteEnabled_WEL_BIT1) == 0)
+                {
+                    /* device is not in memory write enabled mode, something went wrong */
+                    return ErrorCode.EEPROM_ERROR;
+                }
+                /* clock erase command */
+                _temp_5b[0] = (byte)OpCode.ByteProgram;
+                _temp_5b[1] = (byte)(Address >> 16);
+                _temp_5b[2] = (byte)(Address >> 8);
+                _temp_5b[3] = (byte)(Address);
+                _temp_5b[4] = (byte)(byteValueToWrite);
+                _SPIDevice.Write(_temp_5b);
+
+                /* wait for busy bit to clear */
+                for (int i = 0; i < kMaxByteProgramTimeMs; ++i)
+                {
+                    /* small yield */
+                    Thread.Sleep(1);
+                    /* read status reg */
+                    read = ReadStatusRegister();
+                    if ((read & (int)StatusRegisterBits.BUSY_BIT0) != 0)
+                    {
+                        /* busy bit is set, write is in progress */
+                    }
+                    else
+                    {
+                        /* busy bit is cleared, NO write is in progress */
+                        break;
+                    }
+                }
+                /* is it clear */
+                if ((read & (int)StatusRegisterBits.BUSY_BIT0) != 0)
+                {
+                    /* busy bit is set, we've timed out */
+                    return ErrorCode.EEPROM_TIMED_OUT;
+                }
+                /* increment address */
+                ++Address;
+            }
+            return retval;
+        }
 
 
-        //=======================================================================//
-
+#if false
         private void Auto_Add_IncA(ulong Address, byte Data1, byte Data2)
         {
             byte[] Temp = new byte[6];
@@ -215,20 +389,6 @@ namespace CTRE.HERO
             WRDI();
         }
 
-        //Sector Erases the chip
-        private void Sector_Erase(ulong Address)
-        {
-            byte[] Temp = new byte[4];
-            Wait_Busy();
-            WREN();
-            Temp[0] = (byte)OpCode._4KBErase;
-            Temp[1] = (byte)((Address & 0xFFFFFF) >> 16);
-            Temp[2] = (byte)((Address & 0xFFFF) >> 8);
-            Temp[3] = (byte)(Address & 0xFF);
-            _SPIDevice.Write(Temp);
-            DelayErase();
-        }
-
         //Checks the status register before proceeding
         private void Wait_Busy(int timeout = 100)
         {
@@ -266,5 +426,6 @@ namespace CTRE.HERO
         {
             Thread.Sleep(1);
         }
+#endif
     }
 }

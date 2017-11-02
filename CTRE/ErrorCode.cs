@@ -33,6 +33,9 @@ namespace CTRE
         MODULE_NOT_INIT_GET_ERROR = -402,
 
         FeatureNotSupported = 101,
+
+        EEPROM_ERROR = -500,
+        EEPROM_TIMED_OUT = -501,
     }
 
     internal struct ErrorCodeVar
