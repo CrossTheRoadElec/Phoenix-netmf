@@ -44,6 +44,7 @@ namespace CTRE.Phoenix.LowLevel
 
         FeedbackSensorType = 330,
         SelectedSensorPosition = 331,
+        eFeedbackNotContinuous = 332,
 
         ForwardSoftLimitThreshold = 340,
         ReverseSoftLimitThreshold = 341,
