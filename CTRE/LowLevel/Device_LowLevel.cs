@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace CTRE.Phoenix.LowLevel
 {
@@ -6,6 +7,7 @@ namespace CTRE.Phoenix.LowLevel
     {
         protected uint _baseArbId;
         uint _deviceNumber;
+        string _description;
 
         uint _arbIdStartupFrame;
         uint _arbIdFrameApiStatus;
@@ -27,7 +29,9 @@ namespace CTRE.Phoenix.LowLevel
 
         ResetStats _resetStats = new ResetStats();
         int _firmVers = -1; /* invalid */
+        int _failedVersionChecks = 0;
 
+        internal ErrorCodeVar _lastError;
 
         System.Collections.Hashtable _sigs_Value = new System.Collections.Hashtable();
         System.Collections.Hashtable _sigs_SubValue = new System.Collections.Hashtable();
@@ -156,6 +160,60 @@ namespace CTRE.Phoenix.LowLevel
             bool retval = _resetStats.hasReset;
             _resetStats.hasReset = false;
             return retval;
+        }
+
+        /**
+ * Helpful routine for child classes to report too-old firm
+ */
+        internal void CheckFirmVers(int minMajor, int minMinor, ErrorCode failCode)
+        {
+            /* get the firm vers */
+            int vers = GetFirmwareVersion();
+            /* track the failures */
+            if (vers < 0)
+            {
+                if (_failedVersionChecks < 1000)
+                {
+                    ++_failedVersionChecks;
+                }
+            }
+            else
+            {
+                _failedVersionChecks = 0;
+            }
+            /* compare To */
+            int minAllowableFirmInclusive = (char)minMajor;
+            minAllowableFirmInclusive <<= 8;
+            minAllowableFirmInclusive |= (char)minMinor;
+            /* if its not available skip test */
+            if (vers >= 0)
+            {
+                /* tell user if its too old */
+                if (vers < minAllowableFirmInclusive)
+                {
+                    /* get the trace */
+                    String trace = ""; //This should be a stack trace - how do we get it in netmf without generating an exception?
+                    /* build a message */
+                    StringBuilder message = new StringBuilder();
+                    message.Append(ToString());
+                    message.Append(", firm must be >= ");
+                    message.Append(minMajor);
+                    message.Append(".");
+                    message.Append(minMinor);
+                    /* log it */
+                    Reporting.Log(failCode, message.ToString(), 0,
+                            trace);
+                    
+                }
+            }
+            if (_failedVersionChecks > 100)
+            {
+                /* get the trace */
+                String trace = "";
+                /* log it */
+                Reporting.Log(ErrorCode.FirmVersionCouldNotBeRetrieved,
+                        ToString(), 0, trace);
+            }
         }
 
         /** child class has to provide a way to enable/disable firm status */
@@ -337,32 +395,6 @@ namespace CTRE.Phoenix.LowLevel
                         value = -512;
                     rawbits = (Int32)(value * FLOAT_TO_FXP_10_22);
                     break;
-                case ParamEnum.eProfileParamVcompRate: /* unsigned 0.8 fixed pt value volts per ms */
-                                                       /* within [0,1) volts per ms.
-                                                               Slowest ramp is 1/256 VperMilliSec or 3.072 seconds from 0-to-12V.
-                                                               Fastest ramp is 255/256 VperMilliSec or 12.1ms from 0-to-12V.
-                                                               */
-                    if (value <= 0)
-                    {
-                        /* negative or zero (disable), send raw value of zero */
-                        rawbits = 0;
-                    }
-                    else
-                    {
-                        /* nonzero ramping */
-                        rawbits = (int)(value * FLOAT_TO_FXP_0_8);
-                        /* since whole part is cleared, cap to just under whole unit */
-                        if (rawbits > (FLOAT_TO_FXP_0_8 - 1))
-                            rawbits = (int)(FLOAT_TO_FXP_0_8 - 1);
-                        /* since ramping is nonzero, cap to smallest ramp rate possible */
-                        if (rawbits == 0)
-                        {
-                            /* caller is providing a nonzero ramp rate that's too small
-                                    to serialize, so cap to smallest possible */
-                            rawbits = 1;
-                        }
-                    }
-                    break;
                 case ParamEnum.eNominalBatteryVoltage:
                     rawbits = (int)(value * 256f);
                     /* negative or zero disables feature */
@@ -371,6 +403,16 @@ namespace CTRE.Phoenix.LowLevel
                     /* max value is 255.0V */
                     if (rawbits > 0xFF00)
                         rawbits = 0xFF00;
+                    break;
+                case ParamEnum.eProfileParamSlot_PeakOutput:
+                    if (value > 1.0f) /* bounds check doubles that are outside u10.22 */
+                        value = 1.0f;
+                    else if (value < 0)
+                        value = 0;
+                    rawbits = (int)(value * 1023.0);
+                    break;
+                case ParamEnum.eSelectedSensorCoefficient:
+                    rawbits = (int)(value * 65536.0);
                     break;
                 default: /* everything else is integral */
                     rawbits = (Int32)value;
@@ -519,13 +561,35 @@ namespace CTRE.Phoenix.LowLevel
             if (retval == (int)ErrorCode.OK)
             {
                 /* paramEnum is updated, sent it out */
-                retval = ConfigSetParameter(ParamEnum.StatusFramePeriod, (int)statusArbID, period, 0, timeoutMs);
+                retval = ConfigSetParameter(ParamEnum.eStatusFramePeriod, (int)statusArbID, period, 0, timeoutMs);
             }
             return retval;
         }
         protected ErrorCode GetStatusFramePeriod(int statusArbID, out int periodMs, int timeoutMs = Constants.GetParamTimeoutMs)
         {
-            return ConfigGetParameter(ParamEnum.StatusFramePeriod, statusArbID, out periodMs, 0x00, 0, timeoutMs);
+            return ConfigGetParameter(ParamEnum.eStatusFramePeriod, statusArbID, out periodMs, 0x00, 0, timeoutMs);
         }
+
+        //------ Custom Persistent Params ----------//
+        protected ErrorCode ConfigSetCustomParam(int value,
+                int paramIndex, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eCustomParam, value, 0, paramIndex, timeoutMs);
+        }
+        protected ErrorCode ConfigGetCustomParam(out int value,
+                int paramIndex, int timeoutMs)
+        {
+            return ConfigGetParameter(ParamEnum.eCustomParam, out value, paramIndex, timeoutMs);
+        }
+
+        //------ Description API ----------//
+        /** child class should call this once to set the description */
+        protected void SetDescription(string description) {
+	        _description = description;
+        }
+        public override string ToString() {
+	        return _description;
+        }
+        
     }
 }

@@ -175,7 +175,7 @@ namespace CTRE.Phoenix.LowLevel
          * @param   periodMs    The period in milliseconds.
          */
 
-        public void ChangeMotionControlFramePeriod(UInt32 periodMs)
+        public ErrorCode ChangeMotionControlFramePeriod(UInt32 periodMs)
         {
             lock (_mutMotProf)
             {
@@ -192,8 +192,16 @@ namespace CTRE.Phoenix.LowLevel
                     /* control6 already started, change frame rate */
                     CTRE.Native.CAN.Send(CONTROL_6 | _baseArbId, _cache, 8, _control6PeriodMs);
                 }
+                return SetLastError(stat);
             }
         }
+        public ErrorCode ConfigMotionProfileTrajectoryPeriod(int durationMs, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eMotionProfileTrajectoryPointDurationMs, durationMs, 0, 0,
+                    timeoutMs);
+        }
+
+        
         /** Clear the buffered motion profile in both Talon RAM (bottom), and in the API (top). */
         public void ClearMotionProfileTrajectories()
         {
@@ -245,6 +253,21 @@ namespace CTRE.Phoenix.LowLevel
             }
         }
 
+        int DurationMsToEnum(int durationMs)
+        {
+            int[] kDurationMs = MotionProf_DurationMs.List;
+            int kNum = kDurationMs.Length;
+            int kInclusiveEnd = kNum - 1;
+            /* find value in enum list. */
+            for (int i = 0; i < kNum; ++i)
+            {
+                if (durationMs == kDurationMs[i])
+                    return i;
+            }
+            /* if its not support return the slowest one. User will notice the problem this way. */
+            return kInclusiveEnd;
+        }
+
         /**
          * Push another trajectory point into the top level buffer (which is emptied into the Talon's
          * bottom buffer as room allows).
@@ -273,32 +296,55 @@ namespace CTRE.Phoenix.LowLevel
          *          kMotionProfileTopBufferCapacity.
          */
 
-        public ErrorCode PushMotionProfileTrajectory(int targPos,
-                                                int targVel,
-                                                int profileSlotSelect,
-                                                int timeDurMs, int velOnly,
-                                                int isLastPoint,
-                                                int zeroPos)
+        public ErrorCode PushMotionProfileTrajectory(
+        double position, double velocity, double turn,
+        int profileSlotSelect0, int profileSlotSelect1, bool isLastPoint, bool zeroPos, int durationMs)
         {
-            ReactToMotionProfileCall();
-            /* create our trajectory point */
-            byte b0 = 0;
-            byte b1 = 0;
-            if (zeroPos != 0)
-                b0 |= 0x40;
-            if (velOnly != 0)
-                b0 |= 0x04;
-            if (isLastPoint != 0)
-                b0 |= 0x08;
-            if (profileSlotSelect != 0)
-                b0 |= 0x80;
 
-            if (timeDurMs < 0)
-                timeDurMs = 0;
-            else if (timeDurMs > 255)
-                timeDurMs = 255;
+            ErrorCode retval = ErrorCode.OK;
 
-            byte b2 = (byte)(timeDurMs);
+            int turnUnits = (int)(turn);
+            int targPos = (int)position;
+            int targVel = (int)velocity;
+
+            /* sterilize and check inputs */
+            if (profileSlotSelect0 < 0)
+            {
+                profileSlotSelect0 = 0;
+                retval = ErrorCode.InvalidParamValue;
+            }
+            if (profileSlotSelect0 > 3)
+            {
+                profileSlotSelect0 = 3;
+                retval = ErrorCode.InvalidParamValue;
+            }
+            if (profileSlotSelect1 < 0)
+            {
+                profileSlotSelect1 = 0;
+                retval = ErrorCode.InvalidParamValue;
+            }
+            if (profileSlotSelect1 > 1)
+            {
+                profileSlotSelect1 = 1;
+                retval = ErrorCode.InvalidParamValue;
+            }
+
+            byte b0 = (byte)profileSlotSelect0;
+            b0 <<= 2;
+            b0 |= (byte)(zeroPos ? 1 : 0);
+            b0 <<= 1;
+            b0 |= (byte)DurationMsToEnum(durationMs);
+
+            byte headingH = (byte)((turnUnits >> 8) & 0x3F);
+            byte headingL = (byte)(turnUnits & 0xFF);
+
+            byte b1 = (byte)(isLastPoint ? 1 : 0);
+            b1 <<= 1;
+            b1 |= (byte)profileSlotSelect1;
+            b1 <<= 1;
+            b1 |= headingH;
+
+            byte b2 = headingL;
             byte b3 = (byte)(targVel >> 0x08);
             byte b4 = (byte)(targVel & 0xFF);
             byte b5 = (byte)(targPos >> 0x10);
@@ -347,28 +393,7 @@ namespace CTRE.Phoenix.LowLevel
             return ((idx >= 3) ? 1 : 0) + ((idx + 1) & 0xF);
         }
 
-        /**
-         * Update the NextPt signals inside the control frame given the next pt to send.
-         *
-         * @param [in,out]  control pointer to the CAN frame payload containing control6.  Only the
-         *                          signals that serialize the next trajectory point are updated from the
-         *                          contents of newPt.
-         * @param           newPt   point to the next trajectory that needs to be inserted into Talon RAM.
-         */
-
-        private void CopyTrajPtIntoControl(ref TALON_Control_6_MotProfAddTrajPoint_t control, TALON_Control_6_MotProfAddTrajPoint_t newPt)
-        {
-            /* Bring over the common signals in the first two bytes:  
-                NextPt_ProfileSlotSelect,
-                NextPt_ZeroPosition,
-                NextPt_VelOnly,
-                NextPt_IsLast,
-                huffCode
-                */
-            /* the last six bytes are entirely for hold NextPt's values. */
-            control &= 0x0000000000000F30;
-            control |= 0xFFFFFFFFFFFFF0CF & newPt;
-        }
+        
 
         /**
          * Caller is either pushing a new motion profile point, or is calling the Process buffer
@@ -404,7 +429,7 @@ namespace CTRE.Phoenix.LowLevel
             /* lock */
             lock (_mutMotProf)
             {
-                int NextID = (int)((_cache >> 0x8) & 0xF);
+                int NextID = (int)((_cache >> (0x8 + 5)) & 0x3);
                 /* calc what we expect to receive */
                 if (_motProfFlowControl == NextID)
                 {
@@ -418,14 +443,14 @@ namespace CTRE.Phoenix.LowLevel
                         /* get the latest control frame */
                         UInt64 toFill = GetControl6();
                         UInt64 front = _motProfTopBuffer.Front();
-                        CopyTrajPtIntoControl(ref toFill, front);
+                        toFill |= front;
                         _motProfTopBuffer.Pop();
                         _motProfFlowControl = MotionProf_IncrementSync(_motProfFlowControl);
                         /* insert latest flow control */
                         ulong val = (ulong)_motProfFlowControl;
-                        val &= 0xF;
-                        val <<= 8;
-                        toFill &= 0xFFFFFFFFFFFFF0FF;
+                        val &= 0x3;
+                        val <<= 6;
+                        toFill &= 0xFFFFFFFFFFFFFF3F;
                         toFill |= val;
                         CTRE.Native.CAN.Send(CONTROL_6 | _baseArbId, toFill, 8, 0xFFFFFFFF);
                     }
@@ -481,61 +506,48 @@ namespace CTRE.Phoenix.LowLevel
          * @return  CTR error code.
          */
 
-        public int GetMotionProfileStatus(out UInt32 flags, out UInt32 profileSlotSelect, out Int32 targPos,
-                                out Int32 targVel, out UInt32 topBufferRem, out UInt32 topBufferCnt,
-                                out UInt32 btmBufferCnt, out UInt32 outputEnable)
+        public ErrorCode GetMotionProfileStatus(out int topBufferRem, out int topBufferCnt, out int btmBufferCnt,
+                                        out bool hasUnderrun, out bool isUnderrun, out bool activePointValid,
+                                        out bool isLast, out int profileSlotSelect0, out int outputEnable,
+                                        out int timeDurMs, out int profileSlotSelect1)
         {
             /* get the latest status frame */
             int retval = CTRE.Native.CAN.Receive(STATUS_09 | _baseArbId, ref _cache, ref _len);
 
-            /* clear signals in case we never received an update, caller should check return */
-            flags = 0;
-            profileSlotSelect = 0;
-            targPos = 0;
-            targVel = 0;
+            /* clear signals in case we never received an update, caller should check
+	         * return
+	         */
+            profileSlotSelect0 = 0;
             btmBufferCnt = 0;
 
             /* these signals are always available */
-            topBufferCnt = _motProfTopBuffer.GetNumTrajectories();
-            topBufferRem = kMotionProfileTopBufferCapacity - _motProfTopBuffer.GetNumTrajectories();
+            topBufferCnt = (int)_motProfTopBuffer.GetNumTrajectories();
+            topBufferRem = kMotionProfileTopBufferCapacity - (int)_motProfTopBuffer.GetNumTrajectories();
 
-            /* TODO: make enums or make a better method prototype */
-            if ((_cache & 0x01) > 0) flags |= kMotionProfileFlag_ActTraj_IsValid;
-            if ((_cache & 0x40) > 0) flags |= kMotionProfileFlag_HasUnderrun;
-            if ((_cache & 0x80) > 0) flags |= kMotionProfileFlag_IsUnderrun;
-            if ((_cache & 0x08) > 0) flags |= kMotionProfileFlag_ActTraj_IsLast;
-            if ((_cache & 0x04) > 0) flags |= kMotionProfileFlag_ActTraj_VelOnly;
-
+            activePointValid = (_cache & 1) == 1 ? true : false;
+            hasUnderrun = ((_cache >> 6) & 1) == 1 ? true : false;
+            isUnderrun = ((_cache >> 7) & 1) == 1 ? true : false;
+            isLast = ((_cache >> 3) & 1) == 1 ? true : false;
             btmBufferCnt = (byte)(_cache >> 0x10);
+            profileSlotSelect0 = (int)((_cache >> 1) & 0x3);
+            profileSlotSelect1 = (int)((_cache >> (0x8 + 3)) & 0x3);
+            timeDurMs = (byte)(_cache >> 0x18);
+            //bufferIsFull  = rx->BufferIsFull; // since we have the btmCount, we don't need this.
 
-            targVel = (byte)(_cache >> 0x18);
-            targVel <<= 8;
-            targVel |= (byte)(_cache >> 0x20);
-
-            targPos = (byte)(_cache >> 0x28);
-            targPos <<= 8;
-            targPos |= (byte)(_cache >> 0x30);
-            targPos <<= 8;
-            targPos |= (byte)(_cache >> 0x38);
-
-            if ((_cache & 0x02) > 0)
-                profileSlotSelect = 1;
-            else
-                profileSlotSelect = 0;
-            /* decode output enable */
-            outputEnable = (uint)((_cache >> 4) & 0x3);
-            switch (outputEnable)
+            switch ((SetValueMotionProfile)((_cache >> 4) & 0x3))
             {
-                case kMotionProf_Disabled:
-                case kMotionProf_Enable:
-                case kMotionProf_Hold:
+                case SetValueMotionProfile.Disable:
+                case SetValueMotionProfile.Enable:
+                case SetValueMotionProfile.Hold:
+                    outputEnable = (int)((_cache >> 4) & 0x3);
                     break;
                 default:
                     /* do now allow invalid values for sake of user-facing enum types */
-                    outputEnable = kMotionProf_Disabled;
+                    outputEnable = (int)kMotionProf_Disabled;
                     break;
             }
-            return retval;
+
+            return SetLastError(retval);
         }
 
         /**
@@ -563,19 +575,21 @@ namespace CTRE.Phoenix.LowLevel
 
         public void GetMotionProfileStatus(Motion.MotionProfileStatus statusToFill)
         {
-            UInt32 flags, profileSlotSelect, topBufferRem, topBufferCnt, btmBufferCnt, outputEnable;
-            Int32 targPos, targVel;
+            int temp;
 
-            GetMotionProfileStatus(out flags,
-                                        out profileSlotSelect,
-                                        out targPos,
-                                        out targVel,
-                                        out topBufferRem,
-                                        out topBufferCnt,
-                                        out btmBufferCnt,
-                                        out outputEnable);
+            GetMotionProfileStatus(out statusToFill.topBufferRem,
+                                    out statusToFill.topBufferCnt,
+                                    out statusToFill.btmBufferCnt,
+                                    out statusToFill.hasUnderrun,
+                                    out statusToFill.isUnderrun,
+                                    out statusToFill.activePointValid,
+                                    out statusToFill.isLast,
+                                    out statusToFill.profileSlotSelect,
+                                    out temp,
+                                    out statusToFill.timeDurMs,
+                                    out statusToFill.profileSlotSelect1);
 
-            statusToFill.outputEnable = SetValueMotionProfile.Disable;
+            statusToFill.outputEnable = (SetValueMotionProfile)temp;
         }
 
         /**
@@ -588,13 +602,14 @@ namespace CTRE.Phoenix.LowLevel
 
         public ErrorCode PushMotionProfileTrajectory(Motion.TrajectoryPoint trajPt)
         {
-            return PushMotionProfileTrajectory((int)trajPt.position,
-                                                    (int)trajPt.velocity,
-                                                    (int)trajPt.profileSlotSelect,
-                                                    (int)trajPt.timeDurMs,
-                                                    0,
-                                                    trajPt.isLastPoint ? 1 : 0,
-                                                    trajPt.zeroPos ? 1 : 0);
+            return PushMotionProfileTrajectory((double)trajPt.position,
+                                                    (double)trajPt.velocity,
+                                                    (double)trajPt.headingDeg,
+                                                    (int)trajPt.profileSlotSelect0,
+                                                    (int)trajPt.profileSlotSelect1,
+                                                    trajPt.isLastPoint,
+                                                    trajPt.zeroPos,
+                                                    (int)trajPt.timeDur);
         }
     }
 }

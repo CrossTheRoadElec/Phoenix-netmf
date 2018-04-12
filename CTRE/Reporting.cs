@@ -3,8 +3,11 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix
 {
-    public class Reporting
+    public static class Reporting
     {
+        
+        
+
         /**
          * Prints to Visual Studio console.
          * @param message 
@@ -24,39 +27,33 @@ namespace CTRE.Phoenix
         }
         public static void SetError(ErrorCode status)
         {
-            SetError((int)status);
+            Log(status, "", 0, "");
         }
         private static void SetError(int status)
         {
-            // if(status < 0)
-
-            switch ((ErrorCode)status)
-            {
-                case ErrorCode.PORT_MODULE_TYPE_MISMATCH:
-                    {
-                        Debug.Print("The selected Gadgeteer Port does not support the Socket Type required by this Module.");
-                        break;
-                    }
-                case ErrorCode.MODULE_NOT_INIT_SET_ERROR:
-                    {
-                        Debug.Print("The Module parameter cannot be set - Module is not initialized.");
-                        break;
-                    }
-                case ErrorCode.MODULE_NOT_INIT_GET_ERROR:
-                    {
-                        Debug.Print("The Module parameter could not be read - Module is not initialized.");
-                        break;
-                    }
-                default:
-                    {
-                        Debug.Print("CTRE.Reporting.SetError called with status " + status);
-                        break;
-                    }
-            }
+            Log((ErrorCode)status, "", 0, "");
         }
         public static int getHALErrorMessage(int status)
         {
             return 0;
         }
+
+        public static ErrorCode Log (ErrorCode code, string origin, int hierarchy, string stacktrace)
+        {
+            LowLevel.MsgEntry _me = new LowLevel.MsgEntry(code, origin, stacktrace, hierarchy);
+
+            if (_me.NotWorthLogging())
+            {
+
+            }
+            else
+            {
+                _me.LogToDs();
+            }
+
+            return ErrorCode.OK;
+        }
+
+        
     }
 }

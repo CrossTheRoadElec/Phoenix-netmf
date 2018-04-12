@@ -5,30 +5,35 @@ namespace CTRE.Phoenix.MotorControl
 {
     public struct Faults
     {
-        public bool HardwareFailure;
         public bool UnderVoltage;
-        public bool OverTemp;
         public bool ForwardLimitSwitch;
         public bool ReverseLimitSwitch;
         public bool ForwardSoftLimit;
         public bool ReverseSoftLimit;
-        public bool MsgOverflow;
+        public bool HardwareFailure;
         public bool ResetDuringEn;
+        public bool SensorOverflow;
+        public bool SensorOutOfPhase;
+        public bool HardwareESDReset;
+        public bool RemoteLossOfSignal;
 
         //!< True iff any of the above flags are true.
         public bool AnyFault
         {
             get
             {
-                return HardwareFailure |
+                return 
                         UnderVoltage |
-                        OverTemp |
                         ForwardLimitSwitch |
                         ReverseLimitSwitch |
                         ForwardSoftLimit |
                         ReverseSoftLimit |
-                        MsgOverflow |
-                        ResetDuringEn;
+                        HardwareFailure |
+                        ResetDuringEn |
+                        SensorOverflow |
+                        SensorOutOfPhase |
+                        HardwareESDReset |
+                        RemoteLossOfSignal;
             }
         }
     }

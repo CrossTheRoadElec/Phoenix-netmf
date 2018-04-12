@@ -43,7 +43,7 @@ namespace CTRE.Phoenix.MotorControl
 
         //------ sensor selection ----------//
         /* expand the options */
-        ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int timeoutMs = 0);
+        ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0);
 
         //------ ??? ----------//
         //ErrorCode ConfigSensorIsContinuous(bool isContinuous, int timeoutMs = 0);  /* TODO: figure this out later */

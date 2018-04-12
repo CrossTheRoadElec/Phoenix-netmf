@@ -103,6 +103,7 @@
  *
  */
 using System;
+using System.Text;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using CTRE.Phoenix.MotorControl;
@@ -155,6 +156,9 @@ namespace CTRE.Phoenix.LowLevel
         const int kMotionProfileFlag_ActTraj_IsLast = 0x8;
         const int kMotionProfileFlag_ActTraj_VelOnly = 0x10;
 
+        const int kMinFirmwareVersionMajor = 3;
+        const int kMinFirmwareVersionMinor = 0;
+
         /* Motion Profile Set Output */
         // Motor output is neutral, Motion Profile Executer is not running.
         const int kMotionProf_Disabled = 0;
@@ -170,7 +174,10 @@ namespace CTRE.Phoenix.LowLevel
         private UInt64 _cache;
         private UInt32 _len;
 
-        ErrorCode _lastError = ErrorCode.OK;
+        private int _usingAdvancedFeatures = 0;
+        private int _setPoint = 0;
+        private ControlMode _appliedMode = ControlMode.Disabled;
+
 
         //--------------------- Constructors -----------------------------//
         /**
@@ -183,20 +190,113 @@ namespace CTRE.Phoenix.LowLevel
         public MotController_LowLevel(int baseArbId, bool externalEnable = false)
             : base((uint)baseArbId, (uint)baseArbId | STATUS_05, (uint)baseArbId | PARAM_REQ, (uint)baseArbId | PARAM_RESP, (uint)baseArbId | PARAM_SET, (uint)baseArbId | STATUS_15)
         {
-            if (false == externalEnable)
-                CTRE.Native.CAN.Send(CONTROL_2 | (uint)_baseArbId, 0x00, 2, 50);
+            if (false == externalEnable) { /*native calling contract for this has changed*/}
             CTRE.Native.CAN.Send(CONTROL_3 | (uint)_baseArbId, 0x00, 8, 10);
+
+            /* fill description */
+            StringBuilder work = new StringBuilder();
+            switch (_baseArbId & 0xFFFF0000)
+            {
+                case 0x02040000:
+                    work.Append("Talon SRX ");
+                    break;
+                case 0x01040000:
+                    work.Append("Victor SPX ");
+                    break;
+                default:
+                    work.Append("Motor Controller ");
+                    break;
+            }
+            work.Append(GetDeviceNumber());
+            SetDescription(work.ToString());
+        }
+
+        /* wrapper so we can call with default parameters */
+        void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode code = ErrorCode.FirmwareTooOld)
+        {
+            /* check firm */
+            CheckFirmVers(minMajor, minMinor, code);
         }
 
         //------ Set output routines. ----------//
         public void SetDemand(ControlMode mode, int demand0, int demand1)
         {
-            /* check for ship firm */
-            CheckFirm(0x0100, "This is ship firmware and needs to be updated.");
+            ErrorCode retval = ErrorCode.OK;
+
+            /* check firm */
+            CheckFirmVers();
+            if (_usingAdvancedFeatures > 0)
+            {
+                --_usingAdvancedFeatures;
+                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            }
+            /* feature below not implemented yet, just save the error code */
+            switch (mode)
+            {
+                case ControlMode.MotionProfile:
+                    CheckFirmVers(3, 2, ErrorCode.MotProfFirmThreshold); /* must use 3.2 or greater */
+                    break;
+                case ControlMode.MotionProfileArc:
+                    CheckFirmVers(3, 4, ErrorCode.MotProfFirmThreshold2); /* must use 3.4 or greater */
+                    break;
+                case ControlMode.Current:
+                case ControlMode.MotionMagic:
+                case ControlMode.Position:
+                case ControlMode.Velocity:
+                case ControlMode.PercentOutput:
+                case ControlMode.Follower:
+                case ControlMode.Disabled:
+                    /* supported */
+                    break;
+
+                default:
+                    retval = ErrorCode.FeatureNotSupported;
+                    break;
+            }
+
+            /* if closed looping to caller's target, save the target */
+            switch (mode)
+            {
+                case ControlMode.Current:
+                case ControlMode.MotionMagic:
+                case ControlMode.Position:
+                case ControlMode.Velocity:
+                    /* save it for GetClosedLoopTarget */
+                    _setPoint = demand0;
+                    break;
+                case ControlMode.PercentOutput:
+                case ControlMode.Follower:
+                case ControlMode.Disabled:
+                    /* there is no target */
+                    break;
+                case ControlMode.MotionProfile:
+                case ControlMode.MotionProfileArc:
+                    /* just use the act traj pt */
+                    break;
+            }
+
+            /* sterilize inputs */
+            switch (mode)
+            {
+                case ControlMode.PercentOutput:
+                    if (false) { }
+                    else if (demand0 > +1023) { demand0 = +1023; }
+                    else if (demand0 < -1023) { demand0 = -1023; }
+                    break;
+                case ControlMode.Position: /* if a mode is missing, compiler warning will catch it */
+                case ControlMode.Velocity:
+                case ControlMode.Current:
+                case ControlMode.Follower:
+                case ControlMode.MotionProfile:
+                case ControlMode.MotionMagic:
+                case ControlMode.MotionProfileArc:
+                case ControlMode.Disabled:
+                    break;
+            }
 
             /* get the frame */
-            int retval = CTRE.Native.CAN.GetSendBuffer(CONTROL_3 | _baseArbId, ref _cache);
-            if (retval != 0) { return; }
+            retval = (ErrorCode)CTRE.Native.CAN.GetSendBuffer(CONTROL_3 | _baseArbId, ref _cache);
+            if (retval != ErrorCode.OK) { return; }
 
             /* unpack */
             byte d0_h8 = (byte)(demand0 >> 0x10);
@@ -206,6 +306,8 @@ namespace CTRE.Phoenix.LowLevel
             byte d1_m8 = (byte)(demand1 >> 2);
             byte d1_l2 = (byte)(demand1 & 0x03);
             int mode_4b = (int)mode & 0xf;
+            int EnableAuxPID1 = 0;
+            int SelectDemandType = 0;
 
             /* clear */
             _cache &= ~(0xFFul << 0x00);    /* demand0 */
@@ -215,6 +317,8 @@ namespace CTRE.Phoenix.LowLevel
             _cache &= ~(0xFFul << 0x20);    /* demand1 */
             _cache &= ~(0xE0ul << 0x28);    /* demand1 */
             _cache &= ~(0x0Ful << 0x28);    /* mode_4b */
+            _cache &= ~(0x01ul << (0x30 + 5));    /* EnableAuxPID1 */
+            _cache &= ~(0x01ul << (0x30 + 6));    /* SelectDemandType */
 
             /* shift in */
             _cache |= (UInt64)(d0_h8) << 0x00;
@@ -224,9 +328,177 @@ namespace CTRE.Phoenix.LowLevel
             _cache |= (UInt64)(d1_m8) << 0x20;
             _cache |= (UInt64)(d1_l2) << (0x28 + 6);
             _cache |= (UInt64)(mode_4b) << (0x28);
+            _cache |= (UInt64)(EnableAuxPID1) << (0x30 + 5);
+            _cache |= (UInt64)(SelectDemandType) << (0x30 + 6);
+
+            /* save the mode */
+            _appliedMode = mode;
 
             /* flush changes */
             CTRE.Native.CAN.Send(CONTROL_3 | _baseArbId, _cache, 8, 0xFFFFFFFF);
+        }
+
+        /**
+ * @param mode
+ * @param demand0	If open loop, [-1,+1]
+ *					If closed loop, units or units/100ms.
+ * @param demand1	if open-loop, [-1,+1]
+ * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
+ */
+        public ErrorCode Set(ControlMode mode, double demand0, double demand1, int demand1Type)
+        {
+            ErrorCode retval = ErrorCode.OKAY;
+            /* check for ship firm */
+            CheckFirmVers();
+            if (_usingAdvancedFeatures > 0)
+            {
+                --_usingAdvancedFeatures;
+                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            }
+            /* feature below not implemented yet, just save the error code */
+            switch (mode)
+            {
+                case ControlMode.MotionProfile:
+                    CheckFirmVers(11, 2, ErrorCode.MotProfFirmThreshold); /* must use 3.2 or greater */
+                    break;
+                case ControlMode.MotionProfileArc:
+                    CheckFirmVers(11, 4, ErrorCode.MotProfFirmThreshold2); /* must use 3.4 or greater */
+                    break;
+                case ControlMode.Current:
+                case ControlMode.MotionMagic:
+                case ControlMode.Position:
+                case ControlMode.Velocity:
+                case ControlMode.PercentOutput:
+                case ControlMode.Follower:
+                case ControlMode.Disabled:
+                    /* supported */
+                    break;
+
+                default:
+                    retval = ErrorCode.FeatureNotSupported;
+                    break;
+            }
+
+            /* if closed looping to caller's target, save the target */
+            switch (mode)
+            {
+                case ControlMode.Current:
+                case ControlMode.MotionMagic:
+                //case ControlMode.MotionMagicArc:
+                case ControlMode.Position:
+                case ControlMode.Velocity:
+                    /* save it for GetClosedLoopTarget */
+                    _setPoint = (int)demand0;
+                    break;
+                case ControlMode.PercentOutput:
+                case ControlMode.Follower:
+                case ControlMode.Disabled:
+                    /* there is no target */
+                    break;
+                case ControlMode.MotionProfile:
+                case ControlMode.MotionProfileArc:
+                    /* just use the act traj pt */
+                    break;
+            }
+
+            /* scale and sterilize inputs */
+            switch (mode)
+            {
+                case ControlMode.PercentOutput:
+                    /* coerce */
+                    if (false) { }
+                    else if (demand0 > +1) { demand0 = +1; }
+                    else if (demand0 < -1) { demand0 = -1; }
+                    /* scale [-1,+1] => [-1023,+1023] */
+                    demand0 *= 1023;
+                    break;
+                case ControlMode.Position: /* if a mode is missing, compiler warning will catch it */
+                case ControlMode.Velocity:
+                case ControlMode.Current:
+                case ControlMode.Follower:
+                case ControlMode.MotionProfile:
+                case ControlMode.MotionMagic:
+                //case ControlMode.MotionMagicArc:
+                case ControlMode.MotionProfileArc:
+                case ControlMode.Disabled:
+                    break;
+            }
+
+            /* get the frame */
+            retval = (ErrorCode)CTRE.Native.CAN.GetSendBuffer(CONTROL_3 | _baseArbId, ref _cache);
+            if (retval != ErrorCode.OK) { return retval; }
+
+            int EnableAuxPID1 = 0;
+            int SelectDemandType = 0;
+
+            /* scale feedforward */
+            switch (demand1Type)
+            {
+                case 0:
+                    EnableAuxPID1 = 0;
+                    SelectDemandType = 0;
+                    break;
+                case 1: /* PID[1] */
+                    _usingAdvancedFeatures = 100;
+                    EnableAuxPID1 = 1;
+                    SelectDemandType = 0;
+                    break;
+                case 2: /* dem1 is throtBump */
+                    _usingAdvancedFeatures = 100;
+                    EnableAuxPID1 = 0;
+                    SelectDemandType = 1;
+                    /* coerce */
+                    if (false) { }
+                    else if (demand1 > +1) { demand1 = +1; }
+                    else if (demand1 < -1) { demand1 = -1; }
+                    /* scale [-1,+1] => [-1023,+1023] */
+                    demand1 *= 1023;
+                    break;
+            }
+
+            /* int casts */
+            int idemand0 = (int)demand0;
+            int idemand1 = (int)demand1;
+            /* unpack */
+            byte d0_h8 = (byte)(idemand0 >> 0x10);
+            byte d0_m8 = (byte)(idemand0 >> 0x08);
+            byte d0_l8 = (byte)(idemand0);
+            byte d1_h8 = (byte)(idemand1 >> 10);
+            byte d1_m8 = (byte)(idemand1 >> 2);
+            byte d1_l2 = (byte)(idemand1 & 0x03);
+            int mode_4b = (int)mode & 0xf;
+
+
+            /* clear */
+            _cache &= ~(0xFFul << 0x00);    /* demand0 */
+            _cache &= ~(0xFFul << 0x08);    /* demand0 */
+            _cache &= ~(0xFFul << 0x10);    /* demand0 */
+            _cache &= ~(0xFFul << 0x18);    /* demand1 */
+            _cache &= ~(0xFFul << 0x20);    /* demand1 */
+            _cache &= ~(0xE0ul << 0x28);    /* demand1 */
+            _cache &= ~(0x0Ful << 0x28);    /* mode_4b */
+            _cache &= ~(0x01ul << (0x30 + 5));    /* EnableAuxPID1 */
+            _cache &= ~(0x01ul << (0x30 + 6));    /* SelectDemandType */
+
+            /* shift in */
+            _cache |= (UInt64)(d0_h8) << 0x00;
+            _cache |= (UInt64)(d0_m8) << 0x08;
+            _cache |= (UInt64)(d0_l8) << 0x10;
+            _cache |= (UInt64)(d1_h8) << 0x18;
+            _cache |= (UInt64)(d1_m8) << 0x20;
+            _cache |= (UInt64)(d1_l2) << (0x28 + 6);
+            _cache |= (UInt64)(mode_4b) << (0x28);
+            _cache |= (UInt64)(EnableAuxPID1) << (0x30 + 5);
+            _cache |= (UInt64)(SelectDemandType) << (0x30 + 6);
+
+
+            /* save the mode */
+            _appliedMode = mode;
+
+            /* flush changes */
+            CTRE.Native.CAN.Send(CONTROL_3 | _baseArbId, _cache, 8, 0xFFFFFFFF);
+
+            return SetLastError(retval);
         }
 
         public void SelectDemandType(bool enable)
@@ -273,7 +545,7 @@ namespace CTRE.Phoenix.LowLevel
         }
         private byte CalcMotorDeadband(float percentOut)
         {
-            int retval = (int)(2049 * percentOut);
+            int retval = (int)(1023 * percentOut);
             if (retval > byte.MaxValue)
                 return byte.MaxValue;
             return (byte)retval;
@@ -292,54 +564,49 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
             int ramp = CalcPercPer10Ms(secondsFromNeutralToFull);
-            return ConfigSetParameter(ParamEnum.OpenloopRamp, ramp, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eOpenloopRamp, ramp, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigClosedloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
             int ramp = CalcPercPer10Ms(secondsFromNeutralToFull);
-            return ConfigSetParameter(ParamEnum.ClosedloopRamp, ramp, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eClosedloopRamp, ramp, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigPeakOutputForward(float percentOut, int timeoutMs)
         {
             int param = CalcMotorOutput(percentOut);
-            return ConfigSetParameter(ParamEnum.PeakPosOutput, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.ePeakPosOutput, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigPeakOutputReverse(float percentOut, int timeoutMs)
         {
             int param = CalcMotorOutput(percentOut);
-            return ConfigSetParameter(ParamEnum.PeakNegOutput, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.ePeakNegOutput, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigNominalOutputForward(float percentOut, int timeoutMs)
         {
             int param = CalcMotorOutput(percentOut);
-            return ConfigSetParameter(ParamEnum.NominalPosOutput, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eNominalPosOutput, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigNominalOutputReverse(float percentOut, int timeoutMs)
         {
             int param = CalcMotorOutput(percentOut);
-            return ConfigSetParameter(ParamEnum.NominalNegOutput, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eNominalNegOutput, param, 0, 0, timeoutMs);
         }
-        public ErrorCode ConfigOpenLoopNeutralDeadband(float percentDeadband, int timeoutMs)
+        public ErrorCode ConfigNeutralDeadband(float percentDeadband, int timeoutMs)
         {
             byte param = CalcMotorDeadband(percentDeadband);
-            return ConfigSetParameter(ParamEnum.OpenloopDeadband, param, 0, 0, timeoutMs);
-        }
-        public ErrorCode ConfigClosedLoopNeutralDeadband(float percentDeadband, int timeoutMs)
-        {
-            byte param = CalcMotorDeadband(percentDeadband);
-            return ConfigSetParameter(ParamEnum.ClosedloopDeadband, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eNeutralDeadband, param, 0, 0, timeoutMs);
         }
 
         //------ Voltage Compensation ----------//
         public ErrorCode ConfigVoltageCompSaturation(float voltage, int timeoutMs)
         {
             int param = CalcVoltage_8_8(voltage);
-            return ConfigSetParameter(ParamEnum.NominalBatteryVoltage, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eNominalBatteryVoltage, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigVoltageMeasurementFilter(int filterWindowSamples, int timeoutMs)
         {
             int param = BoundAboveOne(filterWindowSamples);
-            return ConfigSetParameter(ParamEnum.BatteryVoltageFilterSize, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eBatteryVoltageFilterSize, param, 0, 0, timeoutMs);
         }
         public void EnableVoltageCompensation(bool enable)
         {
@@ -350,7 +617,7 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetBusVoltage(out float param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_04 | _baseArbId, ref _cache, ref _len);
-            byte L = (byte)(_cache >> 48);
+            byte L = (byte)(_cache);
             Int32 raw = 0;
             raw |= L;
             param = 0.05F * raw + 4F;
@@ -390,61 +657,212 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetTemperature(out float param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_04 | _baseArbId, ref _cache, ref _len);
-            byte L = (byte)(_cache >> 40);
+            byte L = (byte)(_cache >> 56);
+            L &= 0x3F;
             Int32 raw = 0;
             raw |= L;
-            param = 0.645161290322581F * raw + -50F;
+            param = (float)raw;
             return SetLastError(retval);
         }
         //------ sensor selection ----------//
-        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int timeoutMs)
+        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int pidIdx, int timeoutMs)
         {
+            ErrorCode err1 = ErrorCode.OK;
+            ErrorCode err2 = ErrorCode.OK;
+            switch (pidIdx)
+            {
+                case 0: break;
+                case 1: break;
+                default: return ErrorCode.InvalidParamValue;
+            }
+
+            /* check param */
+            switch (feedbackDevice)
+            {
+                case FeedbackDevice.RemoteSensor0:
+                case FeedbackDevice.RemoteSensor1:
+                    CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm); //Must use latest firmware
+                    _usingAdvancedFeatures = 100;
+                    break;
+                case FeedbackDevice.QuadEncoder:
+                case FeedbackDevice.Analog:
+                case FeedbackDevice.Tachometer:
+                case FeedbackDevice.PulseWidthEncodedPosition:
+                case FeedbackDevice.SoftwareEmulatedSensor:
+                case FeedbackDevice.SensorSum:
+                case FeedbackDevice.SensorDifference:
+                    break;
+                default:
+                    break;
+            }
             int param = (int)feedbackDevice;
-            return ConfigSetParameter(ParamEnum.FeedbackSensorType, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eFeedbackSensorType, param, 0, 0, timeoutMs);
         }
-        public ErrorCode ConfigRemoteFeedbackFilter(int arbId, int peripheralIdx, int reserved, int timeoutMs)
+
+        public ErrorCode ConfigSelectedFeedbackCoefficient(
+        float coefficient, int pidIdx, int timeoutMs)
         {
-            throw new NotImplementedException();
+            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+
+            return ConfigSetParameter(ParamEnum.eSelectedSensorCoefficient, coefficient, 0, pidIdx, timeoutMs);
         }
+
+        public ErrorCode ConfigRemoteFeedbackFilter(int deviceID,
+        RemoteSensorSource remoteSensorSource, int remoteOrdinal, int timeoutMs)
+        {
+
+            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+            if (remoteOrdinal < 0) { return ErrorCode.InvalidParamValue; }
+            if (remoteOrdinal > 1) { return ErrorCode.InvalidParamValue; }
+
+            ErrorCode err1 = ConfigSetParameter(ParamEnum.eRemoteSensorSource, (int)remoteSensorSource, 0, remoteOrdinal, timeoutMs);
+            ErrorCode err2 = ConfigSetParameter(ParamEnum.eRemoteSensorDeviceID, deviceID, 0, remoteOrdinal, timeoutMs);
+
+            if (err1 != ErrorCode.OK)
+            {
+                return SetLastError(err1);
+            }
+            else
+            {
+                return SetLastError(err2);
+            }
+        }
+
+        public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs)
+        {
+            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+
+            int ordinal = (int)sensorTerm;
+
+            ErrorCode err1 = ErrorCode.OKAY;
+            switch (feedbackDevice)
+            {
+                case FeedbackDevice.SensorDifference:
+                case FeedbackDevice.SensorSum:
+                    /* it makes no sense to select these */
+                    err1 = ErrorCode.InvalidParamValue;
+                    break;
+                default:
+                    break;
+            }
+
+            ErrorCode err2 = ConfigSetParameter(ParamEnum.eSensorTerm, (int)feedbackDevice, 0, ordinal, timeoutMs);
+
+            if (err1 != ErrorCode.OK)
+            {
+                return SetLastError(err1);
+            }
+            else
+            {
+                return SetLastError(err2);
+            }
+        }
+
         //------- sensor status --------- //
-        public ErrorCode GetSelectedSensorPosition(out int param)
+        public ErrorCode GetSelectedSensorPosition(out int param, int pidIdx)
         {
-            int err = CTRE.Native.CAN.Receive(STATUS_02 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 0);
-            byte M = (byte)(_cache >> 8);
-            byte L = (byte)(_cache >> 16);
-            param = 0;
-            param |= H;
-            param <<= 8;
-            param |= M;
-            param <<= 8;
-            param |= L;
-            param <<= (32 - 24); /* sign extend */
-            param >>= (32 - 24); /* sign extend */
-            return SetLastError(err);
+            if (pidIdx == 0)
+            {
+                int err = CTRE.Native.CAN.Receive(STATUS_02 | _baseArbId, ref _cache, ref _len);
+                byte H = (byte)(_cache >> 0);
+                byte M = (byte)(_cache >> 8);
+                byte L = (byte)(_cache >> 16);
+                int PosDiv8 = (int)((_cache >> (0x38 + 4)) & 1);
+                param = 0;
+                param |= H;
+                param <<= 8;
+                param |= M;
+                param <<= 8;
+                param |= L;
+                param <<= (32 - 24); /* sign extend */
+                param >>= (32 - 24); /* sign extend */
+                if (PosDiv8 == 1) { param *= 8; }
+                return SetLastError(err);
+            }
+            else if (pidIdx == 1)
+            {
+                int err = CTRE.Native.CAN.Receive(STATUS_12 | _baseArbId, ref _cache, ref _len);
+                byte H = (byte)(_cache >> 0);
+                byte M = (byte)(_cache >> 8);
+                byte L = (byte)(_cache >> 16);
+                int PosDiv8 = (int)((_cache >> (0x20 + 7)) & 1);
+                param = 0;
+                param |= H;
+                param <<= 8;
+                param |= M;
+                param <<= 8;
+                param |= L;
+                param <<= (32 - 24); /* sign extend */
+                param >>= (32 - 24); /* sign extend */
+                if (PosDiv8 == 1) { param *= 8; }
+                return SetLastError(err);
+            }
+            else
+            {
+                param = 0;
+                return SetLastError(ErrorCode.InvalidParamValue);
+            }
         }
 
-        public ErrorCode GetSelectedSensorVelocity(out int param)
+        public ErrorCode GetSelectedSensorVelocity(out int param, int pidIdx)
         {
-            int err = CTRE.Native.CAN.Receive(STATUS_02 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 24);
-            byte L = (byte)(_cache >> 32);
-            int velDiv4 = (int)((_cache >> 60) & 1);
-            param = 0;
-            param |= H;
-            param <<= 8;
-            param |= L;
-            param <<= (32 - 16); /* sign extend */
-            param >>= (32 - 16); /* sign extend */
-            if (velDiv4 == 1)
-                param *= 4;
-            return SetLastError(err);
+            if (pidIdx == 0)
+            {
+                int err = CTRE.Native.CAN.Receive(STATUS_02 | _baseArbId, ref _cache, ref _len);
+                byte H = (byte)(_cache >> 24);
+                byte L = (byte)(_cache >> 32);
+                int velDiv4 = (int)((_cache >> (0x38 + 3)) & 1);
+                param = 0;
+                param |= H;
+                param <<= 8;
+                param |= L;
+                param <<= (32 - 16); /* sign extend */
+                param >>= (32 - 16); /* sign extend */
+                if (velDiv4 == 1)
+                    param *= 4;
+                return SetLastError(err);
+            }
+            else if (pidIdx == 1)
+            {
+                int err = CTRE.Native.CAN.Receive(STATUS_12 | _baseArbId, ref _cache, ref _len);
+                byte H = (byte)(_cache >> 24);
+                byte L = (byte)(_cache >> 32);
+                int velDiv4 = (int)((_cache >> (0x20 + 7)) & 1);
+                param = 0;
+                param |= H;
+                param <<= 8;
+                param |= L;
+                param <<= (32 - 16); /* sign extend */
+                param >>= (32 - 16); /* sign extend */
+                if (velDiv4 == 1)
+                    param *= 4;
+                return SetLastError(err);
+            }
+            else
+            {
+                param = 0;
+                return SetLastError(ErrorCode.InvalidParamValue);
+            }
         }
 
-        public ErrorCode SetSelectedSensorPosition(int sensorPos, int timeoutMs)
+        public ErrorCode SetSelectedSensorPosition(int sensorPos, int pidIdx, int timeoutMs)
         {
-            int param = (int)sensorPos;
-            return ConfigSetParameter(ParamEnum.SelectedSensorPosition, param, 0, 0, timeoutMs);
+            if (pidIdx == 0)
+            {
+                int param = (int)sensorPos;
+                return ConfigSetParameter(ParamEnum.eSelectedSensorPosition, param, 0, 0, timeoutMs);
+            }
+            else if (pidIdx == 1)
+            {
+                /* teams can set the secondary feedback sensor
+                 *  with the low level API for remote object API */
+                return SetLastError(ErrorCode.AuxiliaryPIDNotSupportedYet);
+            }
+            /* invalid PID */
+            return SetLastError(ErrorCode.InvalidParamValue);
         }
         //------ status frame period changes ----------//
         public ErrorCode SetControlFramePeriod(ControlFrame frame, int periodMs)
@@ -492,25 +910,82 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigVelocityMeasurementPeriod(VelocityMeasPeriod period, int timeoutMs)
         {
             int param = (int)period;
-            return ConfigSetParameter(ParamEnum.SampleVelocityPeriod, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eSampleVelocityPeriod, param, 0, 0, timeoutMs);
         }
 
         public ErrorCode ConfigVelocityMeasurementWindow(int windowSize, int timeoutMs)
         {
             int param = (int)windowSize;
-            return ConfigSetParameter(ParamEnum.SampleVelocityWindow, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, param, 0, 0, timeoutMs);
         }
         //------ ALL limit switch ----------//
-        public ErrorCode ConfigForwardLimitSwitchSource(LimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceIDIfApplicable, int timeoutMs)
+        ErrorCode ConfigSingleLimitSwitchSource(
+                LimitSwitchSource limitSwitchSource, LimitSwitchNormal normalOpenOrClose,
+                int deviceIDIfApplicable, int timeoutMs, bool isForward)
         {
-            throw new NotImplementedException();
+
+            int ordinal = isForward ? 0 : 1; /* forward or reverse */
+
+            ErrorCode err1 = ErrorCode.InvalidParamValue;
+            switch (limitSwitchSource)
+            {
+                case LimitSwitchSource.FeedbackConnector:
+                case LimitSwitchSource.RemoteTalonSRX:
+                case LimitSwitchSource.RemoteCANifier:
+                case LimitSwitchSource.Deactivated:
+                    err1 = ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)limitSwitchSource, 0, ordinal, timeoutMs);
+                    break;
+            };
+
+            ErrorCode err2 = ErrorCode.InvalidParamValue;
+            switch (normalOpenOrClose)
+            {
+                case LimitSwitchNormal.NormallyOpen:
+                case LimitSwitchNormal.NormallyClosed:
+                case LimitSwitchNormal.Disabled:
+                    err2 = ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)normalOpenOrClose, 0, ordinal, timeoutMs);
+                    break;
+            };
+
+
+            ErrorCode err3 = ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, deviceIDIfApplicable, 0, ordinal, timeoutMs);
+
+
+            if (err1 != ErrorCode.OK)
+            {
+                SetLastError(err1);
+            }
+            else if (err2 != ErrorCode.OK)
+            {
+                SetLastError(err2);
+            }
+            else
+            {
+                SetLastError(err3);
+            }
+
+            return GetLastError();
+        }
+        public ErrorCode ConfigForwardLimitSwitchSource(
+        LimitSwitchSource limitSwitchSource,
+        LimitSwitchNormal normalOpenOrClose, int deviceIDIfApplicable,
+        int timeoutMs)
+        {
+
+            return ConfigSingleLimitSwitchSource(limitSwitchSource, normalOpenOrClose,
+                    deviceIDIfApplicable, timeoutMs, true);
         }
 
-        public ErrorCode ConfigReverseLimitSwitchSource(LimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceIDIfApplicable, int timeoutMs)
+        public ErrorCode ConfigReverseLimitSwitchSource(
+        LimitSwitchSource limitSwitchSource,
+        LimitSwitchNormal normalOpenOrClose, int deviceIDIfApplicable,
+        int timeoutMs)
         {
-            throw new NotImplementedException();
+
+            return ConfigSingleLimitSwitchSource(limitSwitchSource, normalOpenOrClose,
+                    deviceIDIfApplicable, timeoutMs, false);
         }
-        public void EnableLimitSwitches(bool enable)
+        public void OverrideLimitSwitchesEnable(bool enable)
         {
             SetClrBit(enable ? 0 : 1, 0x30 + 7, CONTROL_3); /* LimitSwitchDisable */
         }
@@ -518,14 +993,26 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigForwardSoftLimit(int forwardSensorLimit, int timeoutMs)
         {
             int param = (int)forwardSensorLimit;
-            return ConfigSetParameter(ParamEnum.ForwardSoftLimitThreshold, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eForwardSoftLimitThreshold, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigReverseSoftLimit(int reverseSensorLimit, int timeoutMs)
         {
             int param = (int)reverseSensorLimit;
-            return ConfigSetParameter(ParamEnum.ReverseSoftLimitThreshold, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eReverseSoftLimitThreshold, param, 0, 0, timeoutMs);
         }
-        public void EnableSoftLimits(bool enable)
+        public ErrorCode ConfigForwardSoftLimitEnable(bool enable, int timeoutMs)
+        {
+            int param = enable ? 1 : 0;
+            return ConfigSetParameter(ParamEnum.eForwardSoftLimitEnable, param, 0, 0,
+                    timeoutMs);
+        }
+        public ErrorCode ConfigReverseSoftLimitEnable(bool enable, int timeoutMs)
+        {
+            int param = enable ? 1 : 0;
+            return ConfigSetParameter(ParamEnum.eReverseSoftLimitEnable, param, 0, 0,
+                    timeoutMs);
+        }
+        public void OverrideSoftLimitsEnable(bool enable)
         {
             SetClrBit((!enable) ? 1 : 0, 8 * 5 + 5, CONTROL_3); /* DisableSoftLimits */
         }
@@ -534,17 +1021,17 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigPeakCurrentLimit(int amps, int timeoutMs)
         {
             int param = BoundAboveOne(amps);
-            return ConfigSetParameter(ParamEnum.PeakCurrentLimitAmps, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.ePeakCurrentLimitAmps, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigPeakCurrentDuration(int milliseconds, int timeoutMs)
         {
             int param = BoundAboveOne(milliseconds);
-            return ConfigSetParameter(ParamEnum.ContinuousCurrentLimitMs, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.ePeakCurrentLimitMs, param, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigContinuousCurrentLimit(int amps, int timeoutMs)
         {
             int param = BoundAboveOne(amps);
-            return ConfigSetParameter(ParamEnum.ContinuousCurrentLimitAmps, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eContinuousCurrentLimitAmps, param, 0, 0, timeoutMs);
         }
         public void EnableCurrentLimit(bool enable)
         {
@@ -554,39 +1041,53 @@ namespace CTRE.Phoenix.LowLevel
         //------ General Close loop ----------//
         public ErrorCode Config_kP(int slotIdx, float value, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_P, value, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_P, value, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode Config_kI(int slotIdx, float value, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_I, value, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_I, value, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode Config_kD(int slotIdx, float value, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_D, value, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_D, value, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode Config_kF(int slotIdx, float value, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_F, value, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_F, value, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode Config_IntegralZone(int slotIdx, int izone, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_IZone, izone, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_IZone, izone, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode ConfigAllowableClosedloopError(int slotIdx, int allowableCloseLoopError, int timeoutMs)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_AllowableClosedLoopErr, allowableCloseLoopError, 0x00, slotIdx, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_AllowableErr, allowableCloseLoopError, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum , int timeoutMs = 0)
         {
-            return ConfigSetParameter(ParamEnum.ProfileParamSlot_MaxIAccum, iaccum, 0x00, slotIdx, timeoutMs);
+            CheckFirmVers(11, 2); /* must use 11.2 or greater */
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_MaxIAccum, iaccum, 0x00, slotIdx, timeoutMs);
+        }
+
+        public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs)
+        {
+            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+            return ConfigSetParameter(ParamEnum.eProfileParamSlot_PeakOutput, percentOut, 0x00, slotIdx, timeoutMs);
+        }
+        public ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs)
+        {
+            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+            return ConfigSetParameter(ParamEnum.ePIDLoopPeriod, loopTimeMs, 0x00, slotIdx, timeoutMs);
         }
 
         public ErrorCode SetIntegralAccumulator(float iaccum = 0, int timeoutMs = 0)
         {
-            return ConfigSetParameter(ParamEnum.ClosedLoopIAccum, iaccum, 0x00, 0x00, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eClosedLoopIAccum, iaccum, 0x00, 0x00, timeoutMs);
         }
 
-        public ErrorCode GetClosedLoopError(out int error, int pidIdx = 0)
+        public ErrorCode GetClosedLoopError(out int error, int pidIdx)
         {
             uint statusID = (pidIdx == 0) ? STATUS_13 : STATUS_14;
             int err = CTRE.Native.CAN.Receive(statusID | _baseArbId, ref _cache, ref _len);
@@ -605,7 +1106,7 @@ namespace CTRE.Phoenix.LowLevel
             error = param;
             return SetLastError(err);
         }
-        public ErrorCode GetIntegralAccumulator(out float iaccum, int pidIdx = 0)
+        public ErrorCode GetIntegralAccumulator(out float iaccum, int pidIdx)
         {
             uint statusID = (pidIdx == 0) ? STATUS_13 : STATUS_14;
             int err = CTRE.Native.CAN.Receive(statusID | _baseArbId, ref _cache, ref _len);
@@ -624,7 +1125,7 @@ namespace CTRE.Phoenix.LowLevel
             iaccum = param;
             return SetLastError(err);
         }
-        public ErrorCode GetErrorDerivative(out float derivError, int pidIdx = 0)
+        public ErrorCode GetErrorDerivative(out float derivError, int pidIdx)
         {
             uint statusID = (pidIdx == 0) ? STATUS_13 : STATUS_14;
             int err = CTRE.Native.CAN.Receive(statusID | _baseArbId, ref _cache, ref _len);
@@ -640,9 +1141,28 @@ namespace CTRE.Phoenix.LowLevel
             derivError = param;
             return SetLastError(err);
         }
-        public void SelectProfileSlot(int slotIdx)
+        public ErrorCode SelectProfileSlot(int slotIdx, int pidIdx)
         {
-            SetClrSmallVal(slotIdx, 4, 8, 0, CONTROL_3);
+            ErrorCode retval = ErrorCode.OK;
+            /* sterilize inputs */
+            if (slotIdx > 3) { slotIdx = 3; }
+            else if (slotIdx < 0) { slotIdx = 0; }
+
+            if (pidIdx == 0)
+            {
+                SetClrSmallVal(slotIdx, 2, 8, 0, CONTROL_3);
+            }
+            else if (pidIdx == 1)
+            {
+                SetClrSmallVal(slotIdx, 2, 8, 2, CONTROL_3);
+            }
+            else
+            {
+                /* no return code so nothing to pass to caller */
+                retval = ErrorCode.InvalidParamValue;
+            }
+            
+            return SetLastError(retval);
         }
         //------ Motion Profile Settings used in Motion Magic and Motion Profile ----------//
 
@@ -655,6 +1175,109 @@ namespace CTRE.Phoenix.LowLevel
             return ConfigSetParameter(ParamEnum.eMotMag_Accel, sensorUnitsPer100msPerSec, 0, 0, timeoutMs);
         }
 
+        public ErrorCode GetClosedLoopTarget(out int value, int pidIdx)
+        {
+            /* clear output */
+            value = 0;
+
+            if (pidIdx == 0)
+            {
+                /* look at applied mode to see if call is valid */
+                switch (_appliedMode)
+                {
+                    case ControlMode.Current:
+                    case ControlMode.MotionMagic:
+                    //case ControlMode.MotionMagicArc:
+                    case ControlMode.Position:
+                    case ControlMode.Velocity:
+                        /* update the variable */
+                        value = _setPoint;
+                        return ErrorCode.OK;
+                    case ControlMode.Disabled:
+                    case ControlMode.Follower:
+                    case ControlMode.PercentOutput:
+                        /* set point is not saved, use a different call */
+                        return SetLastError(ErrorCode.ControlModeNotValid);
+                    case ControlMode.MotionProfile:
+                    case ControlMode.MotionProfileArc:
+                        /* get the target of the current point */
+                        return GetActiveTrajectoryPosition(out value);
+                    default:
+                        return SetLastError(ErrorCode.InvalidParamValue);
+                }
+            }
+            if (pidIdx == 1)
+            {
+                return SetLastError(ErrorCode.NotImplemented);
+            }
+            return SetLastError(ErrorCode.InvalidParamValue);
+        }
+
+        public ErrorCode GetActiveTrajectoryVelocity(
+        out int sensorUnitsPer100ms)
+        {
+            int err = CTRE.Native.CAN.Receive(STATUS_10 | _baseArbId, ref _cache, ref _len);
+            byte H = (byte)(_cache);
+            byte L = (byte)(_cache >> 0x08);
+            int veldiv4 = (int)((_cache >> (0x38 + 3)) & 1);
+            int param;
+            param = 0;
+            param |= H;
+            param <<= 8;
+            param |= L;
+            param <<= (32 - 16); /* sign extend */
+            param >>= (32 - 16); /* sign extend */
+
+            sensorUnitsPer100ms = param;
+            if (veldiv4 == 1)
+                sensorUnitsPer100ms *= 4;
+            return SetLastError(err);
+        }
+
+        public ErrorCode GetActiveTrajectoryPosition(
+        out int sensorUnits)
+        {
+            int err = CTRE.Native.CAN.Receive(STATUS_10 | _baseArbId, ref _cache, ref _len);
+            byte H = (byte)(_cache >> 0x10);
+            byte M = (byte)(_cache >> 0x18);
+            byte L = (byte)(_cache >> 0x20);
+            int posdiv8 = (int)((_cache >> (0x38 + 2)) & 1);
+            int param;
+            param = 0;
+            param |= H;
+            param <<= 8;
+            param |= M;
+            param <<= 8;
+            param |= L;
+            param <<= (32 - 24); /* sign extend */
+            param >>= (32 - 24); /* sign extend */
+            sensorUnits = param;
+            if (posdiv8 == 1)
+                sensorUnits *= 8;
+            return SetLastError(err);
+        }
+
+        public ErrorCode GetActiveTrajectoryHeading(
+        out double turnUnits)
+        {
+            int err = CTRE.Native.CAN.Receive(STATUS_10 | _baseArbId, ref _cache, ref _len);
+            byte H = (byte)(_cache >> 0x28);
+            byte M = (byte)(_cache >> 0x30);
+            byte L = (byte)((_cache >> (0x38 + 4)) & 0xF);
+
+            int param;
+            param = 0;
+            param |= H;
+            param <<= 8;
+            param |= M;
+            param <<= 4;
+            param |= L;
+            param <<= (32 - 20); /* sign extend */
+            param >>= (32 - 20); /* sign extend */
+            turnUnits = param;
+            return SetLastError(err);
+        }
+
         //------ Motion Profile Buffer ----------//
         /* implemented in child class */
 
@@ -663,59 +1286,46 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetFaults(Faults toFill)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_01 | _baseArbId, ref _cache, ref _len);
-            toFill.OverTemp = (((_cache >> 52) & 1) == 1);
-            toFill.UnderVoltage = (((_cache >> 51) & 1) == 1);
-            toFill.ForwardLimitSwitch = (((_cache >> 50) & 1) == 1);
-            toFill.ReverseLimitSwitch = (((_cache >> 49) & 1) == 1);
-            toFill.HardwareFailure = (((_cache >> 48) & 1) == 1);
-            toFill.ForwardSoftLimit = (((_cache >> 28) & 1) == 1);
-            toFill.ReverseSoftLimit = (((_cache >> 27) & 1) == 1);
-            toFill.MsgOverflow = false;
-            toFill.ResetDuringEn = false;
+            toFill.HardwareFailure =    ((_cache) & 1) == 1;
+            toFill.ReverseLimitSwitch = ((_cache >> 1) & 1) == 1;
+            toFill.ForwardLimitSwitch = ((_cache >> 2) & 1) == 1;
+            toFill.UnderVoltage =       ((_cache >> 3) & 1) == 1;
+            toFill.ResetDuringEn =      ((_cache >> 4) & 1) == 1;
+            toFill.SensorOutOfPhase =   ((_cache >> 5) & 1) == 1;
+            toFill.SensorOverflow =     ((_cache >> 6) & 1) == 1;
+            toFill.ReverseSoftLimit = ((_cache >> (0x18)) & 1) == 1;
+            toFill.ForwardSoftLimit = ((_cache >> (0x18 + 1)) & 1) == 1;
+            toFill.HardwareESDReset = ((_cache >> (0x18 + 2)) & 1) == 1;
+            toFill.RemoteLossOfSignal = ((_cache >> (0x30 + 4)) & 1) == 1;
             return SetLastError(retval);
         }
         public ErrorCode GetStickyFaults(Faults toFill)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_02 | _baseArbId, ref _cache, ref _len);
-            toFill.OverTemp = (((_cache >> 53) & 1) == 1);
-            toFill.UnderVoltage = (((_cache >> 52) & 1) == 1);
-            toFill.ForwardLimitSwitch = (((_cache >> 51) & 1) == 1);
-            toFill.ReverseLimitSwitch = (((_cache >> 50) & 1) == 1);
-            toFill.HardwareFailure = false;
-            toFill.ForwardSoftLimit = (((_cache >> 49) & 1) == 1);
-            toFill.ReverseSoftLimit = (((_cache >> 48) & 1) == 1);
-            toFill.MsgOverflow = false;
-            toFill.ResetDuringEn = false;
+            toFill.RemoteLossOfSignal = ((_cache >> (0x38 + 0)) & 1) == 1;
+            toFill.HardwareESDReset =   ((_cache >> (0x38 + 1)) & 1) == 1;
+            toFill.ResetDuringEn =      ((_cache >> (0x38 + 2)) & 1) == 1;
+            toFill.SensorOutOfPhase =   ((_cache >> (0x38 + 5)) & 1) == 1;
+            toFill.SensorOverflow =     ((_cache >> (0x38 + 6)) & 1) == 1;
+            toFill.ReverseSoftLimit =   ((_cache >> (0x30 + 0)) & 1) == 1;
+            toFill.ForwardSoftLimit =   ((_cache >> (0x30 + 1)) & 1) == 1;
+            toFill.ReverseLimitSwitch = ((_cache >> (0x30 + 2)) & 1) == 1;
+            toFill.ForwardLimitSwitch = ((_cache >> (0x30 + 3)) & 1) == 1;
+            toFill.UnderVoltage =       ((_cache >> (0x30 + 4)) & 1) == 1;
             return SetLastError(retval);
         }
         public ErrorCode ClearStickyFaults(int timeoutMs = 0)
         {
-            return ConfigSetParameter(ParamEnum.StickyFaults, 0, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eStickyFaults, 0, 0, 0, timeoutMs);
         }
-
-        //------ Custom Persistent Params ----------//
-        public ErrorCode ConfigSetCustomParam(int value, int paramIndex, int timeoutMs)
-        {
-            return ConfigSetParameter(ParamEnum.CustomParam, value, 0, paramIndex, timeoutMs);
-        }
-        public ErrorCode ConfigGetCustomParam(out int value, int paramIndex, int timeoutMs)
-        {
-            return ConfigGetParameter(ParamEnum.CustomParam, out value, paramIndex, timeoutMs);
-        }
-
-        //------ Generic Param API, typically not used ----------//
-        //public ErrorCode ConfigSetParameter(ParamEnum param, float value, byte subValue = 0, int ordinal = 0, int timeoutMs = 0)
-        //{
-        //    return base.ConfigSetParameter(param, value, 0, 0, timeoutMs);
-        //}
 
         //------ Motor Controller Sensor Collection API ---------//
         public ErrorCode GetAnalogInWithOv(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_04 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 0);
-            byte M = (byte)(_cache >> 8);
-            byte L = (byte)(_cache >> 16);
+            byte H = (byte)(_cache >> 0x10);
+            byte M = (byte)(_cache >> 0x18);
+            byte L = (byte)(_cache >> 0x20);
             Int32 raw = 0;
             raw |= H;
             raw <<= 8;
@@ -730,8 +1340,8 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetAnalogInVel(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_04 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 24);
-            byte L = (byte)(_cache >> 32);
+            byte H = (byte)((_cache >> 0x18) & 3);
+            byte L = (byte)(_cache >> 0x20);
             Int32 raw = 0;
             raw |= H;
             raw <<= 8;
@@ -742,12 +1352,7 @@ namespace CTRE.Phoenix.LowLevel
             return SetLastError(retval);
         }
 
-        /**
-         * Get the position of whatever is in the analog pin of the Talon, regardless of
-         * whether it is actually being used for feedback.
-         *
-         * @returns The value (0 - 1023) on the analog pin of the Talon.
-         */
+        
         public ErrorCode GetQuadraturePosition(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_03 | _baseArbId, ref _cache, ref _len);
@@ -766,12 +1371,7 @@ namespace CTRE.Phoenix.LowLevel
             return SetLastError(retval);
         }
 
-        /**
-         * Get the position of whatever is in the analog pin of the Talon, regardless of
-         * whether it is actually being used for feedback.
-         *
-         * @returns The value (0 - 1023) on the analog pin of the Talon.
-         */
+        
         public ErrorCode GetQuadratureVelocity(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_03 | _baseArbId, ref _cache, ref _len);
@@ -806,11 +1406,14 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetPulseWidthVelocity(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_08 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 48);
-            byte L = (byte)(_cache >> 56);
+            byte H = (byte)((_cache >> 0x28) & 0x1F);
+            byte M = (byte)(_cache >> 0x30);
+            byte L = (byte)((_cache >> (0x38 + 5)) & 0x3);
             Int32 raw = 0;
             raw |= H;
             raw <<= 8;
+            raw |= M;
+            raw <<= 3;
             raw |= L;
             raw <<= (32 - 16); /* sign extend */
             raw >>= (32 - 16); /* sign extend */
@@ -840,14 +1443,17 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode GetPulseWidthRiseToRiseUs(out int param)
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_08 | _baseArbId, ref _cache, ref _len);
-            byte H = (byte)(_cache >> 32);
-            byte L = (byte)(_cache >> 40);
+            byte H = (byte)(_cache >> 0x18);
+            byte M = (byte)(_cache >> 0x20);
+            byte L = (byte)((_cache >> (0x28 + 5)) & 0x3);
             Int32 raw = 0;
             raw |= H;
             raw <<= 8;
+            raw |= M;
+            raw <<= 3;
             raw |= L;
-            raw <<= (32 - 16); /* sign extend */
-            raw >>= (32 - 16); /* sign extend */
+            raw <<= (32 - 19); /* sign extend */
+            raw >>= (32 - 19); /* sign extend */
             param = (int)raw;
             return SetLastError(retval);
         }
@@ -884,7 +1490,10 @@ namespace CTRE.Phoenix.LowLevel
          */
         public ErrorCode IsFwdLimitSwitchClosed(out int param)
         {
-            throw new NotImplementedException();
+            int retval = CTRE.Native.CAN.Receive(STATUS_01 | _baseArbId, ref _cache, ref _len);
+            byte L = (byte)((_cache >> (0x18 + 7)) & 1);
+            param = L == 0 ? 1 : 0;
+            return SetLastError(retval);
         }
         /**
          * @return '1' iff reverse limit switch is closed, 0 iff switch is open.
@@ -892,7 +1501,26 @@ namespace CTRE.Phoenix.LowLevel
          */
         public ErrorCode IsRevLimitSwitchClosed(out int param)
         {
-            throw new NotImplementedException();
+            int retval = CTRE.Native.CAN.Receive(STATUS_01 | _baseArbId, ref _cache, ref _len);
+            byte L = (byte)((_cache >> (0x18 + 6)) & 1);
+            param = L == 0 ? 1 : 0;
+            return SetLastError(retval);
+        }
+
+        ErrorCode SetAnalogPosition(int newPosition,
+        int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eAnalogPosition, newPosition, 0, 0, timeoutMs);
+        }
+        ErrorCode SetQuadraturePosition(int newPosition,
+                int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eQuadraturePosition, newPosition, 0, 0, timeoutMs);
+        }
+        ErrorCode SetPulseWidthPosition(int newPosition,
+                int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.ePulseWidthPosition, newPosition, 0, 0, timeoutMs);
         }
 
 
@@ -941,16 +1569,6 @@ namespace CTRE.Phoenix.LowLevel
             CTRE.Native.CAN.Send(baseId | _baseArbId, _cache, 8, 0xFFFFFFFF);
         }
 
-        //------ Misc ----------//
-        void CheckFirm(int minFirm, string message)
-        {
-            /* get the firm vers */
-            int vers = GetFirmwareVersion();
-            /* if its not available skip test */
-            if (vers < 0) { return; }
-            /* tell user if its too old */
-            if (vers < minFirm) { Reporting.ConsolePrint(message); }
-        }
         //-------------------------------- Device_LowLevel requirements -----------------------//
         protected override void EnableFirmStatusFrame(bool enable)
         {
@@ -958,18 +1576,28 @@ namespace CTRE.Phoenix.LowLevel
         }
         protected override ErrorCode SetLastError(ErrorCode errorCode)
         {
-            _lastError = errorCode;
+            _lastError.SetLastError(errorCode);
             return _lastError;
         }
         public ErrorCode GetLastError()
         {
-            return _lastError;
+            return _lastError.GetLastError();
         }
 
         protected ErrorCode SetLastError(int errorCode)
         {
-            _lastError = (ErrorCode)errorCode;
+            _lastError.SetLastError((ErrorCode)errorCode);
             return _lastError;
+        }
+
+        //------ Custom Persistent Params ----------//
+        public new ErrorCode ConfigSetCustomParam(int newValue, int paramIndex, int timeoutMs = 0)
+        {
+            return base.ConfigSetCustomParam(newValue, paramIndex, timeoutMs);
+        }
+        public new ErrorCode ConfigGetCustomParam(out int readValue, int paramIndex, int timeoutMs = Constants.GetParamTimeoutMs)
+        {
+            return base.ConfigGetCustomParam(out readValue, paramIndex, timeoutMs);
         }
     }
 }

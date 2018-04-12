@@ -22,7 +22,7 @@ namespace CTRE.Phoenix.Mechanical
             _rotationsPerUnit = 1f / _unitsPerRevolution;
             _remoteFeedbackDevice = remoteFeedbackDevice;
 
-            _motor.ConfigSelectedFeedbackSensor(_remoteFeedbackDevice);
+            _motor.ConfigSelectedFeedbackSensor(_remoteFeedbackDevice, 0);
         }
 
         public RemoteSensoredGearbox(float unitsPerRevolution, IMotorController master, IFollower[] followers, RemoteFeedbackDevice remoteFeedbackDevice) : base(master, followers)
@@ -31,7 +31,7 @@ namespace CTRE.Phoenix.Mechanical
             _rotationsPerUnit = 1f / _unitsPerRevolution;
             _remoteFeedbackDevice = remoteFeedbackDevice;
 
-            _motor.ConfigSelectedFeedbackSensor(_remoteFeedbackDevice);
+            _motor.ConfigSelectedFeedbackSensor(_remoteFeedbackDevice, 0);
         }
 
         public RemoteSensoredGearbox(float unitsPerRevolution, IMotorController mc0, IFollower mc1, RemoteFeedbackDevice remoteFeedbackDevice) : this(unitsPerRevolution, mc0, new IFollower[] { mc1 }, remoteFeedbackDevice) { }
@@ -43,7 +43,7 @@ namespace CTRE.Phoenix.Mechanical
         {
             _unitsPerRevolution = unitsPerRevolution;
             _rotationsPerUnit = 1f / _unitsPerRevolution;
-            _remoteFeedbackDevice = null;
+            _remoteFeedbackDevice = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
 
             /* child class takes care of sensor */
         }
@@ -51,7 +51,7 @@ namespace CTRE.Phoenix.Mechanical
         {
             _unitsPerRevolution = unitsPerRevolution;
             _rotationsPerUnit = 1f / _unitsPerRevolution;
-            _remoteFeedbackDevice = null;
+            _remoteFeedbackDevice = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
 
             /* child class takes care of sensor */
         }
@@ -77,15 +77,16 @@ namespace CTRE.Phoenix.Mechanical
         //------- sensor status --------- //
         public virtual ErrorCode SetPosition(float sensorPos, int timeoutMs = 0)
         {
-            return _remoteFeedbackDevice.SetPosition(_unitsPerRevolution * sensorPos, timeoutMs);
+            //return _remoteFeedbackDevice.SetPosition(_unitsPerRevolution * sensorPos, timeoutMs);
+            return ErrorCode.NotImplemented;
         }
         public virtual float GetPosition()
         {
-            return _motor.GetSelectedSensorPosition() * _rotationsPerUnit;
+            return _motor.GetSelectedSensorPosition(0) * _rotationsPerUnit;
         }
         public virtual float GetVelocity()
         {
-            return _motor.GetSelectedSensorVelocity() * _rotationsPerUnit * 600f;
+            return _motor.GetSelectedSensorVelocity(0) * _rotationsPerUnit * 600f;
         }
 
         //----- velocity signal conditionaing ------//

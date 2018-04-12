@@ -135,7 +135,7 @@ namespace CTRE.Phoenix.Drive
             foreach (var gb in _gearBoxes)
             {
                 /*for this gearbox */
-                var errorCode = gb.ConfigClosedLoopNeutralDeadband(percentDeadband, timeoutMs);
+                var errorCode = gb.ConfigNeutralDeadband(percentDeadband, timeoutMs);
                 /* save the error for this GB */
                 _lastError.Push(errorCode);
             }
@@ -151,7 +151,7 @@ namespace CTRE.Phoenix.Drive
             foreach (var gb in _gearBoxes)
             {
                 /*for this gearbox */
-                var errorCode = gb.ConfigClosedLoopNeutralDeadband(percentDeadband, timeoutMs);
+                var errorCode = gb.ConfigNeutralDeadband(percentDeadband, timeoutMs);
                 /* save the error for this GB */
                 _lastError.Push(errorCode);
             }

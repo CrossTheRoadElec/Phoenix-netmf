@@ -17,13 +17,13 @@ namespace CTRE.Phoenix.Mechanical
         public SensoredGearbox(float unitsPerRevolution, IMotorControllerEnhanced master, FeedbackDevice feedbackDevice) : base(unitsPerRevolution, master)
         {
             _master = master;
-            _master.ConfigSelectedFeedbackSensor(feedbackDevice);
+            _master.ConfigSelectedFeedbackSensor(feedbackDevice, 0);
         }
 
         public SensoredGearbox(float unitsPerRevolution, IMotorControllerEnhanced master, IFollower[] followers, FeedbackDevice feedbackDevice) : base(unitsPerRevolution, master, followers)
         {
             _master = master;
-            _master.ConfigSelectedFeedbackSensor(feedbackDevice);
+            _master.ConfigSelectedFeedbackSensor(feedbackDevice, 0);
         }
 
         public SensoredGearbox(float unitsPerRevolution, IMotorControllerEnhanced master, RemoteFeedbackDevice remoteFeedbackDevice) : base(unitsPerRevolution, master, remoteFeedbackDevice)
@@ -82,10 +82,10 @@ namespace CTRE.Phoenix.Mechanical
 
         //------- sensor status --------- //
         /* done in parent except SetPosition is unique for local sensors */
-        public override ErrorCode SetPosition(float sensorPos, int timeoutMs = 0)
-        {
-            return _master.SetSelectedSensorPosition((int)(_unitsPerRevolution * sensorPos), timeoutMs);
-        }
+        //public override ErrorCode SetPosition(float sensorPos, int timeoutMs = 0)
+        //{
+        //    return _master.SetSelectedSensorPosition((int)(_unitsPerRevolution * sensorPos), timeoutMs);
+        //}
 
         //----- velocity signal conditionaing ------//
         ErrorCode ConfigVelocityMeasurementPeriod(VelocityMeasPeriod period, int timeoutMs = 0)

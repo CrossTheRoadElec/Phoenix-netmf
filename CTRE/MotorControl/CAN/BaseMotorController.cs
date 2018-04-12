@@ -8,17 +8,15 @@ namespace CTRE.Phoenix.MotorControl.CAN
 {
     public abstract class BaseMotorController : IMotorController
     {
-        ErrorCodeVar _lastError;
-        SensorCollection _sensColl;
+        SensorCollection _sensorColl;
         protected MotControllerWithBuffer_LowLevel _ll;
+        private int[] _motionProfStats = new int[11];
 
-        ControlMode m_controlMode = ControlMode.PercentOutput;
-        ControlMode m_sendMode;
+        private ControlMode m_controlMode = ControlMode.PercentOutput;
+        private ControlMode m_sendMode = ControlMode.PercentOutput;
 
         int _arbId;
-        float m_setPoint = 0;
-        bool _invert;
-        int m_profile = 0;
+        bool _invert = false;
 
         // FeedbackDevice m_feedbackDevice = FeedbackDevice.QuadEncoder;
 
@@ -34,74 +32,111 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             _arbId = arbId;
             _ll = new MotControllerWithBuffer_LowLevel(arbId, externalEnable);
-            _sensColl = new SensorCollection(_ll);
+            _sensorColl = new SensorCollection(_ll);
         }
         //------ Set output routines. ----------//
+        // ------ Set output routines. ----------//
         /**
-        * Sets the appropriate output on the talon, depending on the mode.
-        *
-        * In PercentOutput, the output is between -1.0 and 1.0, with 0.0 as stopped.
-        * In Voltage mode, output value is in volts.
-        * In Current mode, output value is in amperes.
-        * In Speed mode, output value is in position change / 100ms.
-        * In Position mode, output value is in encoder ticks or an analog value,
-        *   depending on the sensor.
-        * In Follower mode, the output value is the integer device ID of the talon to
-        * duplicate.
-        *
-        * @param outputValue The setpoint value, as described above.
-        * @see SelectProfileSlot to choose between the two sets of gains.
-        */
-        public void Set(ControlMode Mode, float value)
+         * Sets the appropriate output on the talon, depending on the mode.
+         * @param mode The output mode to apply.
+         * In PercentOutput, the output is between -1.0 and 1.0, with 0.0 as stopped.
+         * In Current mode, output value is in amperes.
+         * In Velocity mode, output value is in position change / 100ms.
+         * In Position mode, output value is in encoder ticks or an analog value,
+         *   depending on the sensor.
+         * In Follower mode, the output value is the integer device ID of the talon to
+         * duplicate.
+         *
+         * @param outputValue The setpoint value, as described above.
+         *
+         *
+         *	Standard Driving Example:
+         *	_talonLeft.set(ControlMode.PercentOutput, leftJoy);
+         *	_talonRght.set(ControlMode.PercentOutput, rghtJoy);
+         */
+        public void Set(ControlMode mode, double outputValue)
         {
-            Set(Mode, value, 0);
+            Set(mode, outputValue, DemandType.Neutral, 0);
         }
-        public void Set(ControlMode mode, float demand0, float demand1)
+
+        /**
+	 * @param mode Sets the appropriate output on the talon, depending on the mode.
+	 * @param demand0 The output value to apply.
+	 * 	such as advanced feed forward and/or auxiliary close-looping in firmware.
+	 * In PercentOutput, the output is between -1.0 and 1.0, with 0.0 as stopped.
+	 * In Current mode, output value is in amperes.
+	 * In Velocity mode, output value is in position change / 100ms.
+	 * In Position mode, output value is in encoder ticks or an analog value,
+	 *   depending on the sensor. See
+	 * In Follower mode, the output value is the integer device ID of the talon to
+	 * duplicate.
+	 *
+	 * @param demand1Type The demand type for demand1.
+	 * Neutral: Ignore demand1 and apply no change to the demand0 output.
+	 * AuxPID: Use demand1 to set the target for the auxiliary PID 1.
+	 * ArbitraryFeedForward: Use demand1 as an arbitrary additive value to the
+	 *	 demand0 output.  In PercentOutput the demand0 output is the motor output,
+	 *   and in closed-loop modes the demand0 output is the output of PID0.
+	 * @param demand1 Supplmental output value.  Units match the set mode.
+	 *
+	 *
+	 *  Arcade Drive Example:
+	 *		_talonLeft.set(ControlMode.PercentOutput, joyForward, DemandType.ArbitraryFeedForward, +joyTurn);
+	 *		_talonRght.set(ControlMode.PercentOutput, joyForward, DemandType.ArbitraryFeedForward, -joyTurn);
+	 *
+	 *	Drive Straight Example:
+	 *	Note: Selected Sensor Configuration is necessary for both PID0 and PID1.
+	 *		_talonLeft.follow(_talonRght, FollwerType.AuxOutput1);
+	 *		_talonRght.set(ControlMode.PercentOutput, joyForward, DemandType.AuxPID, desiredRobotHeading);
+	 *
+	 *	Drive Straight to a Distance Example:
+	 *	Note: Other configurations (sensor selection, PID gains, etc.) need to be set.
+	 *		_talonLeft.follow(_talonRght, FollwerType.AuxOutput1);
+	 *		_talonRght.set(ControlMode.MotionMagic, targetDistance, DemandType.AuxPID, desiredRobotHeading);
+	 */
+        public void Set(ControlMode mode, double demand0, DemandType demand1Type, double demand1)
         {
             m_controlMode = mode;
             m_sendMode = mode;
-            m_setPoint = demand0;
-
-            int status = 0;
+            int work;
 
             switch (m_controlMode)
             {
                 case ControlMode.PercentOutput:
-                case ControlMode.TimedPercentOutput:
-                    _ll.SetDemand(m_sendMode, (int)(1023 * demand0), 0);
+                    // case TimedPercentOutput:
+                    _ll.Set(m_sendMode, demand0, demand1, (int)demand1Type);
                     break;
+                case ControlMode.Follower:
+                    /* did caller specify device ID */
+                    if ((0 <= demand0) && (demand0 <= 62))
+                    { // [0,62]
+                        work = GetBaseID();
+                        work >>= 16;
+                        work <<= 8;
+                        work |= ((int)demand0) & 0xFF;
+                    }
+                    else
+                    {
+                        work = (int)demand0;
+                    }
+                    /* single precision guarantees 16bits of integral precision,
+                   * so float/double cast on work is safe */
+                    _ll.Set(m_sendMode, (double)work, demand1, (int)demand1Type);
+                    break;
+                case ControlMode.Velocity:
+                case ControlMode.Position:
+                case ControlMode.MotionMagic:
+                case ControlMode.MotionProfile:
+                case ControlMode.MotionProfileArc:
+                    _ll.Set(m_sendMode, demand0, demand1, (int)demand1Type);
+                    break;
+                case ControlMode.Disabled:
+                /* fall thru... */
                 default:
                     _ll.SetDemand(m_sendMode, 0, 0);
                     break;
-
             }
-            //
-            //switch (m_controlMode)
-            //{
-            //    case ControlMode.PercentOutput:
-            //        status = _cci.SetDemand((int)m_sendMode, (int)demand0);
-            //        break;
-            //    case ControlMode.Follower:
-            //        status = _cci.SetDemand((int)demand0, (int)m_sendMode);
-            //        break;
-            //    case ControlMode.Velocity:
-            //        /* if the caller has provided scaling info, apply it */
-            //        status = _cci.SetDemand((int)demand0, (int)m_sendMode);
-            //        break;
-            //    case ControlMode.Position:
-            //        status = _cci.SetDemand((int)demand0, (int)m_sendMode);
-            //        break;
-            //    case ControlMode.MotionProfile:
-            //        status = _cci.SetDemand((int)demand0, (int)m_sendMode);
-            //        break;
-            //    case ControlMode.MotionMagic:
-            //        status = _cci.SetDemand((int)demand0, (int)m_sendMode);
-            //        break;
-            //    default:
-            //        Debug.Print("The CTRE MotorController does not support this control mode.");
-            //        break;
-            //}
-            SetLastError(status);
+
         }
         public void NeutralOutput()
         {
@@ -125,6 +160,11 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public bool GetInverted()
         {
             return _invert;
+        }
+
+        public int GetDeviceID()
+        {
+            return (int)_ll.GetDeviceNumber();
         }
 
         //----- general output shaping ------------------//
@@ -152,13 +192,9 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             return _ll.ConfigNominalOutputReverse(percentOut, timeoutMs);
         }
-        public ErrorCode ConfigOpenLoopNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0)
+        public ErrorCode ConfigNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0)
         {
-            return _ll.ConfigOpenLoopNeutralDeadband(percentDeadband, timeoutMs);
-        }
-        public ErrorCode ConfigClosedLoopNeutralDeadband(float percentDeadband = 0, int timeoutMs = 0)
-        {
-            return _ll.ConfigClosedLoopNeutralDeadband(percentDeadband, timeoutMs);
+            return _ll.ConfigNeutralDeadband(percentDeadband, timeoutMs);
         }
 
         //------ Voltage Compensation ----------//
@@ -204,39 +240,80 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
         //------ sensor selection ----------//
-        public ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int timeoutMs = 0)
+        public ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0)
         {
-            /* we may break this into two APIs */
-            ErrorCode e1 = _ll.ConfigRemoteFeedbackFilter(feedbackDevice._arbId, feedbackDevice._peripheralIndex, feedbackDevice._reserved, timeoutMs);
-
-            ErrorCode e2 = _ll.ConfigSelectedFeedbackSensor(FeedbackDevice.RemoteSensor, timeoutMs);
-
-            if (e1 == ErrorCode.OK) { return e2; }
-            return e1;
+            return _ll.ConfigSelectedFeedbackSensor((FeedbackDevice)feedbackDevice, pidIdx, timeoutMs);
         }
-        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int timeoutMs = 0)
+        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0)
         {
-            return _ll.ConfigSelectedFeedbackSensor(feedbackDevice, timeoutMs);
+            return _ll.ConfigSelectedFeedbackSensor(feedbackDevice, pidIdx, timeoutMs);
         }
 
+        public ErrorCode configSelectedFeedbackCoefficient(float coefficient, int pidIdx, int timeoutMs)
+        {
+            return _ll.ConfigSelectedFeedbackCoefficient(coefficient, pidIdx, timeoutMs);
+        }
+
+        /**
+	 * Select what remote device and signal to assign to Remote Sensor 0 or Remote Sensor 1.
+	 * After binding a remote device and signal to Remote Sensor X, you may select Remote Sensor X
+	 * as a PID source for closed-loop features.
+	 *
+	 * @param deviceID
+ 	 *            The CAN ID of the remote sensor device.
+	 * @param remoteSensorSource
+	 *            The remote sensor device and signal type to bind.
+	 * @param remoteOrdinal
+	 *            0 for configuring Remote Sensor 0
+	 *            1 for configuring Remote Sensor 1
+	 * @param timeoutMs
+	 *            Timeout value in ms. If nonzero, function will wait for
+	 *            config success and report an error if it times out.
+	 *            If zero, no blocking or checking is performed.
+	 * @return Error Code generated by function. 0 indicates no error.
+	 */
+        public ErrorCode configRemoteFeedbackFilter(int deviceID, RemoteSensorSource remoteSensorSource, int remoteOrdinal,
+                int timeoutMs)
+        {
+            return _ll.ConfigRemoteFeedbackFilter(deviceID, remoteSensorSource, remoteOrdinal,
+                    timeoutMs);
+        }
+        /**
+         * Select what sensor term should be bound to switch feedback device.
+         * Sensor Sum = Sensor Sum Term 0 - Sensor Sum Term 1
+         * Sensor Difference = Sensor Diff Term 0 - Sensor Diff Term 1
+         * The four terms are specified with this routine.  Then Sensor Sum/Difference
+         * can be selected for closed-looping.
+         *
+         * @param sensorTerm Which sensor term to bind to a feedback source.
+         * @param feedbackDevice The sensor signal to attach to sensorTerm.
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode configSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs)
+        {
+            return _ll.ConfigSensorTerm(sensorTerm, feedbackDevice, timeoutMs);
+        }
 
         //------- sensor status --------- //
-        public int GetSelectedSensorPosition()
+        public int GetSelectedSensorPosition(int pidIdx)
         {
             int retval;
-            SetLastError(_ll.GetSelectedSensorPosition(out retval));
+            _ll.GetSelectedSensorPosition(out retval, pidIdx);
             return retval;
         }
-        public int GetSelectedSensorVelocity()
+        public int GetSelectedSensorVelocity(int pidIdx)
         {
             int retval;
-            ErrorCode err = _ll.GetSelectedSensorVelocity(out retval);
-            SetLastError(err);
+            _ll.GetSelectedSensorVelocity(out retval, pidIdx);
             return retval;
         }
-        public ErrorCode SetSelectedSensorPosition(int sensorPos, int timeoutMs = 0)
+        public ErrorCode SetSelectedSensorPosition(int sensorPos, int pidIdx, int timeoutMs = 0)
         {
-            return _ll.SetSelectedSensorPosition(sensorPos, timeoutMs);
+            return _ll.SetSelectedSensorPosition(sensorPos, pidIdx, timeoutMs);
         }
 
         //------ status frame period changes ----------//
@@ -284,9 +361,9 @@ namespace CTRE.Phoenix.MotorControl.CAN
             var cciType = LimitSwitchRoutines.Promote(type);
             return _ll.ConfigReverseLimitSwitchSource(cciType, normalOpenOrClose, deviceID, timeoutMs);
         }
-        public void EnableLimitSwitches(bool enable)
+        public void OverrideLimitSwitchesEnable(bool enable)
         {
-            _ll.EnableLimitSwitches(enable);
+            _ll.OverrideLimitSwitchesEnable(enable);
         }
 
         //------ local limit switch ----------//
@@ -301,19 +378,29 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
 
         //------ soft limit ----------//
-        public ErrorCode ConfigForwardSoftLimit(int forwardSensorLimit, int timeoutMs = 0)
+        public ErrorCode ConfigForwardSoftLimitThreshold(int forwardSensorLimit, int timeoutMs = 0)
         {
             return _ll.ConfigForwardSoftLimit(forwardSensorLimit, timeoutMs);
         }
 
-        public ErrorCode ConfigReverseSoftLimit(int reverseSensorLimit, int timeoutMs = 0)
+        public ErrorCode ConfigReverseSoftLimitThreshold(int reverseSensorLimit, int timeoutMs = 0)
         {
             return _ll.ConfigReverseSoftLimit(reverseSensorLimit, timeoutMs);
         }
 
-        public void EnableSoftLimits(bool enable)
+        public void ConfigForwardSoftLimitEnable(bool enable, int timeoutMs = 0)
         {
-            _ll.EnableSoftLimits(enable);
+            _ll.ConfigForwardSoftLimitEnable(enable, timeoutMs);
+        }
+
+        public void ConfigReverseSoftLimitEnable(bool enable, int timeoutMs = 0)
+        {
+            _ll.ConfigReverseSoftLimitEnable(enable, timeoutMs);
+        }
+
+        public void OverrideSoftLimitsEnable(bool enable)
+        {
+            _ll.OverrideSoftLimitsEnable(enable);
         }
 
         //------ Current Lim ----------//
@@ -349,41 +436,164 @@ namespace CTRE.Phoenix.MotorControl.CAN
             return _ll.ConfigMaxIntegralAccumulator(slotIdx, iaccum, timeoutMs);
         }
 
+        /**
+	     * Sets the peak closed-loop output.  This peak output is slot-specific and
+	     *   is applied to the output of the associated PID loop.
+	     * This setting is seperate from the generic Peak Output setting.
+	     *
+	     * @param slotIdx
+	     *            Parameter slot for the constant.
+	     * @param percentOut
+	     *            Peak Percent Output from 0 to 1.  This value is absolute and
+	     *						the magnitude will apply in both forward and reverse directions.
+	     * @param timeoutMs
+	     *            Timeout value in ms. If nonzero, function will wait for
+	     *            config success and report an error if it times out.
+	     *            If zero, no blocking or checking is performed.
+	     * @return Error Code generated by function. 0 indicates no error.
+	     */
+        public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs)
+        {
+            return _ll.ConfigClosedLoopPeakOutput(slotIdx, percentOut, timeoutMs);
+        }
+
+        /**
+	     * Sets the loop time (in milliseconds) of the PID closed-loop calculations.
+	     * Default value is 1 ms.
+	     *
+	     * @param slotIdx
+	     *            Parameter slot for the constant.
+	     * @param loopTimeMs
+	     *            Loop timing of the closed-loop calculations.  Minimum value of
+	     *						1 ms, maximum of 64 ms.
+	     * @param timeoutMs
+	     *            Timeout value in ms. If nonzero, function will wait for
+	     *            config success and report an error if it times out.
+	     *            If zero, no blocking or checking is performed.
+	     * @return Error Code generated by function. 0 indicates no error.
+	     */
+        public ErrorCode configClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs)
+        {
+            return _ll.ConfigClosedLoopPeriod(slotIdx, loopTimeMs, timeoutMs);
+        }
+
+        /**
+	     * Configures the Polarity of the Auxiliary PID (PID1).
+	     *
+	     * Standard Polarity:
+	     *    Primary Output = PID0 + PID1
+	     *    Auxiliary Output = PID0 - PID1
+	     *
+	     * Inverted Polarity:
+	     *    Primary Output = PID0 - PID1
+	     *    Auxiliary Output = PID0 + PID1
+	     *
+	     * @param invert
+	     *            If true, use inverted PID1 output polarity.
+	     * @param timeoutMs
+	     *            Timeout value in ms. If nonzero, function will wait for config
+	     *            success and report an error if it times out. If zero, no
+	     *            blocking or checking is performed.
+	     * @return Error Code
+	     */
+        public ErrorCode configAuxPIDPolarity(bool invert, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.ePIDLoopPolarity, invert ? 1 : 0, 0, 1, timeoutMs);
+        }
+
         public ErrorCode SetIntegralAccumulator(float iaccum = 0, int timeoutMs = 0)
         {
             return _ll.SetIntegralAccumulator(iaccum, timeoutMs);
         }
 
-        public ErrorCode GetClosedLoopError(out int closedLoopError)
+        public int GetClosedLoopError(int pidIdx)
         {
-            return SetLastError(_ll.GetClosedLoopError(out closedLoopError));
+            int closedLoopError;
+            _ll.GetClosedLoopError(out closedLoopError, pidIdx);
+            return closedLoopError;
         }
-        public ErrorCode GetIntegralAccumulator(out float iaccum)
+        public float GetIntegralAccumulator(int pidIdx)
         {
-            return _ll.GetIntegralAccumulator(out iaccum);
+            float iaccum;
+            _ll.GetIntegralAccumulator(out iaccum, pidIdx);
+            return iaccum;
         }
-        public ErrorCode GetErrorDerivative(out float derror)
+        public float GetErrorDerivative(int pidIdx)
         {
-            return SetLastError(_ll.GetErrorDerivative(out derror));
+            float derror;
+            _ll.GetErrorDerivative(out derror, pidIdx);
+            return derror;
         }
         /**
          * SRX has two available slots for PID.
          * @param slotIdx one or zero depending on which slot caller wants.
          */
-        public void SelectProfileSlot(int slotIdx)
+        public void SelectProfileSlot(int slotIdx, int pidIdx)
         {
-            m_profile = slotIdx; /* only get two slots for now */
-            _ll.SelectProfileSlot(m_profile);
+            _ll.SelectProfileSlot(slotIdx, pidIdx);
+        }
+
+        /**
+	     * Gets the current target of a given closed loop.
+	     *
+	     * @param pidIdx
+	     *            0 for Primary closed-loop. 1 for auxiliary closed-loop.
+	     * @return The closed loop target.
+	     */
+        public int GetClosedLoopTarget(int pidIdx)
+        {
+            int value;
+            _ll.GetClosedLoopTarget(out value, pidIdx);
+            return value;
+        }
+
+        /**
+	     * Gets the active trajectory target position using
+	     * MotionMagic/MotionProfile control modes.
+	     *
+	     * @return The Active Trajectory Position in sensor units.
+	     */
+        public int getActiveTrajectoryPosition()
+        {
+            int sensorUnits;
+            _ll.GetActiveTrajectoryPosition(out sensorUnits);
+            return sensorUnits;
+        }
+
+        /**
+         * Gets the active trajectory target velocity using
+         * MotionMagic/MotionProfile control modes.
+         *
+         * @return The Active Trajectory Velocity in sensor units per 100ms.
+         */
+        public int getActiveTrajectoryVelocity()
+        {
+            int sensorUnitsPer100Ms;
+            _ll.GetActiveTrajectoryVelocity(out sensorUnitsPer100Ms);
+            return sensorUnitsPer100Ms;
+        }
+
+        /**
+         * Gets the active trajectory target heading using
+         * MotionMagicArc/MotionProfileArc control modes.
+         *
+         * @return The Active Trajectory Heading in degreees.
+         */
+        public double getActiveTrajectoryHeading()
+        {
+            double turnUnits;
+            _ll.GetActiveTrajectoryHeading(out turnUnits);
+            return turnUnits;
         }
 
         //------ Motion Profile Settings used in Motion Magic and Motion Profile ----------//
         public ErrorCode ConfigMotionCruiseVelocity(int sensorUnitsPer100ms, int timeoutMs = 0)
         {
-            return ErrorCode.FeatureNotSupported;
+            return _ll.ConfigMotionCruiseVelocity(sensorUnitsPer100ms, timeoutMs);
         }
         public ErrorCode ConfigMotionAcceleration(int sensorUnitsPer100msPerSec, int timeoutMs = 0)
         {
-            return ErrorCode.FeatureNotSupported;
+            return _ll.ConfigMotionAcceleration(sensorUnitsPer100msPerSec, timeoutMs);
         }
 
         //------ Motion Profile Buffer ----------//
@@ -415,33 +625,57 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             _ll.ClearMotionProfileHasUnderrun(timeoutMs);
         }
-
+        /**
+	     * Calling application can opt to speed up the handshaking between the robot
+	     * API and the controller to increase the download rate of the controller's Motion
+	     * Profile. Ideally the period should be no more than half the period of a
+	     * trajectory point.
+	     *
+	     * @param periodMs
+	     *            The transmit period in ms.
+	     * @return Error Code generated by function. 0 indicates no error.
+	     */
+        public ErrorCode ChangeMotionControlFramePeriod(int periodMs)
+        {
+            return _ll.ChangeMotionControlFramePeriod((uint)periodMs);
+        }
+        /**
+	     * When trajectory points are processed in the motion profile executer, the MPE determines
+	     * how long to apply the active trajectory point by summing baseTrajDurationMs with the
+	     * timeDur of the trajectory point (see TrajectoryPoint).
+	     *
+	     * This allows general selection of the execution rate of the points with 1ms resolution,
+	     * while allowing some degree of change from point to point.
+	     * @param baseTrajDurationMs The base duration time of every trajectory point.
+	     * 							This is summed with the trajectory points unique timeDur.
+	     * @param timeoutMs
+	     *            Timeout value in ms. If nonzero, function will wait for
+	     *            config success and report an error if it times out.
+	     *            If zero, no blocking or checking is performed.
+	     * @return Error Code generated by function. 0 indicates no error.
+	     */
+        public ErrorCode ConfigMotionProfileTrajectoryPeriod(int baseTrajDurationMs, int timeoutMs)
+        {
+            return _ll.ConfigMotionProfileTrajectoryPeriod(baseTrajDurationMs, timeoutMs);
+        }
         //------ error ----------//
         public ErrorCode GetLastError()
         {
-            return _lastError.GetLastError();
-        }
-        ErrorCode SetLastError(int error)
-        {
-            return (ErrorCode)_lastError.SetLastError(error);
-        }
-        ErrorCode SetLastError(ErrorCode error)
-        {
-            return (ErrorCode)_lastError.SetLastError(error);
+            return _ll.GetLastError();
         }
 
         //------ Faults ----------//
         public ErrorCode GetFaults(Faults toFill)
         {
-            return ErrorCode.FeatureNotSupported;
+            return _ll.GetFaults(toFill);
         }
         public ErrorCode GetStickyFaults(Faults toFill)
         {
-            return ErrorCode.FeatureNotSupported;
+            return _ll.GetStickyFaults(toFill);
         }
         public ErrorCode ClearStickyFaults()
         {
-            return ErrorCode.FeatureNotSupported;
+            return _ll.ClearStickyFaults();
         }
 
         //------ Firmware ----------//
@@ -474,35 +708,75 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             ErrorCode retval = _ll.ConfigGetParameter(param, out value, ordinal, timeoutMs);
 
-            return SetLastError(retval);
+            return retval;
         }
         //------ Misc. ----------//
         public int GetBaseID()
         {
             return _arbId;
         }
-        // ----- Follower ------//
-        public void Follow(Object masterToFollow)
+        public ControlMode GetControlMode()
         {
-            IMotorController master = (IMotorController)masterToFollow;
-            /* set it up */
-            Set(ControlMode.Follower, master.GetBaseID());
+            return m_controlMode;
+        }
+        // ----- Follower ------//
+        /**
+         * Set the control mode and output value so that this motor controller will
+         * follow another motor controller. Currently supports following Victor SPX
+         * and Talon SRX.
+         *
+         * @param masterToFollow
+         *						Motor Controller object to follow.
+         * @param followerType
+         *						Type of following control.  Use AuxOutput1 to follow the master
+         *						device's auxiliary output 1.
+         *						Use PercentOutput for standard follower mode.
+         */
+        public void Follow(IMotorController masterToFollow, FollowerType followerType)
+        {
+            int id32 = masterToFollow.GetBaseID();
+            int id24 = id32;
+            id24 >>= 16;
+            id24 = (short)id24;
+            id24 <<= 8;
+            id24 |= (id32 & 0xFF);
+            Set(ControlMode.Follower, id24);
+
+            switch (followerType)
+            {
+                case FollowerType.PercentOutput:
+                    Set(ControlMode.Follower, (double)id24);
+                    break;
+                case FollowerType.AuxOutput1:
+                    /* follow the motor controller, but set the aux flag
+                   * to ensure we follow the processed output */
+                    Set(ControlMode.Follower, (double)id24, DemandType.AuxPID, 0);
+                    break;
+                default:
+                    NeutralOutput();
+                    break;
+            }
+        }
+        /**
+         * Set the control mode and output value so that this motor controller will
+         * follow another motor controller. Currently supports following Victor SPX
+         * and Talon SRX.
+         */
+        public void Follow(IMotorController masterToFollow)
+        {
+            Follow(masterToFollow, FollowerType.PercentOutput);
         }
         public void ValueUpdated()
         {
             //do nothing
         }
 
-        //------ RAW Sensor API ----------//
         /**
-         * @retrieve object that can get/set individual RAW sensor values.
-         */
-        SensorCollection SensorCollection
+	 * @return object that can get/set individual raw sensor values.
+	 */
+        public SensorCollection GetSensorCollection()
         {
-            get
-            {
-                return _sensColl;
-            }
+            return _sensorColl;
         }
     }
 }

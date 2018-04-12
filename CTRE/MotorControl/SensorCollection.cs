@@ -51,7 +51,7 @@ namespace CTRE.Phoenix.MotorControl
 
         public ErrorCode SetAnalogPosition(int newPosition, int timeoutMs = 0)
         {
-            return _ll.ConfigSetParameter(ParamEnum.AnalogPosition, newPosition, 0, 0, timeoutMs);
+            return _ll.ConfigSetParameter(ParamEnum.eAnalogPosition, newPosition, 0, 0, timeoutMs);
         }
 
         /**
@@ -112,7 +112,7 @@ namespace CTRE.Phoenix.MotorControl
 
         public ErrorCode SetQuadraturePosition(int newPosition, int timeoutMs = 0)
         {
-            return _ll.ConfigSetParameter(ParamEnum.QuadraturePosition, newPosition, 0, 0, timeoutMs);
+            return _ll.ConfigSetParameter(ParamEnum.eQuadraturePosition, newPosition, 0, 0, timeoutMs);
         }
 
         /**
@@ -154,7 +154,7 @@ namespace CTRE.Phoenix.MotorControl
 
         public ErrorCode SetPulseWidthPosition(int newPosition, int timeoutMs = 0)
         {
-            return _ll.ConfigSetParameter(ParamEnum.PulseWidthPosition, newPosition, 0, 0, timeoutMs);
+            return _ll.ConfigSetParameter(ParamEnum.ePulseWidthPosition, newPosition, 0, 0, timeoutMs);
         }
 
         /**

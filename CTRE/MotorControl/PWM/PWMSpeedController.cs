@@ -123,7 +123,7 @@ namespace CTRE.Phoenix.MotorControl
         public bool GetInverted() { return (m_isInverted == 1) ? false : true; }
 
 
-        public void Follow(object masterToFollow)
+        public void Follow(IMotorController masterToFollow)
         {
             _master = (IMotorController)(masterToFollow);
         }

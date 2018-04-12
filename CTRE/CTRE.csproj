@@ -76,6 +76,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CANifier.cs" />
+    <Compile Include="ErrorStrings.cs" />
     <Compile Include="LowLevel\Device_LowLevel.cs" />
     <Compile Include="Containers\ByteRingBuffer.cs" />
     <Compile Include="Containers\CharRingBuffer.cs" />
@@ -112,7 +113,9 @@
     <Compile Include="LowLevel\MotController_LowLevel.cs" />
     <Compile Include="LowLevel\ParamContainer.cs" />
     <Compile Include="LowLevel\ParamEnum.cs" />
+    <Compile Include="LowLevel\PigeonIMU_LowLevel.cs" />
     <Compile Include="LowLevel\ResetStats.cs" />
+    <Compile Include="LowLevel\TimestampMsgMap.cs" />
     <Compile Include="LowLevel\TrajectoryBuffer.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="Mechanical\AndMark_PickOne.cs" />
@@ -142,6 +145,9 @@
     <Compile Include="Motion\SetValueMotionProfile.cs" />
     <Compile Include="Motion\MotionProfileStatus.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="MotorControl\CAN\VictorSPX.cs" />
+    <Compile Include="MotorControl\DemandType.cs" />
+    <Compile Include="MotorControl\FollowerType.cs" />
     <Compile Include="MotorControl\NeutralMode.cs" />
     <Compile Include="MotorControl\IMotorControllerEnhanced.cs" />
     <Compile Include="MotorControl\LimitSwitchType.cs" />
@@ -154,17 +160,22 @@
     <Compile Include="MotorControl\IMotorController.cs" />
     <Compile Include="MotorControl\PWM\PWMSpeedController.cs" />
     <Compile Include="MotorControl\FeedbackDevice.cs" />
+    <Compile Include="MotorControl\RemoteSensorSource.cs" />
     <Compile Include="MotorControl\SensorCollection.cs" />
     <Compile Include="MotorControl\Faults.cs" />
     <Compile Include="MotorControl\ControlFrame.cs" />
+    <Compile Include="MotorControl\SensorTerm.cs" />
     <Compile Include="MotorControl\ZeroSensorCriteria.cs" />
     <Compile Include="MotorControl\VelocityMeasPeriod.cs" />
     <Compile Include="MotorControl\StatusFrame.cs" />
-    <Compile Include="PigeonImu.cs" />
+    <Compile Include="Sensors\PigeonImu.cs" />
     <Compile Include="Plot\Plotter.cs" />
     <Compile Include="Power\Voltage.cs" />
     <Compile Include="RCRadio3Ch.cs" />
     <Compile Include="RobotApplication.cs" />
+    <Compile Include="Sensors\PigeonIMUData.cs" />
+    <Compile Include="Sensors\PigeonIMU_ControlFrame.cs" />
+    <Compile Include="Sensors\PigeonIMU_StatusFrame.cs" />
     <Compile Include="ServoParameters.cs" />
     <Compile Include="Signals\IBoolInputSignal.cs" />
     <Compile Include="Signals\IInputSignal.cs" />
@@ -203,8 +214,7 @@
     <Compile Include="Watchdog\Watchdog.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ctre_netmf_native, Version=1.2.0.6, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="ctre_netmf_native, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.SPOT.Graphics" />

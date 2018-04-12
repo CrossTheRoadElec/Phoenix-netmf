@@ -47,9 +47,9 @@ namespace CTRE.Phoenix.Mechanical
         //------ Set output routines. ----------//
 
         /** Sets the motor output and takes inversion into account */
-        public virtual void Set(ControlMode controlMode, float output0, float output1 = 0)
+        public virtual void Set(ControlMode controlMode, float output0, DemandType demand1Type = DemandType.Neutral, float output1 = 0)
         {
-            _motor.Set(controlMode, output0, output1);
+            _motor.Set(controlMode, output0, demand1Type, output1);
 
             foreach (var follower in _followers) { follower.ValueUpdated(); }
         }
@@ -91,13 +91,9 @@ namespace CTRE.Phoenix.Mechanical
         {
             return _motor.ConfigNominalOutputReverse(percentOut, timeoutMs);
         }
-        public virtual ErrorCode ConfigOpenLoopNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0)
+        public virtual ErrorCode ConfigNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0)
         {
-            return _motor.ConfigOpenLoopNeutralDeadband(percentDeadband, timeoutMs);
-        }
-        public virtual ErrorCode ConfigClosedLoopNeutralDeadband(float percentDeadband = 0, int timeoutMs = 0)
-        {
-            return _motor.ConfigClosedLoopNeutralDeadband(percentDeadband, timeoutMs);
+            return _motor.ConfigNeutralDeadband(percentDeadband, timeoutMs);
         }
 
         //------ Voltage Compensation ----------//
@@ -145,7 +141,7 @@ namespace CTRE.Phoenix.Mechanical
         }
         public virtual void EnableLimitSwitches(bool enable)
         {
-            _motor.EnableLimitSwitches(enable);
+            _motor.OverrideLimitSwitchesEnable(enable);
         }
 
         //------ soft limit ----------//

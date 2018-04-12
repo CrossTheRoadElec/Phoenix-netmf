@@ -28,8 +28,8 @@ namespace CTRE.Phoenix.MotorControl
     public interface IMotorController : IFollower //: Signals.IOutputSignal , IFollower, IInvertable, ICANAddressable, IHasRemoteLimitSwitches
     {
         //------ Set output routines. ----------//
-        void Set(ControlMode Mode, float demand);
-        void Set(ControlMode Mode, float demand0, float demand1);
+        void Set(ControlMode Mode, double demand);
+        void Set(ControlMode mode, double demand0, DemandType demand1Type, double demand1);
         void NeutralOutput();
         void SetNeutralMode(NeutralMode neutralMode);
 
@@ -45,8 +45,7 @@ namespace CTRE.Phoenix.MotorControl
         ErrorCode ConfigPeakOutputReverse(float percentOut, int timeoutMs = 0);
         ErrorCode ConfigNominalOutputForward(float percentOut, int timeoutMs = 0);
         ErrorCode ConfigNominalOutputReverse(float percentOut, int timeoutMs = 0);
-        ErrorCode ConfigOpenLoopNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0);
-        ErrorCode ConfigClosedLoopNeutralDeadband(float percentDeadband = 0, int timeoutMs = 0);
+        ErrorCode ConfigNeutralDeadband(float percentDeadband = Constants.DefaultDeadband, int timeoutMs = 0);
 
         //------ Voltage Compensation ----------//
         ErrorCode ConfigVoltageCompSaturation(float voltage, int timeoutMs = 0);
@@ -61,12 +60,12 @@ namespace CTRE.Phoenix.MotorControl
         ErrorCode GetTemperature(out float param);
 
         //------ sensor selection ----------//
-        ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int timeoutMs = 0);
+        ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0);
 
         //------- sensor status --------- //
-        int GetSelectedSensorPosition();
-        int GetSelectedSensorVelocity();
-        ErrorCode SetSelectedSensorPosition(int sensorPos, int timeoutMs = 0);
+        int GetSelectedSensorPosition(int pidIdx);
+        int GetSelectedSensorVelocity(int pidIdx);
+        ErrorCode SetSelectedSensorPosition(int sensorPos, int pidIdx, int timeoutMs = 0);
 
         //------ status frame period changes ----------//
         ErrorCode SetControlFramePeriod(ControlFrame frame, int periodMs);
@@ -80,17 +79,17 @@ namespace CTRE.Phoenix.MotorControl
         //------ remote limit switch ----------//
         ErrorCode ConfigForwardLimitSwitchSource(RemoteLimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceID, int timeoutMs = 0);
         ErrorCode ConfigReverseLimitSwitchSource(RemoteLimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int deviceID, int timeoutMs = 0);
-        void EnableLimitSwitches(bool enable);
+        void OverrideLimitSwitchesEnable(bool enable);
 
         //------ local limit switch ----------//
         /* not supported */
 
         //------ soft limit ----------//
-        ErrorCode ConfigForwardSoftLimit(int forwardSensorLimit, int timeoutMs = 0);
-        ErrorCode ConfigReverseSoftLimit(int reverseSensorLimit, int timeoutMs = 0);
+        ErrorCode ConfigForwardSoftLimitThreshold(int forwardSensorLimit, int timeoutMs = 0);
+        ErrorCode ConfigReverseSoftLimitThreshold(int reverseSensorLimit, int timeoutMs = 0);
 
 
-        void EnableSoftLimits(bool enable);
+        void OverrideSoftLimitsEnable(bool enable);
 
         //------ Current Lim ----------//
 		/* not supported */
@@ -106,11 +105,15 @@ namespace CTRE.Phoenix.MotorControl
 
         ErrorCode SetIntegralAccumulator(float iaccum = 0, int timeoutMs = 0);
 
-        ErrorCode GetClosedLoopError(out int error);
-        ErrorCode GetIntegralAccumulator(out float iaccum);
-        ErrorCode GetErrorDerivative(out float derivError);
+        ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs);
+        ErrorCode configClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs);
+        ErrorCode configAuxPIDPolarity(bool invert, int timeoutMs);
 
-        void SelectProfileSlot(int slotIdx);
+        int GetClosedLoopError(int pidIdx);
+        float GetIntegralAccumulator(int pidIdx);
+        float GetErrorDerivative(int pidIdx);
+
+        void SelectProfileSlot(int slotIdx, int pidIdx);
 
         //------ Motion Profile Settings used in Motion Magic and Motion Profile ----------//
         ErrorCode ConfigMotionCruiseVelocity(int sensorUnitsPer100ms, int timeoutMs = 0);

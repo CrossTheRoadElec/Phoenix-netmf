@@ -5,23 +5,24 @@ namespace CTRE.Phoenix.MotorControl
 {
     public enum LimitSwitchSource
     {
-        Disabled = 0,
-        FeedbackConnector = 1,
-        RemoteTalonSRX = 2,
-        RemoteCANifier = 3,
+        FeedbackConnector = 0, /* default */
+        RemoteTalonSRX = 1,
+        RemoteCANifier = 2,
+        Deactivated = 3,
     }
 
     public enum RemoteLimitSwitchSource
     {
-        Disabled = 0,
-        RemoteTalonSRX = 2,
-        RemoteCANifier = 3,
+        RemoteTalonSRX = 1,
+        RemoteCANifier = 2,
+        Deactivated = 3,
     }
 
     public enum LimitSwitchNormal
     {
         NormallyOpen,
         NormallyClosed,
+        Disabled,
     }
 
     public interface IHasRemoteLimitSwitches
