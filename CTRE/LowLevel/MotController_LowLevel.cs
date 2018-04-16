@@ -156,7 +156,7 @@ namespace CTRE.Phoenix.LowLevel
         const int kMotionProfileFlag_ActTraj_IsLast = 0x8;
         const int kMotionProfileFlag_ActTraj_VelOnly = 0x10;
 
-        const int kMinFirmwareVersionMajor = 3;
+        const int kMinFirmwareVersionMajor = 11;
         const int kMinFirmwareVersionMinor = 0;
 
         /* Motion Profile Set Output */
@@ -215,7 +215,7 @@ namespace CTRE.Phoenix.LowLevel
         void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode code = ErrorCode.FirmwareTooOld)
         {
             /* check firm */
-            CheckFirmVers(minMajor, minMinor, code);
+            base.CheckFirmVers(minMajor, minMinor, code);
         }
 
         //------ Set output routines. ----------//
