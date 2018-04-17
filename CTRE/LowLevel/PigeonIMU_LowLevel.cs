@@ -189,7 +189,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
          */
         public ErrorCode GetGeneralStatus(GeneralStatus statusToFill)
         {
-            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1);
+            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1 | (int)_baseArbId);
 
             byte b3 = (byte)(_cache >> 0x18);
             byte b5 = (byte)(_cache >> 0x28);
@@ -486,7 +486,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         {
             int raw;
             float retval;
-            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_2);
+            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_2 | (int)_baseArbId);
 
             byte m8 = (byte)((_cache >> 0x30) & 0xFF);
             byte l8 = (byte)((_cache >> 0x38) & 0xFF);
@@ -509,7 +509,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         {
             int raw;
             float retval;
-            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_2);
+            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_2 | (int)_baseArbId);
             byte h4 = (byte)((_cache >> 0x28) & 0xF);
             byte m8 = (byte)((_cache >> 0x30) & 0xFF);
             byte l8 = (byte)((_cache >> 0x38) & 0xFF);
@@ -554,7 +554,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         }
         public ErrorCode GetTemp(out float value)
         {
-            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1);
+            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1 | (int)_baseArbId);
             float tempC = GetTemp(_cache);
 
             value = tempC;
@@ -610,14 +610,14 @@ public PigeonIMU_LowLevel(int baseArbId) :
         }
         public PigeonState GetState()
         {
-            int errCode = ReceiveCAN(COND_STATUS_1);
+            int errCode = ReceiveCAN(COND_STATUS_1 | (int)_baseArbId);
             PigeonState retval = GetState(errCode, _cache);
             SetLastError((ErrorCode)errCode);
             return retval;
         }
         public ErrorCode GetState(out int state)
         {
-            int errCode = ReceiveCAN(COND_STATUS_1);
+            int errCode = ReceiveCAN(COND_STATUS_1 | (int)_baseArbId);
             PigeonState retval = GetState(errCode, _cache);
             state = (int)retval;
             return SetLastError((ErrorCode)errCode);
@@ -630,7 +630,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         public ErrorCode GetUpTime(out int value)
         {
             /* repoll status frame */
-            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1);
+            ErrorCode errCode = (ErrorCode)ReceiveCAN(COND_STATUS_1 | (int)_baseArbId);
             value = (byte)(_cache >> 56);
             return SetLastError(errCode);
         }
