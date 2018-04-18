@@ -106,8 +106,8 @@ namespace CTRE.Phoenix.MotorControl
         ErrorCode SetIntegralAccumulator(float iaccum = 0, int timeoutMs = 0);
 
         ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs);
-        ErrorCode configClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs);
-        ErrorCode configAuxPIDPolarity(bool invert, int timeoutMs);
+        ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs);
+        ErrorCode ConfigAuxPIDPolarity(bool invert, int timeoutMs);
 
         int GetClosedLoopError(int pidIdx);
         float GetIntegralAccumulator(int pidIdx);
