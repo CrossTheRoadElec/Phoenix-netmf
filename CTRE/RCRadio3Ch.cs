@@ -36,10 +36,10 @@ namespace CTRE.Phoenix
         {
             _canifier = canifier;
 
-            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status3_PwmInput0, 8, 100);
-            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status4_PwmInput1, 8, 100);
-            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status5_PwmInput2, 8, 100);
-            _canifier.SetStatusFramePeriod(CANifier.StatusFrameRate.Status6_PwmInput3, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifierStatusFrame.Status_3_PwmInputs0, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifierStatusFrame.Status_4_PwmInputs1, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifierStatusFrame.Status_5_PwmInputs2, 8, 100);
+            _canifier.SetStatusFramePeriod(CANifierStatusFrame.Status_6_PwmInputs3, 8, 100);
         }
 
         public Status CurrentStatus { get; private set; }

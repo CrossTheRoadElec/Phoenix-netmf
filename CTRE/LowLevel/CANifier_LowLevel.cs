@@ -29,8 +29,6 @@ namespace CTRE.Phoenix.LowLevel
         private UInt64 _cache;
         private UInt32 _len;
 
-        ErrorCode _lastError = ErrorCode.OK;
-
         private UInt32 _can_h = 0;
         private int _can_stat = 0;
         private System.Collections.Hashtable _sigs = new System.Collections.Hashtable();
@@ -38,6 +36,9 @@ namespace CTRE.Phoenix.LowLevel
         private uint _regInput = 0; //!< Decoded inputs
         private uint _regLat = 0; //!< Decoded output latch
         private uint _regIsOutput = 0; //!< Decoded data direction register
+
+        const int kMinFirmwareVersionMajor = 0;
+        const int kMinFirmwareVersionMinor = 40;
 
         public enum GeneralPin
         {
@@ -58,34 +59,19 @@ namespace CTRE.Phoenix.LowLevel
 
         bool _SendingPwmOutput = false;
 
-        public CANifier_LowLevel(UInt16 deviceId, bool externalEnable = false) : base(deviceId, 0,0,0,0,0) // todo startup frame
+        public CANifier_LowLevel(UInt16 deviceId, bool externalEnable = false) : 
+            base((uint)0x03040000 | deviceId, STATUS_7 | deviceId, PARAM_REQUEST | deviceId, PARAM_RESPONSE | deviceId, PARAM_SET | deviceId, (uint)0x03041600 | deviceId) // todo startup frame
         {
             if (false == externalEnable)
             {
                 CTRE.Native.CAN.Send(CANifier_Control_1_General_20Ms | _baseArbId, 0x00, 8, 20);
             }
         }
-        //-------------------------------- Device_LowLevel and ErrorCode requirements -----------------------//
-        protected override void EnableFirmStatusFrame(bool enable)
+        void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failCode = ErrorCode.FirmwareTooOld)
         {
-            /* fail silently */
+            base.CheckFirmVers(minMajor, minMinor, failCode);
         }
-
-        protected override ErrorCode SetLastError(ErrorCode errorCode)
-        {
-            _lastError = errorCode;
-            return _lastError;
-        }
-        public ErrorCode GetLastError()
-        {
-            return _lastError;
-        }
-
-        protected ErrorCode SetLastError(int errorCode)
-        {
-            _lastError = (ErrorCode)errorCode;
-            return _lastError;
-        }
+        
         //-------------------------------- frame decoders -----------------------//
         private void EnsurePwmOutputFrameIsTransmitting()
         {
@@ -437,6 +423,79 @@ namespace CTRE.Phoenix.LowLevel
             return b5 * 0.1f + 4f;
         }
 
+        public ErrorCode GetQuadraturePosition(out int pos)
+        {
+            /* general firm check */
+            CheckFirmVers(0, 42, ErrorCode.FeatureRequiresHigherFirm);
+
+            int err = CTRE.Native.CAN.Receive(STATUS_2 | _baseArbId, ref _cache, ref _len);
+
+            byte H = (byte)(_cache);
+            byte M = (byte)(_cache >> 0x8);
+            byte L = (byte)(_cache >> 0x10);
+            int posDiv8 = (int)((_cache >> (0x28 + 7)) & 1);
+
+            int raw = 0;
+            raw |= H;
+            raw <<= 8;
+            raw |= M;
+            raw <<= 8;
+            raw |= L;
+
+            raw <<= (32 - 24); /* sign extend */
+            raw >>= (32 - 24); /* sign extend */
+
+            if (posDiv8 == 1)
+                raw *= 8;
+
+            pos = (int)raw;
+
+            return SetLastError(err);
+        }
+        public ErrorCode SetQuadraturePosition(int newPosition, int timeoutMs)
+        {
+            /* general firm check */
+            CheckFirmVers(0, 42, ErrorCode.FeatureRequiresHigherFirm);
+
+            return ConfigSetParameter(ParamEnum.eQuadraturePosition, newPosition, 0, 0, timeoutMs);
+        }
+        public ErrorCode GetQuadratureVelocity(out int vel)
+        {
+            /* general firm check */
+            CheckFirmVers(0, 42, ErrorCode.FeatureRequiresHigherFirm);
+
+            int err = CTRE.Native.CAN.Receive(STATUS_2 | _baseArbId, ref _cache, ref _len);
+
+            byte H = (byte)(_cache >> 0x18);
+            byte L = (byte)(_cache >> 0x20);
+            int velDiv4 = (int)((_cache >> (0x28 + 6)) & 1);
+
+            int raw = 0;
+            raw |= H;
+            raw <<= 8;
+            raw |= L;
+
+            raw <<= (32 - 16); /* sign extend */
+            raw >>= (32 - 16); /* sign extend */
+
+            if (velDiv4 == 1)
+                raw *= 4;
+
+            vel = (int)raw;
+
+            return SetLastError(err);
+        }
+
+        public ErrorCode ConfigVelocityMeasurementPeriod(CANifierVelocityMeasPeriod period, int timeoutMs)
+        {
+            int param = (int)period;
+            return ConfigSetParameter(ParamEnum.eSampleVelocityPeriod, param, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigVelocityMeasurementWindow(int windowSize, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, windowSize, 0, 0, timeoutMs);
+        }
+
         public static String ToString(CANifier_LowLevel.GeneralPin gp)
         {
             String sig;
@@ -459,202 +518,104 @@ namespace CTRE.Phoenix.LowLevel
         }
 
         //----------------------------------------------------------------------------------------------------//
-        /**
-        * Signal enumeration for generic signal access.
-        * Although every signal is enumerated, only use this for traffic that must
-        * be solicited.
-        * Use the auto generated getters/setters at bottom of this header as much as
-        * possible.
-        */
-        public enum ParamEnum
-        {
-            eStatusFrameRate = 200,
-        };
 
 
-        private void OpenSessionIfNeedBe()
-        {
-            _can_stat = 0;
-            if (_can_h == 0)
-            {
-                /* bit30 - bit8 must match $000002XX.  Top bit is not masked to get remote frames */
-                uint arbId = kParamArbIdValue | GetDeviceNumber();
-                _can_stat = CTRE.Native.CAN.OpenStream(ref _can_h, kParamArbIdMask, arbId);
-                if (_can_stat == 0)
-                {
-                    /* success */
-                }
-                else
-                {
-                    /* something went wrong, try again later */
-                    _can_h = 0;
-                }
-            }
-        }
-
-        private void ProcessStreamMessages()
-        {
-            if (0 == _can_h) OpenSessionIfNeedBe();
-            /* process receive messages */
-            UInt32 i;
-            UInt32 messagesRead = 0;
-            UInt32 arbId = 0;
-            UInt64 data = 0;
-            UInt32 len = 0;
-            UInt32 msgsRead = 0;
-            /* read out latest bunch of messages */
-            _can_stat = 0;
-            if (_can_h != 0)
-            {
-                CTRE.Native.CAN.GetStreamSize(_can_h, ref messagesRead);
-            }
-            /* loop thru each message of interest */
-            for (i = 0; i < messagesRead; ++i)
-            {
-                CTRE.Native.CAN.ReadStream(_can_h, ref arbId, ref data, ref len, ref msgsRead);
-                if (arbId == (PARAM_RESPONSE | GetDeviceNumber()))
-                {
-                    byte paramEnum = (byte)(data & 0xFF);
-                    data >>= 8;
-                    /* save latest signal */
-                    _sigs[(uint)paramEnum] = (uint)data;
-                }
-            }
-        }
-        /*---------------------setters and getters that use the param
-         * request/response-------------*/
-        /**
-         * Send a one shot frame to set an arbitrary signal.
-         * Most signals are in the control frame so avoid using this API unless you have
-         * to.
-         * Use this api for...
-         * -A motor controller profile signal eProfileParam_XXXs.  These are backed up
-         * in flash.  If you are gain-scheduling then call this periodically.
-         * -Default brake and limit switch signals... eOnBoot_XXXs.  Avoid doing this,
-         * use the override signals in the control frame.
-         * Talon will automatically send a PARAM_RESPONSE after the set, so
-         * GetParamResponse will catch the latest value after a couple ms.
-         */
-        public int SetParamRaw(ParamEnum paramEnum, int rawBits, uint timeoutMs = 0)
-        {
-            /* caller is using param API.  Open session if it hasn'T been done. */
-            if (0 == _can_h) OpenSessionIfNeedBe();
-            /* wait for response frame */
-            if (timeoutMs != 0)
-            {
-                /* remove stale entry if caller wants to wait for response. */
-                _sigs.Remove((uint)paramEnum);
-            }
-            /* frame set request and send it */
-            UInt64 frame = ((UInt64)rawBits) & 0xFFFFFFFF;
-            frame <<= 8;
-            frame |= (byte)paramEnum;
-            uint arbId = PARAM_SET | GetDeviceNumber();
-            int status = CTRE.Native.CAN.Send(arbId, frame, 5, 0);
-            /* wait for response frame */
-            if (timeoutMs > 0)
-            {
-                int readBits;
-                /* loop until timeout or receive if caller wants to check */
-                while (timeoutMs > 0)
-                {
-                    /* wait a bit */
-                    System.Threading.Thread.Sleep(1);
-                    /* see if response was received */
-                    if (0 == GetParamResponseRaw(paramEnum, out readBits))
-                        break; /* leave inner loop */
-                    /* decrement */
-                    --timeoutMs;
-                }
-                /* if we get here then we timed out */
-                if (timeoutMs == 0)
-                    status = (int)ErrorCode.SIG_NOT_UPDATED;
-            }
-            return status;
-        }
-        /**
-         * Checks cached CAN frames and updating solicited signals.
-         */
-        public int GetParamResponseRaw(ParamEnum paramEnum, out Int32 rawBits)
-        {
-            int retval = 0;
-            /* process received param events. We don't expect many since this API is not
-             * used often. */
-            ProcessStreamMessages();
-            /* grab the solicited signal value */
-            if (_sigs.Contains((uint)paramEnum) == false)
-            {
-                retval = (int)ErrorCode.SIG_NOT_UPDATED;
-                rawBits = 0; /* default value if signal was not received */
-            }
-            else
-            {
-                Object value = _sigs[(uint)paramEnum];
-                uint temp = (uint)value;
-                rawBits = (int)temp;
-            }
-            return retval;
-        }
-        /**
-         * Asks TALON to immedietely respond with signal value.  This API is only used
-         * for signals that are not sent periodically.
-         * This can be useful for reading params that rarely change like Limit Switch
-         * settings and PIDF values.
-          * @param param to request.
-         */
-        public int RequestParam(ParamEnum paramEnum)
-        {
-            /* process received param events. We don't expect many since this API is not
-             * used often. */
-            ProcessStreamMessages();
-            int status = CTRE.Native.CAN.Send(PARAM_REQUEST | GetDeviceNumber(), (uint)paramEnum, 1, 0);
-            return status;
-        }
-
-        public int SetParam(ParamEnum paramEnum, float value, uint timeoutMs = 0)
-        {
-            Int32 rawbits = 0;
-            switch (paramEnum)
-            {
-                default: /* everything else is integral */
-                    rawbits = (Int32)value;
-                    break;
-            }
-            return SetParamRaw(paramEnum, rawbits, timeoutMs);
-        }
-        public int GetParamResponse(ParamEnum paramEnum, out float value)
-        {
-            Int32 rawbits = 0;
-            int retval = GetParamResponseRaw(paramEnum, out rawbits);
-            switch (paramEnum)
-            {
-                default: /* everything else is integral */
-                    value = (float)rawbits;
-                    break;
-            }
-            return retval;
-        }
-        public Int32 GetParamResponseInt32(ParamEnum paramEnum, out int value)
-        {
-            float dvalue = 0;
-            int retval = GetParamResponse(paramEnum, out dvalue);
-            value = (Int32)dvalue;
-            return retval;
-        }
         /*----- getters and setters that use param request/response. These signals are backed up in flash and will survive a power cycle. ---------*/
         /*----- If your application requires changing these values consider using both slots and switch between slot0 <=> slot1. ------------------*/
         /*----- If your application requires changing these signals frequently then it makes sense to leverage this API. --------------------------*/
         /*----- Getters don't block, so it may require several calls to get the latest value. --------------------------*/
-        public int SetStatusFramePeriod(UInt32 frameIdx, uint newPeriodMs, uint timeoutMs = 0)
+        public ErrorCode SetStatusFramePeriod(CANifierStatusFrame frame, uint periodMs, uint timeoutMs = 0)
         {
-            if (newPeriodMs > 255) { newPeriodMs = 255; }
-            if (frameIdx > 255) { frameIdx = 255; }
+            int fullId = (int)((int)_baseArbId | (int)frame); /* build ID */
 
-            UInt32 value = newPeriodMs;
-            value <<= 8;
-            value |= (frameIdx & 0xFF);
+            return base.SetStatusFramePeriod(fullId, (int)periodMs, (int)timeoutMs);
+        }
+        public ErrorCode GetStatusFramePeriod(CANifierStatusFrame frame, out int periodMs, int timeoutMs)
+        {
+            int fullId = (int)((int)_baseArbId | (int)frame); /* build ID */
 
-            return SetParam(ParamEnum.eStatusFrameRate, value, timeoutMs);
+            return base.GetStatusFramePeriod(fullId, out periodMs, timeoutMs);
+        }
+        public ErrorCode SetControlFramePeriod(CANifierControlFrame frame, int periodMs)
+        {
+            /* sterilize inputs */
+            if (periodMs < 0) { periodMs = 0; }
+            if (periodMs > 0xFF) { periodMs = 0xFF; }
+
+            uint fullId = (uint)((int)_baseArbId | (int)frame); /* build ID */
+
+            /* apply the change if frame is transmitting */
+            int err = CTRE.Native.CAN.GetSendBuffer(fullId, ref _cache);
+            if (err == 0)
+            {
+                err = CTRE.Native.CAN.Send(fullId, _cache, 8, (uint)periodMs);
+            }
+
+            return SetLastError(err);
+        }
+        //-------------------------------- Device_LowLevel requirements -----------------------//
+        protected override void EnableFirmStatusFrame(bool enable)
+        {
+            SetClrBit(enable ? 0 : 1, (4 * 8) + 0, CANifier_Control_1_General_20Ms); /* DisableFirmStatusFrame */
+        }
+        public ErrorCode GetLastError()
+        {
+            return _lastError;
+        }
+
+        protected override ErrorCode SetLastError(ErrorCode error)
+        {
+            _lastError = error;
+            return error;
+        }
+
+        private ErrorCode SetLastError(int error)
+        {
+            return SetLastError((ErrorCode)error);
+        }
+
+        //------ Faults ----------//
+        public ErrorCode GetFaults(CANifierFaults toFill)
+        {
+            return SetLastError(ErrorCode.FeatureNotSupported);
+        }
+        public ErrorCode GetStickyFaults(CANifierStickyFaults toFill)
+        {
+            return SetLastError(ErrorCode.FeatureNotSupported);
+        }
+        public ErrorCode ClearStickyFaults(int timeoutMs)
+        {
+            return SetLastError(ErrorCode.FeatureNotSupported);
+        }
+
+        //------ Custom Persistent Params ----------//
+        public new ErrorCode ConfigSetCustomParam(int newValue, int paramIndex, int timeoutMs = 0)
+        {
+            return base.ConfigSetCustomParam(newValue, paramIndex, timeoutMs);
+        }
+        public new ErrorCode ConfigGetCustomParam(out int readValue, int paramIndex, int timeoutMs = Constants.GetParamTimeoutMs)
+        {
+            return base.ConfigGetCustomParam(out readValue, paramIndex, timeoutMs);
+        }
+
+        //------ Utility ----------//
+        private void SetClrBit(int bit, int shift, uint baseId)
+        {
+            /* get the frame */
+            int retval = CTRE.Native.CAN.GetSendBuffer(baseId | _baseArbId, ref _cache);
+            if (retval != 0) { return; }
+
+            /* clear */
+            _cache &= ~(0x1ul << shift);
+
+            /* shift in */
+            if (bit != 0)
+            {
+                _cache |= (UInt64)(1) << (shift);
+            }
+
+            /* flush changes */
+            CTRE.Native.CAN.Send(baseId | _baseArbId, _cache, 8, 0xFFFFFFFF);
         }
     }
 }

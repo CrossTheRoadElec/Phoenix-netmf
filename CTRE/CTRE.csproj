@@ -76,6 +76,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CANifier.cs" />
+    <Compile Include="CANifierControlFrame.cs" />
+    <Compile Include="CANifierFaults.cs" />
+    <Compile Include="CANifierStatusFrame.cs" />
+    <Compile Include="CANifierStickyFaults.cs" />
+    <Compile Include="CANifierVelocityMeasPeriod.cs" />
     <Compile Include="ErrorStrings.cs" />
     <Compile Include="LowLevel\Device_LowLevel.cs" />
     <Compile Include="Containers\ByteRingBuffer.cs" />
