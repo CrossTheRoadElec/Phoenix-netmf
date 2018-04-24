@@ -122,7 +122,7 @@ namespace CTRE
                         _container._dirtyEvent.Set();
                         return this;
                     }
-                    internal Sprite SetPosition(int x, int y)
+                    public Sprite SetPosition(int x, int y)
                     {
                         if ((_newPos[0] == x) && (_newPos[1] == y))
                         {
