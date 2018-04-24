@@ -53,11 +53,11 @@ namespace CTRE.Phoenix.MotorControl
         void EnableVoltageCompensation(bool enable);
 
         //------ General Status ----------//
-        ErrorCode GetBusVoltage(out float param);
-        ErrorCode GetMotorOutputPercent(out float param);
-        ErrorCode GetMotorOutputVoltage(out float param);
-        ErrorCode GetOutputCurrent(out float param);
-        ErrorCode GetTemperature(out float param);
+        float GetBusVoltage();
+        float GetMotorOutputPercent();
+        float GetMotorOutputVoltage();
+        float GetOutputCurrent();
+        float GetTemperature();
 
         //------ sensor selection ----------//
         ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0);

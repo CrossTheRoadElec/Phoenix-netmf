@@ -130,8 +130,7 @@ namespace CTRE.Phoenix.MotorControl
 
         public void ValueUpdated()
         {
-            float percentOutput;
-            _master.GetBusVoltage(out percentOutput);
+            float percentOutput = _master.GetBusVoltage();
             Set(percentOutput);
         }
     }

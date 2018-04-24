@@ -212,31 +212,38 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
         //------ General Status ----------//
-        public ErrorCode GetBusVoltage(out float param)
+        public float GetBusVoltage()
         {
-            return _ll.GetBusVoltage(out param);
+            float retval;
+            _ll.GetBusVoltage(out retval);
+            return retval;
         }
-        public ErrorCode GetMotorOutputPercent(out float param)
+        public float GetMotorOutputPercent()
         {
-            return _ll.GetMotorOutputPercent(out param);
+            float retval;
+            _ll.GetMotorOutputPercent(out retval);
+            return retval;
         }
-        public ErrorCode GetMotorOutputVoltage(out float param)
+        public float GetMotorOutputVoltage()
         {
-            ErrorCode er;
             float v, p;
-            er = GetBusVoltage(out v);
-            GetMotorOutputPercent(out p);
+            v = GetBusVoltage();
+            p = GetMotorOutputPercent();
 
-            param = v * p;
-            return er;
+            float param = v * p;
+            return param;
         }
-        public ErrorCode GetOutputCurrent(out float param)
+        public float GetOutputCurrent()
         {
-            return _ll.GetOutputCurrent(out param);
+            float retval;
+            _ll.GetOutputCurrent(out retval);
+            return retval;
         }
-        public ErrorCode GetTemperature(out float param)
+        public float GetTemperature()
         {
-            return _ll.GetTemperature(out param);
+            float retval;
+            _ll.GetTemperature(out retval);
+            return retval;
         }
 
         //------ sensor selection ----------//

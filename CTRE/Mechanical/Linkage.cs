@@ -108,11 +108,11 @@ namespace CTRE.Phoenix.Mechanical
         public virtual void EnableVoltageCompensation(bool enable) { _motor.EnableVoltageCompensation(enable); }
 
         //------ General Status ----------//
-        public virtual ErrorCode GetBusVoltage(out float param) { return _motor.GetBusVoltage(out param); }
-        public virtual ErrorCode GetMotorOutputPercent(out float param) { return _motor.GetMotorOutputPercent(out param); }
-        public virtual ErrorCode GetMotorOutputVoltage(out float param) { return _motor.GetMotorOutputVoltage(out param); }
-        public virtual ErrorCode GetOutputCurrent(out float param) { return _motor.GetOutputCurrent(out param); }
-        public virtual ErrorCode GetTemperature(out float param) { return _motor.GetTemperature(out param); }
+        public virtual float GetBusVoltage() { return _motor.GetBusVoltage(); }
+        public virtual float GetMotorOutputPercent() { return _motor.GetMotorOutputPercent(); }
+        public virtual float GetMotorOutputVoltage() { return _motor.GetMotorOutputVoltage(); }
+        public virtual float GetOutputCurrent() { return _motor.GetOutputCurrent(); }
+        public virtual float GetTemperature() { return _motor.GetTemperature(); }
 
         //------ sensor selection ----------//
         /* not supported */

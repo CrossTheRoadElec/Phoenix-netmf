@@ -24,7 +24,7 @@ namespace CTRE.Phoenix.Power
                 /* grab first device battery voltage */
                 if (DeviceCatalog.MotorControllerCount != 0)
                 {
-                    DeviceCatalog.Get(1).GetBusVoltage(out retval);
+                    retval = DeviceCatalog.Get(1).GetBusVoltage();
                 }
                 return retval;
             }
