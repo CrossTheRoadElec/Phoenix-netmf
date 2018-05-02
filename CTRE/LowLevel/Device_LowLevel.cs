@@ -304,7 +304,7 @@ namespace CTRE.Phoenix.LowLevel
          * Talon will automatically send a PARAM_RESPONSE after the set, so
          * GetParamResponse will catch the latest value after a couple ms.
          */
-        private ErrorCode ConfigSetParameter(ParamEnum paramEnum, int value, byte subValue, int ordinal = 0, int timeoutMs = 0)
+        private ErrorCode ConfigSetParameterRaw(ParamEnum paramEnum, int value, byte subValue, int ordinal = 0, int timeoutMs = 0)
         {
             /* sterilize inputs */
             if ((int)paramEnum > 0xFFF)
@@ -418,7 +418,7 @@ namespace CTRE.Phoenix.LowLevel
                     rawbits = (Int32)value;
                     break;
             }
-            return ConfigSetParameter(paramEnum, rawbits, subValue, ordinal, timeoutMs);
+            return ConfigSetParameterRaw(paramEnum, rawbits, subValue, ordinal, timeoutMs);
         }
         //------------------------------------- ConfigGet* interface -----------------------------------------//
         /**
