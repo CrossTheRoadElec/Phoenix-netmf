@@ -600,8 +600,7 @@ namespace CTRE.Phoenix.LowLevel
         //------ Voltage Compensation ----------//
         public ErrorCode ConfigVoltageCompSaturation(float voltage, int timeoutMs)
         {
-            int param = CalcVoltage_8_8(voltage);
-            return ConfigSetParameter(ParamEnum.eNominalBatteryVoltage, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eNominalBatteryVoltage, voltage, 0, 0, timeoutMs);
         }
         public ErrorCode ConfigVoltageMeasurementFilter(int filterWindowSamples, int timeoutMs)
         {
