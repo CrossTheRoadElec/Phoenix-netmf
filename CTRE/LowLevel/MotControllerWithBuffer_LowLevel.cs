@@ -211,7 +211,7 @@ namespace CTRE.Phoenix.LowLevel
                 _motProfTopBuffer.Clear();
                 /* send signal to clear bottom buffer */
                 UInt64 frame = GetControl6();
-                frame &= 0xFFFFFFFFFFFFF0FF; /* clear Idx */
+                frame &= 0xFFFFFFFFFFFFFF3F; /* clear Idx */
                 _motProfFlowControl = 0; /* match the transmitted flow control */
                 CTRE.Native.CAN.Send(CONTROL_6 | _baseArbId, frame, 8, 0xFFFFFFFF);
             }
@@ -330,9 +330,9 @@ namespace CTRE.Phoenix.LowLevel
             }
 
             byte b0 = (byte)profileSlotSelect0;
-            b0 <<= 2;
-            b0 |= (byte)(zeroPos ? 1 : 0);
             b0 <<= 1;
+            b0 |= (byte)(zeroPos ? 1 : 0);
+            b0 <<= 3;
             b0 |= (byte)DurationMsToEnum(durationMs);
 
             byte headingH = (byte)((turnUnits >> 8) & 0x3F);
@@ -341,7 +341,7 @@ namespace CTRE.Phoenix.LowLevel
             byte b1 = (byte)(isLastPoint ? 1 : 0);
             b1 <<= 1;
             b1 |= (byte)profileSlotSelect1;
-            b1 <<= 1;
+            b1 <<= 6;
             b1 |= headingH;
 
             byte b2 = headingL;
@@ -390,7 +390,7 @@ namespace CTRE.Phoenix.LowLevel
 
         private int MotionProf_IncrementSync(int idx)
         {
-            return ((idx >= 3) ? 1 : 0) + ((idx + 1) & 0xF);
+            return ((idx >= 3) ? 1 : 0) + ((idx + 1) & 0x3);
         }
 
         
@@ -443,6 +443,7 @@ namespace CTRE.Phoenix.LowLevel
                         /* get the latest control frame */
                         UInt64 toFill = GetControl6();
                         UInt64 front = _motProfTopBuffer.Front();
+                        toFill &= 0;
                         toFill |= front;
                         _motProfTopBuffer.Pop();
                         _motProfFlowControl = MotionProf_IncrementSync(_motProfFlowControl);
