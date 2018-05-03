@@ -371,9 +371,11 @@ namespace CTRE.Phoenix.LowLevel
             lock (_mutMotProf)
             {
                 if (_motProfTopBuffer.GetNumTrajectories() >= kMotionProfileTopBufferCapacity)
-                    return ErrorCode.CAN_OVERFLOW;
+                    return Reporting.Log(ErrorCode.BufferFull, ToString(), 0, "");
                 _motProfTopBuffer.Push(traj);
             }
+            if (retval != ErrorCode.OK)
+                return Reporting.Log(retval, ToString(), 0, "");
             return ErrorCode.OK;
         }
 
