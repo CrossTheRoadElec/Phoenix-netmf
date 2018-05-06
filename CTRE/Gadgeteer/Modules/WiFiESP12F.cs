@@ -150,6 +150,30 @@ namespace CTRE
                     return temp;
                 }
 
+                public string getConnectedIp(int timeoutMs = 100)
+                {
+                    byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
+
+                    int err = transaction(toSend, timeoutMs);
+
+                    string temp = "";
+
+                    if (err == 0)
+                    {
+                        foreach (String x in lines)
+                        {
+                            if (x.Length >= 12 && x.Substring(0, 12) == "+CIFSR:STAIP")
+                            {
+                                temp = x.Substring(14);
+                                int tempLen = temp.Length - 1;
+                                temp = temp.Substring(0, tempLen).ToString();
+                            }
+                        }
+                    }
+
+                    return temp;
+                }
+
                 public int setWifiMode(wifiMode mode, int timeoutMs = 50)
                 {
                     byte[] toSend = MakeByteArrayFromString("AT+CWMODE_CUR=" + mode + "\r\n");
