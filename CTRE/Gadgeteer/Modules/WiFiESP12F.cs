@@ -150,7 +150,7 @@ namespace CTRE
                     return temp;
                 }
 
-                public string getConnectedIp(int timeoutMs = 100)
+                public string getLocalIp(int timeoutMs = 100)
                 {
                     byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
 
@@ -162,9 +162,9 @@ namespace CTRE
                     {
                         foreach (String x in lines)
                         {
-                            if (x.Length >= 12 && x.Substring(0, 12) == "+CIFSR:STAIP")
+                            if (x.Length >= 12 && x.Substring(0, 11) == "+CIFSR:APIP")
                             {
-                                temp = x.Substring(14);
+                                temp = x.Substring(13);
                                 int tempLen = temp.Length - 1;
                                 temp = temp.Substring(0, tempLen).ToString();
                             }
@@ -173,6 +173,7 @@ namespace CTRE
 
                     return temp;
                 }
+
 
                 public int setWifiMode(wifiMode mode, int timeoutMs = 50)
                 {
