@@ -174,19 +174,23 @@ namespace CTRE
                         {
                             if (x.Length >= 12 && x.Substring(0, 12) == "+CIFSR:STAIP")
                             {
+                                /* the line holding IP has been found, copy it out */
                                 temp = x.ToString();
-
+                                /* crop out everything between quotes */
                                 int start = temp.IndexOf('\"');
                                 int end = temp.LastIndexOf('\"');
-                                if (start <= -1 || end <= -1 || (start + (end - start)) > temp.Length)
+                                int len = end - start - 1; /* chars between quotes not including quotes themselves */
+                                /* validate input, do not parse if garbage */
+                                if (start <= -1 || end <= -1 || len <= -1)
                                 {
-                                    /* Skip over if start, end, or length are invalid */
-                                    temp = "";
+                                    /* Leave temp as empty if start, end, or length are invalid */
                                 }
                                 else
                                 {
-                                    start += 1; // exclude the first index of character (Char itself)
-                                    temp = temp.Substring(start, end - start);
+                                    /* start with char after first quote */
+                                    temp = temp.Substring(start + 1, len);
+                                    /* leave for loop immedietely since IP has been found */
+                                    return temp
                                 }
                             }
                         }
@@ -217,19 +221,23 @@ namespace CTRE
                         {
                             if (x.Length >= 11 && x.Substring(0, 11) == "+CIFSR:APIP")
                             {
+                                /* the line holding IP has been found, copy it out */
                                 temp = x.ToString();
-
+                                /* crop out everything between quotes */
                                 int start = temp.IndexOf('\"');
                                 int end = temp.LastIndexOf('\"');
-                                if(start <= -1 || end <= -1 || (start + (end - start)) > temp.Length)
+                                int len = end - start - 1; /* chars between quotes not including quotes themselves */
+                                /* validate input, do not parse if garbage */
+                                if (start <= -1 || end <= -1 || len <= -1)
                                 {
-                                    /* Skip over if start, end, or length are invalid */
-                                    temp = "";
+                                    /* Leave temp as empty if start, end, or length are invalid */
                                 }
                                 else
                                 {
-                                    start += 1; // exclude the first index of character (Char itself)
-                                    temp = temp.Substring(start, end - start);
+                                    /* start with char after first quote */
+                                    temp = temp.Substring(start + 1, len);
+                                    /* leave for loop immedietely since IP has been found */
+                                    return temp
                                 }
                             }
                         }
