@@ -150,27 +150,90 @@ namespace CTRE
                     return temp;
                 }
 
-                public string getConnectedIp(int timeoutMs = 100)
+                /**
+                 * Get the Station IP Address
+                 *
+                 * @param timeoutMs
+                 *            Timeout value in ms. If nonzero, function will wait for
+                 *            config success and report an error if it times out.
+                 *            If zero, no blocking or checking is performed.
+                 * @return String of the IP Address
+                 *            If in Station Mode, we check the first 12 characters to match 
+                 *            "+CIFSR:STAIP". 
+                 */
+                public String getStationIP(int timeoutMs = 100)
                 {
                     byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
 
                     int err = transaction(toSend, timeoutMs);
 
-                    string temp = "";
-
+                    string temp = "";   /* Return empty string if there is no response */
                     if (err == 0)
                     {
                         foreach (String x in lines)
                         {
                             if (x.Length >= 12 && x.Substring(0, 12) == "+CIFSR:STAIP")
                             {
-                                temp = x.Substring(14);
-                                int tempLen = temp.Length - 1;
-                                temp = temp.Substring(0, tempLen).ToString();
+                                temp = x.ToString();
+
+                                int start = temp.IndexOf('\"');
+                                int end = temp.LastIndexOf('\"');
+                                if (start <= -1 || end <= -1 || (start + (end - start)) > temp.Length)
+                                {
+                                    /* Skip over if start, end, or length are invalid */
+                                    temp = "";
+                                }
+                                else
+                                {
+                                    start += 1; // exclude the first index of character (Char itself)
+                                    temp = temp.Substring(start, end - start);
+                                }
                             }
                         }
                     }
+                    return temp;
+                }
 
+                /* Get the Access Point IP Address
+                 *
+                 * @param timeoutMs
+                 * Timeout value in ms.If nonzero, function will wait for
+                 *            config success and report an error if it times out.
+                 *            If zero, no blocking or checking is performed.
+                 * @return String of the IP Address
+                 *            If in softAP Mode, we check the first 11 characters to match
+                 *            "+CIFSR:APIP"
+                 */
+                public String getAccessPointIP(int timeoutMs = 100)
+                {
+                    byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
+
+                    int err = transaction(toSend, timeoutMs);
+
+                    string temp = "";   /* Return empty string if there is no response */
+                    if (err == 0)
+                    {
+                        foreach (String x in lines)
+                        {
+                            if (x.Length >= 11 && x.Substring(0, 11) == "+CIFSR:APIP")
+                            {
+                                temp = x.ToString();
+
+                                int start = temp.IndexOf('\"');
+                                int end = temp.LastIndexOf('\"');
+                                if(start <= -1 || end <= -1 || (start + (end - start)) > temp.Length)
+                                {
+                                    /* Skip over if start, end, or length are invalid */
+                                    temp = "";
+                                }
+                                else
+                                {
+                                    start += 1; // exclude the first index of character (Char itself)
+                                    temp = temp.Substring(start, end - start);
+                                }
+                            }
+                        }
+                    }
                     return temp;
                 }
 
