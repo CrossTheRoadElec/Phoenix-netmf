@@ -190,7 +190,7 @@ namespace CTRE
                                     /* start with char after first quote */
                                     temp = temp.Substring(start + 1, len);
                                     /* leave for loop immedietely since IP has been found */
-                                    return temp
+                                    return temp;
                                 }
                             }
                         }
@@ -237,7 +237,7 @@ namespace CTRE
                                     /* start with char after first quote */
                                     temp = temp.Substring(start + 1, len);
                                     /* leave for loop immedietely since IP has been found */
-                                    return temp
+                                    return temp;
                                 }
                             }
                         }
