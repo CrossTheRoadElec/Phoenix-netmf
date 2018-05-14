@@ -150,6 +150,101 @@ namespace CTRE
                     return temp;
                 }
 
+                /**
+                 * Get the Station IP Address
+                 *
+                 * @param timeoutMs
+                 *            Timeout value in ms. If nonzero, function will wait for
+                 *            config success and report an error if it times out.
+                 *            If zero, no blocking or checking is performed.
+                 * @return String of the IP Address
+                 *            If in Station Mode, we check the first 12 characters to match 
+                 *            "+CIFSR:STAIP". 
+                 */
+                public String getStationIP(int timeoutMs = 100)
+                {
+                    byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
+
+                    int err = transaction(toSend, timeoutMs);
+
+                    string temp = "";   /* Return empty string if there is no response */
+                    if (err == 0)
+                    {
+                        foreach (String x in lines)
+                        {
+                            if (x.Length >= 12 && x.Substring(0, 12) == "+CIFSR:STAIP")
+                            {
+                                /* the line holding IP has been found, copy it out */
+                                temp = x.ToString();
+                                /* crop out everything between quotes */
+                                int start = temp.IndexOf('\"');
+                                int end = temp.LastIndexOf('\"');
+                                int len = end - start - 1; /* chars between quotes not including quotes themselves */
+                                /* validate input, do not parse if garbage */
+                                if (start <= -1 || end <= -1 || len <= -1)
+                                {
+                                    /* Leave temp as empty if start, end, or length are invalid */
+                                }
+                                else
+                                {
+                                    /* start with char after first quote */
+                                    temp = temp.Substring(start + 1, len);
+                                    /* leave for loop immedietely since IP has been found */
+                                    return temp;
+                                }
+                            }
+                        }
+                    }
+                    return temp;
+                }
+
+                /* Get the Access Point IP Address
+                 *
+                 * @param timeoutMs
+                 * Timeout value in ms.If nonzero, function will wait for
+                 *            config success and report an error if it times out.
+                 *            If zero, no blocking or checking is performed.
+                 * @return String of the IP Address
+                 *            If in softAP Mode, we check the first 11 characters to match
+                 *            "+CIFSR:APIP"
+                 */
+                public String getAccessPointIP(int timeoutMs = 100)
+                {
+                    byte[] toSend = MakeByteArrayFromString("AT+CIFSR" + "\r\n");
+
+                    int err = transaction(toSend, timeoutMs);
+
+                    string temp = "";   /* Return empty string if there is no response */
+                    if (err == 0)
+                    {
+                        foreach (String x in lines)
+                        {
+                            if (x.Length >= 11 && x.Substring(0, 11) == "+CIFSR:APIP")
+                            {
+                                /* the line holding IP has been found, copy it out */
+                                temp = x.ToString();
+                                /* crop out everything between quotes */
+                                int start = temp.IndexOf('\"');
+                                int end = temp.LastIndexOf('\"');
+                                int len = end - start - 1; /* chars between quotes not including quotes themselves */
+                                /* validate input, do not parse if garbage */
+                                if (start <= -1 || end <= -1 || len <= -1)
+                                {
+                                    /* Leave temp as empty if start, end, or length are invalid */
+                                }
+                                else
+                                {
+                                    /* start with char after first quote */
+                                    temp = temp.Substring(start + 1, len);
+                                    /* leave for loop immedietely since IP has been found */
+                                    return temp;
+                                }
+                            }
+                        }
+                    }
+                    return temp;
+                }
+
                 public int setWifiMode(wifiMode mode, int timeoutMs = 50)
                 {
                     byte[] toSend = MakeByteArrayFromString("AT+CWMODE_CUR=" + mode + "\r\n");
