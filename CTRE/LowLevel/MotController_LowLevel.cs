@@ -695,7 +695,7 @@ namespace CTRE.Phoenix.LowLevel
                     break;
             }
             int param = (int)feedbackDevice;
-            return ConfigSetParameter(ParamEnum.eFeedbackSensorType, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eFeedbackSensorType, param, 0, pidIdx, timeoutMs);
         }
 
         public ErrorCode ConfigSelectedFeedbackCoefficient(
