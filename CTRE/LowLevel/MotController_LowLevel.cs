@@ -1149,11 +1149,11 @@ namespace CTRE.Phoenix.LowLevel
 
             if (pidIdx == 0)
             {
-                SetClrSmallVal(slotIdx, 2, 8, 0, CONTROL_3);
+                SetClrSmallVal(slotIdx, 2, 7, 0, CONTROL_3);
             }
             else if (pidIdx == 1)
             {
-                SetClrSmallVal(slotIdx, 2, 8, 2, CONTROL_3);
+                SetClrSmallVal(slotIdx, 2, 7, 2, CONTROL_3);
             }
             else
             {
