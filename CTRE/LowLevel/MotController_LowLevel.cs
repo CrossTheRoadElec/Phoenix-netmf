@@ -181,17 +181,22 @@ namespace CTRE.Phoenix.LowLevel
 
         //--------------------- Constructors -----------------------------//
         /**
-         * Constructor for the CANTalon device.
-         * @param deviceNumber The CAN ID of the Talon SRX
-         * @param externalEnable pass true to prevent sending enable frames.
-         *  	This can be useful when having one device enable the Talon, and
-         * 		another to control it.
+         * Constructor for the CAN Enabled CTRE motor controller.
+         * @param deviceNumber The CAN ID of the CTRE motor controller.
+         * @param externalEnable Has no effect (originally was used to 
+         *                      allow individual enable signal from 
+         *                      external source). Defaults to false.
          */
         public MotController_LowLevel(int baseArbId, bool externalEnable = false)
             : base((uint)baseArbId, (uint)baseArbId | STATUS_05, (uint)baseArbId | PARAM_REQ, (uint)baseArbId | PARAM_RESP, (uint)baseArbId | PARAM_SET, (uint)baseArbId | STATUS_15)
         {
-            if (false == externalEnable) { /*native calling contract for this has changed*/}
-            CTRE.Native.CAN.Send(CONTROL_3 | (uint)_baseArbId, 0x00, 8, 10);
+            /* 
+             * Talon SRX, Victor SPX, etc., are controlled via two frames...
+             * - Enable frame (ArbID $401BF, first data byte is 0 for disable, 1 for enable, other bytes are zero, DLC=8).
+             * - Control frame (ArbID uses CONTROL_3), each device gets a unique control frame.
+             * ... Enable is taken care of by HERO firmware. Control is done in this class.
+             */
+            CTRE.Native.CAN.Send(CONTROL_3 | (uint)_baseArbId, 0x00, 8, 10); /* control frame */
 
             /* fill description */
             StringBuilder work = new StringBuilder();
