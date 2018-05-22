@@ -373,16 +373,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
             _ll.OverrideLimitSwitchesEnable(enable);
         }
 
-        //------ local limit switch ----------//
-        public ErrorCode ConfigForwardLimitSwitchSource(LimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int timeoutMs = 0)
-        {
-            return _ll.ConfigForwardLimitSwitchSource(type, normalOpenOrClose, 0, timeoutMs);
-        }
-        public ErrorCode ConfigReverseLimitSwitchSource(LimitSwitchSource type, LimitSwitchNormal normalOpenOrClose, int timeoutMs = 0)
-        {
-            return _ll.ConfigReverseLimitSwitchSource(type, normalOpenOrClose, 0, timeoutMs);
-        }
-
 
         //------ soft limit ----------//
         public ErrorCode ConfigForwardSoftLimitThreshold(int forwardSensorLimit, int timeoutMs = 0)

@@ -61,6 +61,6 @@ namespace CTRE.Phoenix.Drive
         //ErrorCode GetMotionProfileTopLevelBufferCount();
         //ErrorCode PushMotionProfileTrajectory(Motion.TrajectoryPoint trajPt);
         //bool IsMotionProfileTopLevelBufferFull();
-		///* in parent */
+		//* in parent */
     }
 }

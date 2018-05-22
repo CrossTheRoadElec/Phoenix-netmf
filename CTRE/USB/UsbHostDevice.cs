@@ -51,7 +51,8 @@ namespace CTRE.Phoenix
             XInputDevices,
             BothDInputAndXInput,
         }
-        /**
+
+        /*
          * This will allow for Logitech gamepads with DInput selected.
          * Selecting XInput on the gamepad will cause joystick to 
          * disconnect (typically disabling robot).
@@ -62,7 +63,7 @@ namespace CTRE.Phoenix
         //{
         //    _maskBits = 0;
         //}
-        /**
+        /*
          * This will allow for Logitech gamepads with XInput selected.
          * Selecting Dinput on the gamepad will cause joystick to 
          * disconnect (typically disabling robot).

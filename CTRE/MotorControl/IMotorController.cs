@@ -2,7 +2,7 @@ using System;
 using Microsoft.SPOT;
 using CTRE.Phoenix.LowLevel;
 
-/**
+/*
  * @param PhaseSensor 		Select true or false so that sensor is positive 
  *								when Motor Controller LED is green. Dial this in first
  *								regardless of desired direction.

@@ -1,4 +1,4 @@
-/**
+/*
  * Decodes the PWM inputs from CANifier for the 3 Channel RC Radio.
  * Tested range exceeds 400ft. Used Futaba radio to test.
  * @link http://www.futabarc.com/systems/futk3100.html

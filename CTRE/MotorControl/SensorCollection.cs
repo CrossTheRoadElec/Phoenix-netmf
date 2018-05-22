@@ -1,13 +1,10 @@
-/** Implements the sensorcollection class. */
-
 using System;
 using Microsoft.SPOT;
 using CTRE.Phoenix.LowLevel;
 
 namespace CTRE.Phoenix.MotorControl
 {
-    /** Collection of sensors. */
-
+    /** Implements the sensorcollection class. */
     public class SensorCollection
     {
         /** Low level object. */

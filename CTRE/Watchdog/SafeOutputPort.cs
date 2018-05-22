@@ -1,5 +1,5 @@
 ﻿using Microsoft.SPOT.Hardware;
-/**
+/*
  * @brief Digital Output that will safely transition to high-impedence if HERO is disabled.
  * @author Ozrien
  */

@@ -31,7 +31,7 @@ namespace CTRE.Phoenix.LowLevel
         int _firmVers = -1; /* invalid */
         int _failedVersionChecks = 0;
 
-        internal ErrorCodeVar _lastError;
+        internal ErrorCodeVar _lastError = ErrorCode.OK;
 
         System.Collections.Hashtable _sigs_Value = new System.Collections.Hashtable();
         System.Collections.Hashtable _sigs_SubValue = new System.Collections.Hashtable();

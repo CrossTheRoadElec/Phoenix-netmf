@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * Converts hue, saturation, and value into RGB
  * 
  * Original posted code found at

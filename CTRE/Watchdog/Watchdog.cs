@@ -1,5 +1,5 @@
 ﻿using System;
-/**
+/*
  * @brief Singleton Watchdog for ensuring actuators are disabled when appropriate.
  *      The simplest use case is for the user's application to call Watchdog.Feed() periodically
  *      to allow motor control.  This way if the managed app terminates, the motor drive will disable.

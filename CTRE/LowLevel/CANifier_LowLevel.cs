@@ -29,8 +29,6 @@ namespace CTRE.Phoenix.LowLevel
         private UInt64 _cache;
         private UInt32 _len;
 
-        private UInt32 _can_h = 0;
-        private int _can_stat = 0;
         private System.Collections.Hashtable _sigs = new System.Collections.Hashtable();
 
         private uint _regInput = 0; //!< Decoded inputs
@@ -67,7 +65,7 @@ namespace CTRE.Phoenix.LowLevel
                 CTRE.Native.CAN.Send(CANifier_Control_1_General_20Ms | _baseArbId, 0x00, 8, 20);
             }
         }
-        void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failCode = ErrorCode.FirmwareTooOld)
+        new void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failCode = ErrorCode.FirmwareTooOld)
         {
             base.CheckFirmVers(minMajor, minMinor, failCode);
         }

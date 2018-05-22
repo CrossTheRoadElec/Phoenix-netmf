@@ -1,19 +1,19 @@
-/**
- * Object driver for CANifier, a multi purpose CAN device capable of
- * - driving RGB common anode LED strip.
- * - reading up to four general purpose PWM inputs.
- * - generating up to four general purpose PWM outputs.
- * - I2C/SPI transfers queued over CAN bus.
- * - 11 3.3V GPIOs
- * - Quadrature input
- * - field-upgradeable for future Talon/Pigeon/CANifier control features.
- */
 using System;
 using Microsoft.SPOT;
 using CTRE.Phoenix.LowLevel;
 
 namespace CTRE.Phoenix
 {
+    /**
+     * Object driver for CANifier, a multi purpose CAN device capable of
+     * - driving RGB common anode LED strip.
+     * - reading up to four general purpose PWM inputs.
+     * - generating up to four general purpose PWM outputs.
+     * - I2C/SPI transfers queued over CAN bus.
+     * - 11 3.3V GPIOs
+     * - Quadrature input
+     * - field-upgradeable for future Talon/Pigeon/CANifier control features.
+     */
     public class CANifier
     {
         CANifier_LowLevel _ll;

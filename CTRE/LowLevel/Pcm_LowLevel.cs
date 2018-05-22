@@ -14,8 +14,6 @@ namespace CTRE.Phoenix.LowLevel
         private UInt64 _cache;
         private UInt32 _len;
 
-        ErrorCode _lastError = ErrorCode.OK;
-
         private const UInt32 kDefaultPeriodMs = 20;
         private const UInt32 kNumSolChannels = 8;
 

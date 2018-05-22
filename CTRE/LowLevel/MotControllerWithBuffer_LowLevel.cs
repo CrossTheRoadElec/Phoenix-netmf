@@ -1,6 +1,4 @@
-﻿/**  */
-/**  */
-using System;
+﻿using System;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using CTRE.Phoenix.MotorControl;

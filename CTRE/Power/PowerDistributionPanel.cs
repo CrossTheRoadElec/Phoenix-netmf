@@ -37,8 +37,6 @@ namespace CTRE.Phoenix
 
         Int16[] _cache_words = new Int16[6];
 
-        ErrorCodeVar _lastError = ErrorCode.OK;
-
         const float kCurrentScalar = 0.125f;
 
         /** CAN frame defines */

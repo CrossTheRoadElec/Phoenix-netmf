@@ -384,12 +384,12 @@ namespace CTRE
                     {
                         //int oldX = _pos[0];
                         //int oldY = _pos[1];
-                        ///* apply new locs */
+                        //* apply new locs */
                         //_pos[0] = _newPos[0];
                         //_pos[1] = _newPos[1];
-                        ///* erase */
+                        //* erase */
                         //_container.DrawRaw_Constant(0x0000, _size[0] * _size[1] * 2, oldX, oldY, _size[0], _size[1]);
-                        ///* repaint it */
+                        //* repaint it */
                         //_container.DrawRaw_Constant(_pixelCol, _size[0] * _size[1] * 2, _pos[0], _pos[1], _size[0], _size[1]);
                     }
                 }

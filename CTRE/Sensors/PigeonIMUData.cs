@@ -111,7 +111,7 @@ namespace CTRE.Phoenix.Sensors
             /**
              * general string description of current status
              */
-            public String ToString()
+            override public String ToString()
             {
                 /* build description string */
                 if (lastError != ErrorCode.OK)
@@ -188,7 +188,7 @@ namespace CTRE.Phoenix.Sensors
 
         public String description;
 
-        public String ToString()
+        override public String ToString()
         {
             if (lastError != ErrorCode.OK)
             {

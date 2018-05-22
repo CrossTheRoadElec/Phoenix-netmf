@@ -101,7 +101,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
             CTRE.Native.CAN.Send(CONTROL_1 | _baseArbId, 0x00, 2, 50); /* two bytes, all zeros */
         }
 
-        void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failcode = ErrorCode.FirmwareTooOld)
+        new void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failcode = ErrorCode.FirmwareTooOld)
         {
             base.CheckFirmVers(minMajor, minMinor, failcode);
         }
@@ -625,7 +625,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         /// <summary>
         /// How long has Pigeon been running
         /// </summary>
-        /// <param name="timeSec"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
         public ErrorCode GetUpTime(out int value)
         {
