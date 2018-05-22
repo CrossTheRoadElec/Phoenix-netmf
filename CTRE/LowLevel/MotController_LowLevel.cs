@@ -1366,6 +1366,10 @@ namespace CTRE.Phoenix.LowLevel
             raw |= L;
             raw <<= (32 - 24); /* sign extend */
             raw >>= (32 - 24); /* sign extend */
+
+            int posDiv8 = (int)((_cache >> (0x38 + 4)) & 1);
+            if(posDiv8 == 1) { raw *= 8; }
+
             param = (int)raw;
             return SetLastError(retval);
         }
@@ -1382,6 +1386,10 @@ namespace CTRE.Phoenix.LowLevel
             raw |= L;
             raw <<= (32 - 16); /* sign extend */
             raw >>= (32 - 16); /* sign extend */
+
+            int velDiv4 = (int)((_cache >> (0x38 + 3)) & 1);
+            if (velDiv4 == 1) { raw *= 4; }
+
             param = (int)raw;
             return SetLastError(retval);
         }
