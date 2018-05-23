@@ -698,7 +698,7 @@ namespace CTRE.Phoenix.LowLevel
                     break;
             }
             int param = (int)feedbackDevice;
-            return ConfigSetParameter(ParamEnum.eFeedbackSensorType, param, 0, 0, timeoutMs);
+            return ConfigSetParameter(ParamEnum.eFeedbackSensorType, param, 0, pidIdx, timeoutMs);
         }
 
         public ErrorCode ConfigSelectedFeedbackCoefficient(
@@ -1152,11 +1152,11 @@ namespace CTRE.Phoenix.LowLevel
 
             if (pidIdx == 0)
             {
-                SetClrSmallVal(slotIdx, 2, 8, 0, CONTROL_3);
+                SetClrSmallVal(slotIdx, 2, 7, 0, CONTROL_3);
             }
             else if (pidIdx == 1)
             {
-                SetClrSmallVal(slotIdx, 2, 8, 2, CONTROL_3);
+                SetClrSmallVal(slotIdx, 2, 7, 2, CONTROL_3);
             }
             else
             {

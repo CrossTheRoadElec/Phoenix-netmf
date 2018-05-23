@@ -472,8 +472,28 @@ namespace CTRE.Phoenix.LowLevel
         {
             int valueInt;
             ErrorCode retval = ConfigGetParameter(paramEnum, 0, out valueInt, 0x00, ordinal, timeoutMs);
-            // todo scaling?
-            value = (float)valueInt;
+            /* scaling */
+            switch (paramEnum)
+            {
+                case ParamEnum.eProfileParamSlot_P: /* 10.22 fixed pt value */
+                case ParamEnum.eProfileParamSlot_I:
+                case ParamEnum.eProfileParamSlot_D:
+                case ParamEnum.eProfileParamSlot_F:
+                    value = ((float)valueInt) * FXP_TO_FLOAT_10_22;
+                    break;
+                case ParamEnum.eNominalBatteryVoltage:
+                    value = ((float)valueInt) * FXP_TO_FLOAT_0_8;
+                    break;
+                case ParamEnum.eProfileParamSlot_PeakOutput:
+                    value = ((float)valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eSelectedSensorCoefficient:
+                    value = ((float)valueInt) * 1.0f / 65536.0f;
+                    break;
+                default: /* everything else is integral */
+                    value = (float)valueInt;
+                    break;
+            }
             return retval;
         }
 
