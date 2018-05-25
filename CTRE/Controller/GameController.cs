@@ -43,7 +43,7 @@ namespace CTRE.Phoenix.Controller
         /**
          * @param buttonArray. Array with current state of buttons less than buttanArray.length
          *                     Array[0] always false.
-         *                     Array index matches button index from [0, 12]. GetButton returns false when exceeded
+         *                     Array index matches button index from [1, 12]. Return false when index exceeds button count
          */
          public void GetButtons(bool[] buttonArray)
          {
