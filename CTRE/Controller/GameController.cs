@@ -41,6 +41,24 @@ namespace CTRE.Phoenix.Controller
             return (_values.btns >> (int)buttonIdx & 1) == 1;
         }
         /**
+         * @param buttonArray. Array with current state of buttons less than buttanArray.length
+         *                     Array[0] always false.
+         *                     Array index matches button index from [0, 12]. GetButton returns false when exceeded
+         */
+         public void GetButtons(bool[] buttonArray)
+         {
+            /* Ensure Array has length */
+            if(buttonArray != null)
+            {
+                /* This Gamepad type does not have a button 0, store false */
+                buttonArray[0] = false;
+                /* Store button state into matching array index */
+                for(uint i = 1; i < buttonArray.Length; ++i)
+                    /* GetButton() returns false when length/array index exceeds button count */
+                    buttonArray[i] = GetButton(i);
+            }
+         }
+        /**                     
          * @param axisIdx (Zero-indexed axis).  '0' is typically the first X axis.
          * @return floating point value within [-1,1].
          */
