@@ -195,6 +195,7 @@ namespace CTRE.Phoenix.LowLevel
              * - Enable frame (ArbID $401BF, first data byte is 0 for disable, 1 for enable, other bytes are zero, DLC=8).
              * - Control frame (ArbID uses CONTROL_3), each device gets a unique control frame.
              * ... Enable is taken care of by HERO firmware. Control is done in this class.
+             * All CAN Bus framing uses 29bit arbIDs.
              */
             CTRE.Native.CAN.Send(CONTROL_3 | (uint)_baseArbId, 0x00, 8, 10); /* control frame */
 
