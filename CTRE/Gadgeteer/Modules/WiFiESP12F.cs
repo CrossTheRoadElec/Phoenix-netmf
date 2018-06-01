@@ -53,7 +53,7 @@ namespace CTRE
 
                 int dataCount;
                 byte[] dataCache = new byte[0];
-                static byte[] _rx = new byte[1024];
+                byte[] _rx = new byte[1024];
 
                 //  WiFiSerialLexer lex;
 
