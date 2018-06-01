@@ -3,7 +3,7 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl
 {
-    public struct Faults
+    public class Faults
     {
         public bool UnderVoltage;
         public bool ForwardLimitSwitch;

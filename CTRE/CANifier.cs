@@ -49,7 +49,7 @@ namespace CTRE.Phoenix
             SPI_CLK_PWM0P = (10),
         }
 
-        public struct PinValues
+        public class PinValues
         {
             public bool QUAD_IDX;
             public bool QUAD_B;

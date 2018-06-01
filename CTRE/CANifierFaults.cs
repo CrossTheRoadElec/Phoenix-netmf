@@ -3,7 +3,7 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix
 {
-    public struct CANifierFaults
+    public class CANifierFaults
     {
         //!< True iff any of the above flags are true.
         bool HasAnyFault() {

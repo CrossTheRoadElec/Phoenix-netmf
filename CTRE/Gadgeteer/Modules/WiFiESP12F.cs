@@ -20,6 +20,8 @@ namespace CTRE
                 int baud = 115200;
                 String SSID;
 
+                private bool printTraffic = true;
+
                 const int kDefaultTimeoutMs = 100;
                 const int kSendTimeoutMs = 1000;
 
@@ -53,7 +55,7 @@ namespace CTRE
 
                 int dataCount;
                 byte[] dataCache = new byte[0];
-                static byte[] _rx = new byte[1024];
+                byte[] _rx = new byte[1024];
 
                 //  WiFiSerialLexer lex;
 
@@ -148,6 +150,15 @@ namespace CTRE
                     }
 
                     return temp;
+                }
+
+                /// <summary>
+                /// Sets whether all UART traffic to/from the ESP12F is printed in the Debug output.
+                /// </summary>
+                /// <param name="enable">True enables printing. Default value is "true".</param>
+                public void enableDebugPrints(bool enable)
+                {
+                    printTraffic = enable;
                 }
 
                 /**
@@ -252,8 +263,26 @@ namespace CTRE
                     return transaction(toSend, timeoutMs, "OK");
                 }
 
+                /// <summary>
+                /// Configures the Access Point settings for the ESP12F.
+                /// </summary>
+                /// <param name="_SSID"></param>
+                /// <param name="password">Must be [8,63] ASCII characters.</param>
+                /// <param name="channel"></param>
+                /// <param name="encryption"></param>
+                /// <returns></returns>
                 public int setAP(String _SSID, String password, int channel, SecurityType encryption)
                 {
+                    if(password.Length < 8 || password.Length > 63)
+                    {
+                        Phoenix.Reporting.Log(ErrorCode.InvalidParamValue, "WiFiESP12F: Password must be from 8 to 63 ASCII characters long.", 0, "");
+                        return -1;
+                    }
+                    if (!IsASCII(password))
+                    {
+                        Phoenix.Reporting.Log(ErrorCode.InvalidParamValue, "WiFiESP12F: Password must be entirely ASCII characters.", 0, "");
+                        return -1;
+                    }
                     SSID = _SSID;
                     byte[] toSend = MakeByteArrayFromString("AT+CWSAP_CUR=\"" + _SSID + "\",\"" + password + "\"," + channel + "," + encryption + "\r\n");
                     return transaction(toSend, kDefaultTimeoutMs, "OK");
@@ -592,7 +621,7 @@ namespace CTRE
                         if (temp.ToString() != "\n" && temp.ToString() != "\r" && temp.ToString() != null)
                         {
                             lines.Add(temp.ToString());
-                            Debug.Print(temp.ToString());
+                            if (printTraffic) { Debug.Print(temp.ToString()); }
                         }
 
                         temp.Clear();
@@ -669,6 +698,15 @@ namespace CTRE
                         }
                     }
                     return false;
+                }
+
+                private bool IsASCII(string text)
+                {
+                    for(int i = 0; i < text.Length; i++)
+                    {
+                        if(text[i] < 32 || text[i] > 126) { return false; }
+                    }
+                    return true;
                 }
             }
         }

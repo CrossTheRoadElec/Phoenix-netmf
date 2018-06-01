@@ -68,7 +68,7 @@
 //        private bool ZeroTurn(float targetHeading, float headingTolerance)
 //        {
 //            if (_servoParams.P == 0 && _servoParams.I == 0 && _servoParams.D == 0)
-//                Debug.Print("CTR: Servo Zero Turn With Imu has no PID values, cannot turn");
+//                Debug.Print("HERO: Servo Zero Turn With Imu has no PID values, cannot turn");
 //            /* Grab the current heading */
 //            float currentHeading = GetImuHeading();
 

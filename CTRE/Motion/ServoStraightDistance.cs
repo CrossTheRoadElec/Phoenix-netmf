@@ -110,9 +110,9 @@
 //        private bool StraightDistance(float targetHeading, float targetDistance, float headingTolerance, float distanceTolerance)
 //        {
 //            if (_straightServoParams.P == 0 && _straightServoParams.I == 0 && _straightServoParams.D == 0)
-//                Debug.Print("CTR: Servo Straight Distance has no straight PID values, cannot go straight");
+//                Debug.Print("HERO: Servo Straight Distance has no straight PID values, cannot go straight");
 //            if (_distanceServoParams.P == 0 && _distanceServoParams.I == 0 && _distanceServoParams.D == 0)
-//                Debug.Print("CTR: Servo Straight Distance has no distance PID values, cannot go forward");
+//                Debug.Print("HERO: Servo Straight Distance has no distance PID values, cannot go forward");
 //            /* Grab current heading and distance*/
 //            float currentDistance = GetEncoderDistance();
 

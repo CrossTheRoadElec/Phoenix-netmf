@@ -119,9 +119,9 @@
 //        private bool StraightDistance(float targetHeading, float targetDistance, float headingTolerance, float distanceTolerance)
 //        {
 //            if (_straightServoParameters.P == 0 && _straightServoParameters.I == 0 && _straightServoParameters.D == 0)
-//                Debug.Print("CTR: Servo Straight Distance With Imu has no straight PID values, cannot go straight");
+//                Debug.Print("HERO: Servo Straight Distance With Imu has no straight PID values, cannot go straight");
 //            if (_distanceServoParameters.P == 0 && _distanceServoParameters.I == 0 && _distanceServoParameters.D == 0)
-//                Debug.Print("CTR: Servo Straight Distance With Imuhas no distance PID values, cannot go forward");
+//                Debug.Print("HERO: Servo Straight Distance With Imuhas no distance PID values, cannot go forward");
 //            /* Grab current distance */
 //            float currentDistance = GetEncoderDistance();
 

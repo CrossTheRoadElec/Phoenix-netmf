@@ -7,7 +7,7 @@ namespace CTRE.Phoenix.Motion
      * Motion Profile Status
      * This is simply a data transer object.
      */
-    public struct MotionProfileStatus
+    public class MotionProfileStatus
     {
 
         /**

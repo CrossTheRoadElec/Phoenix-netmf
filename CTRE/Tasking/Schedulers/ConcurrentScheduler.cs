@@ -43,7 +43,7 @@ namespace CTRE.Phoenix.Tasking
                     return;
                 }
             }
-            Debug.Print("CTR: Could not find object in scheduler");
+            Debug.Print("HERO: Could not find object in scheduler");
         }
         public void Stop(ILoopable toStart)
         {
@@ -62,7 +62,7 @@ namespace CTRE.Phoenix.Tasking
                     return;
                 }
             }
-            Debug.Print("CTR: Could not find object in scheduler");
+            Debug.Print("HERO: Could not find object in scheduler");
         }
 
         public void RemoveAll()

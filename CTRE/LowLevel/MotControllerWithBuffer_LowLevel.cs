@@ -574,7 +574,7 @@ namespace CTRE.Phoenix.LowLevel
          * @param   statusToFill    The status to fill.
          */
 
-        public void GetMotionProfileStatus(ref Motion.MotionProfileStatus statusToFill)
+        public void GetMotionProfileStatus(Motion.MotionProfileStatus statusToFill)
         {
             int temp;
 

@@ -125,7 +125,7 @@ namespace CTRE.Phoenix.MotorControl
         ErrorCode PushMotionProfileTrajectory(Motion.TrajectoryPoint trajPt);
         bool IsMotionProfileTopLevelBufferFull();
         void ProcessMotionProfileBuffer();
-        void GetMotionProfileStatus(ref Motion.MotionProfileStatus statusToFill);
+        void GetMotionProfileStatus(Motion.MotionProfileStatus statusToFill);
         void ClearMotionProfileHasUnderrun(int timeoutMs = 0);
 
         //------ error ----------//

@@ -610,9 +610,9 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             _ll.ProcessMotionProfileBuffer();
         }
-        public void GetMotionProfileStatus(ref Motion.MotionProfileStatus statusToFill)
+        public void GetMotionProfileStatus(Motion.MotionProfileStatus statusToFill)
         {
-            _ll.GetMotionProfileStatus(ref statusToFill);
+            _ll.GetMotionProfileStatus(statusToFill);
         }
         public ErrorCode PushMotionProfileTrajectory(Motion.TrajectoryPoint trajPt)
         {

@@ -35,6 +35,11 @@ namespace CTRE.Phoenix.Controller
          */
         public bool GetButton(uint buttonIdx)
         {
+            if(buttonIdx == 0)
+            {
+                Reporting.Log(ErrorCode.InvalidParamValue, AbstractLocalGamepad.Button0Error, 0, "");
+                return false;
+            }
             if (buttonIdx > 0)
                 --buttonIdx;
             _provider.Get(ref _values, _index);

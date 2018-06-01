@@ -26,7 +26,7 @@ namespace CTRE.Phoenix.Drive
             _gearBoxes = new RemoteSensoredGearbox[] { _left, _right };
 
             if (wheelRadius < 0.01)
-                Debug.Print("CTR: Wheel radius must be greater than 0.01");
+                Debug.Print("HERO: Wheel radius must be greater than 0.01");
             this.wheelRadius = wheelRadius;
         }
         public SensoredTank(SensoredGearbox left, SensoredGearbox right, bool leftInverted, bool rightInverted, float wheelRadius)
@@ -114,19 +114,19 @@ namespace CTRE.Phoenix.Drive
 
             if (wheelRadius < 0.01)
             {
-                Debug.Print("CTR: Sensored Tank has too small of a wheel radius, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has too small of a wheel radius, cannot get heading");
                 return 0;
             }
 
             if (ticksPerRev == 0)
             {
-                Debug.Print("CTR: Sensored Tank has not set ticks per wheel revolution, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has not set ticks per wheel revolution, cannot get heading");
                 return 0;
             }
 
             if (DistanceBetweenWheels < 0.01)
             {
-                Debug.Print("CTR: Sensored Tank has too small of a distance between wheels, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has too small of a distance between wheels, cannot get heading");
                 return 0;
             }
 
@@ -142,19 +142,19 @@ namespace CTRE.Phoenix.Drive
 
             if (wheelRadius < 0.01)
             {
-                Debug.Print("CTR: Sensored Tank has too small of a wheel radius, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has too small of a wheel radius, cannot get heading");
                 return 0;
             }
 
             if (ticksPerRev == 0)
             {
-                Debug.Print("CTR: Sensored Tank has not set ticks per wheel revolution, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has not set ticks per wheel revolution, cannot get heading");
                 return 0;
             }
 
             if (DistanceBetweenWheels < 0.01)
             {
-                Debug.Print("CTR: Sensored Tank has too small of a distance between wheels, cannot get heading");
+                Debug.Print("HERO: Sensored Tank has too small of a distance between wheels, cannot get heading");
                 return 0;
             }
 
