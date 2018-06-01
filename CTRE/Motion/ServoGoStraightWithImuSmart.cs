@@ -72,7 +72,7 @@
 //        private bool GoStraight(float Y, float targetHeading, float headingTolerance)
 //        {
 //            if (_servoParameters.P == 0 && _servoParameters.I == 0 && _servoParameters.D == 0)
-//                Debug.Print("CTR: Servo Go Straight With Imu Smart has no PID values, cannot go straight");
+//                Debug.Print("HERO: Servo Go Straight With Imu Smart has no PID values, cannot go straight");
 //            /* Grab current heading */
 //            float currentHeading = GetImuHeading();
 

@@ -109,7 +109,7 @@ namespace CTRE.Phoenix.LowLevel
 
             _outmsg.Append("Error ");
             _outmsg.Append(_code);
-            _outmsg.Append(" CTR: ");
+            _outmsg.Append(" HERO: ");
             _outmsg.Append(_shortMessage);
             _outmsg.Append(" ");
             _outmsg.Append(_origin);

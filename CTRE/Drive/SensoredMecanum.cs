@@ -43,7 +43,7 @@
 //            _4 = temp4;
 
 //            if (wheelRadius < 0.01)
-//                Debug.Print("CTR: Wheel radius must be greater than 0.01");
+//                Debug.Print("HERO: Wheel radius must be greater than 0.01");
 //            this.wheelRadius = wheelRadius;
 //        }
 
@@ -62,7 +62,7 @@
 //            _rightSensor = true;
 
 //            if (wheelRadius < 0.01)
-//                Debug.Print("CTR: Wheel radius must be greater than 0.01");
+//                Debug.Print("HERO: Wheel radius must be greater than 0.01");
 //            this.wheelRadius = wheelRadius;
 //        }
 
@@ -132,19 +132,19 @@
 
 //            if (wheelRadius < 0.01)
 //            {
-//                Debug.Print("CTR: Sensored Mecanum has too small of a wheel radius, cannot get heading");
+//                Debug.Print("HERO: Sensored Mecanum has too small of a wheel radius, cannot get heading");
 //                return 0;
 //            }
 
 //            if (ticksPerRev == 0)
 //            {
-//                Debug.Print("CTR: Sensored Mecanum has not set ticks per wheel revolution, cannot get heading");
+//                Debug.Print("HERO: Sensored Mecanum has not set ticks per wheel revolution, cannot get heading");
 //                return 0;
 //            }
 
 //            if (distanceBetweenWheels < 0.01)
 //            {
-//                Debug.Print("CTR: Sensored Mecanum has too small of a distance between wheels, cannot get heading");
+//                Debug.Print("HERO: Sensored Mecanum has too small of a distance between wheels, cannot get heading");
 //                return 0;
 //            }
 
