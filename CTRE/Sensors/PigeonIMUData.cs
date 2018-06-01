@@ -3,8 +3,6 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.Sensors
 {
-    //public static class PigeonIMUData
-    //{
         /** Various calibration modes supported by Pigeon. */
         public enum CalibrationMode
         {
@@ -210,7 +208,7 @@ namespace CTRE.Phoenix.Sensors
         }
     }
 
-    public struct PigeonIMU_Faults
+    public class PigeonIMU_Faults
         {
             //!< True iff any of the above flags are true.
             bool HasAnyFault()
@@ -226,7 +224,7 @@ namespace CTRE.Phoenix.Sensors
             PigeonIMU_Faults(int bits) { }
         };
 
-        public struct PigeonIMU_StickyFaults
+        public class PigeonIMU_StickyFaults
         {
             //!< True iff any of the above flags are true.
             bool HasAnyFault()
@@ -241,5 +239,4 @@ namespace CTRE.Phoenix.Sensors
 
             PigeonIMU_StickyFaults(int bits) { }
         };
-    //}
 }

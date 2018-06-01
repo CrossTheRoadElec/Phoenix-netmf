@@ -3,7 +3,7 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl
 {
-    public struct ZeroSensorCriteria
+    public class ZeroSensorCriteria
     {
         public bool ZeroSensorOnIdx;
         public bool IdxRisingEdge;
