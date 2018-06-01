@@ -22,6 +22,8 @@ namespace CTRE.Phoenix.Controller
         public abstract float GetStick(uint axis);
         public abstract uint GetPid();
 
+        internal static string Button0Error = "0 is not a valid button index.";
+
         abstract public bool ModeButtonEnabled(); // tuck into logi
  
         abstract public bool VibrateButtonEnabled(); // tuck into logi

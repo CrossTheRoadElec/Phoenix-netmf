@@ -168,6 +168,11 @@ namespace CTRE.Phoenix.Controller
 
             if (idx < 0) 	/* caller can change button defs to -1 to remove certain features */
                 return false;
+            if (idx == 0)
+            {
+                Reporting.Log(ErrorCode.InvalidParamValue, Button0Error, 0, "");
+                return false;
+            }
             if (idx > 0)
                 --idx;
             uint old = (_oldBtns >> (int)idx) & 1;
@@ -184,7 +189,11 @@ namespace CTRE.Phoenix.Controller
         override public bool IsButtonLow(uint idx)
         {
             //idx = LogToXboxBtnIdx(idx);
-
+            if (idx == 0)
+            {
+                Reporting.Log(ErrorCode.InvalidParamValue, Button0Error, 0, "");
+                return false;
+            }
             if (idx > 0)
                 --idx;
             uint latest = (_gv.btns >> (int)idx) & 1;

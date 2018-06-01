@@ -72,8 +72,8 @@ namespace CTRE.Phoenix
                     shortDescripToFill = "TxTimeout";
                     break;
                 case ErrorCode.InvalidParamValue:
-                    longDescripToFill = "Incorrect argument passed into function/VI.  Check the input parameter values against software documentation.";
-                    shortDescripToFill = "Incorrect argument passed into function/VI.";
+                    longDescripToFill = "Incorrect argument passed into function.  Check the input parameter values against software documentation.";
+                    shortDescripToFill = "Incorrect argument passed into function.";
                     break;
                 case ErrorCode.UnexpectedArbId:
                     longDescripToFill = "ArbID is incorrect, UnexpectedArbId";
