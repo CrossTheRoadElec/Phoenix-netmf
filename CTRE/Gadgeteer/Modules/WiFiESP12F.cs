@@ -20,6 +20,8 @@ namespace CTRE
                 int baud = 115200;
                 String SSID;
 
+                private bool printTraffic = true;
+
                 const int kDefaultTimeoutMs = 100;
                 const int kSendTimeoutMs = 1000;
 
@@ -148,6 +150,15 @@ namespace CTRE
                     }
 
                     return temp;
+                }
+
+                /// <summary>
+                /// Sets whether all UART traffic to/from the ESP12F is printed in the Debug output.
+                /// </summary>
+                /// <param name="enable">True enables printing. Default value is "true".</param>
+                public void enableDebugPrints(bool enable)
+                {
+                    printTraffic = enable;
                 }
 
                 /**
@@ -610,7 +621,7 @@ namespace CTRE
                         if (temp.ToString() != "\n" && temp.ToString() != "\r" && temp.ToString() != null)
                         {
                             lines.Add(temp.ToString());
-                            Debug.Print(temp.ToString());
+                            if (printTraffic) { Debug.Print(temp.ToString()); }
                         }
 
                         temp.Clear();
