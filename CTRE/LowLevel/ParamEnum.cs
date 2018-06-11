@@ -118,6 +118,8 @@ namespace CTRE.Phoenix.LowLevel
         eMotionMeas_shake_reject_time = 179,
         eMotionMeas_shake_reject_timeout = 180,
 
+        eDefaultConfig = 500,
+
 #if false //Pre-Phoenix params
         eProfileParamSlot_P = 2,
         eProfileParamSlot_I = 3,
