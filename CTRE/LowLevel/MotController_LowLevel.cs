@@ -565,7 +565,11 @@ namespace CTRE.Phoenix.LowLevel
             if (param < 1) { return 1; }
             return param;
         }
-
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
+        }
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
@@ -908,11 +912,6 @@ namespace CTRE.Phoenix.LowLevel
             int fullId = (int)((int)_baseArbId | (int)frame); /* build ID */
 
             return base.GetStatusFramePeriod(fullId, out periodMs, timeoutMs);
-        }
-        //----- Factory Default Config -----//
-        public ErrorCode ConfigFactoryDefault(int timeoutMs)
-        {
-            return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
         }
         //----- velocity signal conditionaing ------//
         public ErrorCode ConfigVelocityMeasurementPeriod(VelocityMeasPeriod period, int timeoutMs)
