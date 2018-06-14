@@ -22,19 +22,19 @@ namespace CTRE.Phoenix.MotorControl
 public class RemoteSensorSourceRoutines {
     public static string ToString(RemoteSensorSource value) {
         switch(value) {
-            case RemoteSensorSource.Off                     : return "RemoteSensorSource.Off";
-            case RemoteSensorSource.TalonSRX_SelectedSensor : return "RemoteSensorSource.TalonSRX_SelectedSensor";
-            case RemoteSensorSource.Pigeon_Yaw              : return "RemoteSensorSource.Pigeon_Yaw";
-            case RemoteSensorSource.Pigeon_Pitch            : return "RemoteSensorSource.Pigeon_Pitch";
-            case RemoteSensorSource.Pigeon_Roll             : return "RemoteSensorSource.Pigeon_Roll";
-            case RemoteSensorSource.CANifier_Quadrature     : return "RemoteSensorSource.CANifier_Quadrature";
-            case RemoteSensorSource.CANifier_PWMInput0      : return "RemoteSensorSource.CANifier_PWMInput0";
-            case RemoteSensorSource.CANifier_PWMInput1      : return "RemoteSensorSource.CANifier_PWMInput1";
-            case RemoteSensorSource.CANifier_PWMInput2      : return "RemoteSensorSource.CANifier_PWMInput2";
-            case RemoteSensorSource.CANifier_PWMInput3      : return "RemoteSensorSource.CANifier_PWMInput3";
-            case RemoteSensorSource.GadgeteerPigeon_Yaw     : return "RemoteSensorSource.GadgeteerPigeon_Yaw";
-            case RemoteSensorSource.GadgeteerPigeon_Pitch   : return "RemoteSensorSource.GadgeteerPigeon_Pitch";
-            case RemoteSensorSource.GadgeteerPigeon_Roll    : return "RemoteSensorSource.GadgeteerPigeon_Roll";
+            case RemoteSensorSource.RemoteSensorSource_Off                     : return "RemoteSensorSource.RemoteSensorSource_Off";
+            case RemoteSensorSource.RemoteSensorSource_TalonSRX_SelectedSensor : return "RemoteSensorSource.RemoteSensorSource_TalonSRX_SelectedSensor";
+            case RemoteSensorSource.RemoteSensorSource_Pigeon_Yaw              : return "RemoteSensorSource.RemoteSensorSource_Pigeon_Yaw";
+            case RemoteSensorSource.RemoteSensorSource_Pigeon_Pitch            : return "RemoteSensorSource.RemoteSensorSource_Pigeon_Pitch";
+            case RemoteSensorSource.RemoteSensorSource_Pigeon_Roll             : return "RemoteSensorSource.RemoteSensorSource_Pigeon_Roll";
+            case RemoteSensorSource.RemoteSensorSource_CANifier_Quadrature     : return "RemoteSensorSource.RemoteSensorSource_CANifier_Quadrature";
+            case RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput0      : return "RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput0";
+            case RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput1      : return "RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput1";
+            case RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput2      : return "RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput2";
+            case RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput3      : return "RemoteSensorSource.RemoteSensorSource_CANifier_PWMInput3";
+            case RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Yaw     : return "RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Yaw";
+            case RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Pitch   : return "RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Pitch";
+            case RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Roll    : return "RemoteSensorSource.RemoteSensorSource_GadgeteerPigeon_Roll";
             default : return "InvalidValue";
         }
     }

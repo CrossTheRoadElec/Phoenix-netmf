@@ -66,15 +66,15 @@ public class FeedbackDeviceRoutines {
 
     public static string ToString(RemoteFeedbackDevice value) {
         switch(value) {
-            case RemoteFeedbackDevice.None : return "RemoteFeedbackDevice.None";
-            case RemoteFeedbackDevice.SensorSum : return "RemoteFeedbackDevice.SensorSum";
-            case RemoteFeedbackDevice.SensorDifference : return "RemoteFeedbackDevice.SensorDifference";
-            case RemoteFeedbackDevice.RemoteSensor0 : return "RemoteFeedbackDevice.RemoteSensor0";
-            case RemoteFeedbackDevice.RemoteSensor1 : return "RemoteFeedbackDevice.RemoteSensor1";
-            case RemoteFeedbackDevice.SoftwareEmulatedSensor : return "RemoteFeedbackDevice.SoftwareEmulatedSensor";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_None: return "RemoteFeedbackDevice.RemoteFeedbackDevice_None";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_SensorSum: return "RemoteFeedbackDevice.RemoteFeedbackDevice_SensorSum";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_SensorDifference: return "RemoteFeedbackDevice.RemoteFeedbackDevice_SensorDifference";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0: return "RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor1: return "RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor1";
+            case RemoteFeedbackDevice.RemoteFeedbackDevice_SoftwareEmulatedSensor: return "RemoteFeedbackDevice.RemoteFeedbackDevice_SoftwareEmulatedSensor";
             default : return "InvalidValue";
         }
-
+            
     }
 };
 

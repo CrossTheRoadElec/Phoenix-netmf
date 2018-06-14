@@ -138,9 +138,9 @@ public PigeonIMU_LowLevel(int baseArbId) :
          * @param tempCompEnable
          * @return nonzero for error, zero for success.
          */
-        public ErrorCode ConfigTemperatureCompensationEnable(bool bTempCompEnable, int timeoutMs)
+        public ErrorCode ConfigTemperatureCompensationDisable(bool bTempCompDisable, int timeoutMs)
         {
-            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eTempCompDisable, bTempCompEnable ? 0 : 1, timeoutMs);
+            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eTempCompDisable, bTempCompDisable ? 1 : 0, timeoutMs);
             return SetLastError(errCode);
         }
         /**

@@ -39,7 +39,7 @@ namespace CTRE
                 }
                 public string ToString(string prependString) {
                     string retstr = prependString + ".temperatureCompensationDisable = " + temperatureCompensationDisable.ToString() + ";\n";
-                    retstr += base.ToString(prependString);
+                    retstr += base.ToString(ref prependString);
             
                     return retstr;
                 }
@@ -206,7 +206,13 @@ namespace CTRE
                  */
                 public ErrorCode ConfigTemperatureCompensationEnable(bool bTempCompEnable, int timeoutMs = 0)
                 {
-                    ErrorCode retval = _ll.ConfigTemperatureCompensationEnable(bTempCompEnable, timeoutMs);
+                    ErrorCode retval = _ll.ConfigTemperatureCompensationDisable(!bTempCompEnable, timeoutMs);
+                    return retval;
+                }
+
+                public ErrorCode ConfigTemperatureCompensationDisable(bool bTempCompDisable, int timeoutMs = 0)
+                {
+                    ErrorCode retval = _ll.ConfigTemperatureCompensationDisable(bTempCompDisable, timeoutMs);
                     return retval;
                 }
 
@@ -767,7 +773,7 @@ namespace CTRE
                 }
             
                 public ErrorCode ConfigAllSettings(ref PigeonIMUConfiguration allConfigs, int timeoutMs = 50) {
-                    ErrorCollection errorCollection;
+                    ErrorCollection errorCollection = new ErrorCollection();
                     errorCollection.NewError(ConfigTemperatureCompensationDisable(allConfigs.temperatureCompensationDisable, timeoutMs));
                     errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_0, 0, timeoutMs));
                     errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_1, 1, timeoutMs));
@@ -776,15 +782,15 @@ namespace CTRE
                 }
                 
                 public void GetAllConfigs(out PigeonIMUConfiguration allConfigs, int timeoutMs = 50) {
-                
-                    allConfigs.temperatureCompensationDisable = (bool) ConfigGetParameter(ParamEnum.eTempCompDisable, 0,  timeoutMs);
+                    allConfigs = new PigeonIMUConfiguration();
+                    allConfigs.temperatureCompensationDisable = ConfigGetParameter(ParamEnum.eTempCompDisable, 0,  timeoutMs) == 1.0F;
                     allConfigs.customParam_0 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 0,  timeoutMs);
                     allConfigs.customParam_1 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 1,  timeoutMs);
                 }
                 
                 public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
-                    PigeonIMUConfiguration defaults;
-                    return ConfigAllSettings(defaults, timeoutMs);
+                    PigeonIMUConfiguration defaults = new PigeonIMUConfiguration();
+                    return ConfigAllSettings(ref defaults, timeoutMs);
                 }
 
 

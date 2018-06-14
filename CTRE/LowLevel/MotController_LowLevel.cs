@@ -922,7 +922,7 @@ namespace CTRE.Phoenix.LowLevel
             return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, param, 0, 0, timeoutMs);
         }
         //------ ALL limit switch ----------//
-        ErrorCode ConfigSingleLimitSwitchSource(
+        protected ErrorCode ConfigSingleLimitSwitchSource(
                 LimitSwitchSource limitSwitchSource, LimitSwitchNormal normalOpenOrClose,
                 int deviceIDIfApplicable, int timeoutMs, bool isForward)
         {

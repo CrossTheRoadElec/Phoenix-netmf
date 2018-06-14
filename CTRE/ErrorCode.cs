@@ -84,22 +84,21 @@ namespace CTRE
         MotProfFirmThreshold2 = 110,
     }
 
-    class ErrorCollection {
-    public:
-        static ErrorCode worstOne(ErrorCode errorCode1, ErrorCode errorCode2) {
-            if (errorCode1 != OK)
+    public class ErrorCollection {
+        public static ErrorCode worstOne(ErrorCode errorCode1, ErrorCode errorCode2) {
+            if (errorCode1 != 0)
                 return errorCode1;
             return errorCode2;
         }
-        void NewError(ErrorCode err) {
+        public void NewError(ErrorCode err) {
             _worstError = worstOne(_worstError, err);
         }
-        void NewError(int err) {
+        public void NewError(int err) {
             _worstError = worstOne(_worstError, (ErrorCode) err);
         }
-        ErrorCode _worstError;
-        ErrorCollection() {
-            _worstError = OK;
+        public ErrorCode _worstError;
+        public ErrorCollection() {
+            _worstError = ErrorCode.OK;
         }
     
     

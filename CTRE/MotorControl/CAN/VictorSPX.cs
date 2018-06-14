@@ -1,4 +1,5 @@
 using System;
+using CTRE.Phoenix.LowLevel;
 using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl.CAN
@@ -7,12 +8,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public RemoteFeedbackDevice selectedFeedbackSensor;
     
         public VictorSPXPIDSetConfiguration() {
-            selectedFeedbackSensor = RemoteFeedbackDevice.None;
+            selectedFeedbackSensor = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
         }
         public string ToString(string prependString) {
     
             string retstr = prependString + ".selectedFeedbackSensor = " + FeedbackDeviceRoutines.ToString(selectedFeedbackSensor) + ";\n";
-            retstr += base.ToString(prependString);
+            retstr += base.ToString(ref prependString);
             return retstr;
         }
     
@@ -31,14 +32,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public VictorSPXConfiguration() {
             forwardLimitSwitchSource = RemoteLimitSwitchSource.Deactivated;
             reverseLimitSwitchSource = RemoteLimitSwitchSource.Deactivated;
-            sum_0  = RemoteFeedbackDevice.None;
-            sum_1  = RemoteFeedbackDevice.None;
-            diff_0 = RemoteFeedbackDevice.None;
-            diff_1 = RemoteFeedbackDevice.None;
-    
-        {
+            sum_0  = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
+            sum_1  = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
+            diff_0 = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
+            diff_1 = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
         }
-        public string ToString(string prependString) {
+        public new string ToString(string prependString) {
             string retstr = primaryPID.ToString(prependString + ".primaryPID");
             retstr += auxilaryPID.ToString(prependString + ".auxilaryPID");
             retstr += prependString + ".forwardLimitSwitchSource = " + LimitSwitchRoutines.ToString(forwardLimitSwitchSource) + ";\n";
@@ -60,11 +59,11 @@ namespace CTRE.Phoenix.MotorControl.CAN
             
         }
     public ErrorCode ConfigurePID(ref VictorSPXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50) {
-        ErrorCollection errorCollection;
+        ErrorCollection errorCollection = new ErrorCollection();
     
         //------ sensor selection ----------//      
     
-        errorCollection.NewError(BaseConfigurePID(pid, pidIdx, timeoutMs));
+        errorCollection.NewError(BaseConfigurePID<VictorSPXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs));
         errorCollection.NewError(ConfigSelectedFeedbackSensor(pid.selectedFeedbackSensor, pidIdx, timeoutMs));
     
     
@@ -72,15 +71,16 @@ namespace CTRE.Phoenix.MotorControl.CAN
     }
     public void GetPIDConfigs(out VictorSPXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)
     {
-        BaseGetPIDConfigs(pid, pidIdx, timeoutMs);
+        pid = new VictorSPXPIDSetConfiguration();
+        BaseGetPIDConfigs<VictorSPXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs);
         pid.selectedFeedbackSensor = (RemoteFeedbackDevice) ConfigGetParameter(ParamEnum.eFeedbackSensorType, pidIdx, timeoutMs);
     
     }
     
     public ErrorCode ConfigAllSettings(ref VictorSPXConfiguration allConfigs, int timeoutMs = 50) {
-        ErrorCollection errorCollection;
+        ErrorCollection errorCollection = new ErrorCollection();
     
-        errorCollection.NewError(BaseConfigAllSettings(allConfigs, timeoutMs));
+        errorCollection.NewError(BaseConfigAllSettings<VictorSPXConfiguration>(ref allConfigs, timeoutMs));
     
         //------ remote limit switch ----------//   
         errorCollection.NewError(ConfigForwardLimitSwitchSource(allConfigs.forwardLimitSwitchSource, allConfigs.forwardLimitSwitchNormal, allConfigs.forwardLimitSwitchDeviceID, timeoutMs));
@@ -90,27 +90,29 @@ namespace CTRE.Phoenix.MotorControl.CAN
     
         //--------PIDs---------------//
     
-        errorCollection.NewError(ConfigurePID(allConfigs.primaryPID, 0, timeoutMs));
+        errorCollection.NewError(ConfigurePID(ref allConfigs.primaryPID, 0, timeoutMs));
     
-        errorCollection.NewError(ConfigurePID(allConfigs.auxilaryPID, 1, timeoutMs));
+        errorCollection.NewError(ConfigurePID(ref allConfigs.auxilaryPID, 1, timeoutMs));
     
-        errorCollection.NewError(ConfigSensorTerm(SensorTerm_Sum0, allConfigs.sum_0, timeoutMs));
+        errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum0, allConfigs.sum_0, timeoutMs));
     
-        errorCollection.NewError(ConfigSensorTerm(SensorTerm_Sum1, allConfigs.sum_1, timeoutMs));
+        errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum1, allConfigs.sum_1, timeoutMs));
     
-        errorCollection.NewError(ConfigSensorTerm(SensorTerm_Diff0, allConfigs.diff_0, timeoutMs));
+        errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Diff0, allConfigs.diff_0, timeoutMs));
     
-        errorCollection.NewError(ConfigSensorTerm(SensorTerm_Diff1, allConfigs.diff_1, timeoutMs));
+        errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Diff1, allConfigs.diff_1, timeoutMs));
     
     
         return errorCollection._worstError;
     }
     public void GetAllConfigs(out VictorSPXConfiguration allConfigs, int timeoutMs = 50) {
+
+        allConfigs = new VictorSPXConfiguration();
+
+        BaseGetAllConfigs<VictorSPXConfiguration>(ref allConfigs, timeoutMs);
     
-        BaseGetAllConfigs(allConfigs, timeoutMs);
-    
-        GetPIDConfigs(allConfigs.primaryPID, 0, timeoutMs);
-        GetPIDConfigs(allConfigs.auxilaryPID, 1, timeoutMs);
+        GetPIDConfigs(out allConfigs.primaryPID, 0, timeoutMs);
+        GetPIDConfigs(out allConfigs.auxilaryPID, 1, timeoutMs);
         allConfigs.sum_0 = (RemoteFeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 0, timeoutMs);
         allConfigs.sum_1 = (RemoteFeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 1, timeoutMs);
         allConfigs.diff_0 = (RemoteFeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 2, timeoutMs);
@@ -122,8 +124,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
     }
     
     public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
-        VictorSPXConfiguration defaults;
-        return ConfigAllSettings(defaults, timeoutMs);
+        VictorSPXConfiguration defaults = new VictorSPXConfiguration();
+        return ConfigAllSettings(ref defaults, timeoutMs);
     }
 
 

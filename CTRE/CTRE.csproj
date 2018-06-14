@@ -82,6 +82,7 @@
     <Compile Include="CANifierStatusFrame.cs" />
     <Compile Include="CANifierStickyFaults.cs" />
     <Compile Include="CANifierVelocityMeasPeriod.cs" />
+    <Compile Include="CustomParamConfiguration.cs" />
     <Compile Include="ErrorStrings.cs" />
     <Compile Include="LowLevel\Device_LowLevel.cs" />
     <Compile Include="Containers\ByteRingBuffer.cs" />

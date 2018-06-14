@@ -10,7 +10,7 @@ namespace CTRE.Phoenix
         public CANifierVelocityMeasPeriod velocityMeasurementPeriod;
         public int velocityMeasurementWindow;
         public CANifierConfiguration() {
-            velocityMeasurementPeriod = Period_100Ms;
+            velocityMeasurementPeriod = CANifierVelocityMeasPeriod.Period_100Ms;
             velocityMeasurementWindow = 64;
         }
         string ToString(string prependString) {
@@ -18,7 +18,7 @@ namespace CTRE.Phoenix
             string retstr = prependString + ".velocityMeasurementPeriod = " + CANifierVelocityMeasPeriodRoutines.ToString(velocityMeasurementPeriod) + ";\n";
             retstr += prependString + ".velocityMeasurementWindow = " + velocityMeasurementWindow.ToString() + ";\n";
     
-            retstr += base.ToString(prependString);
+            retstr += base.ToString(ref prependString);
     
             return retstr;
         }
@@ -146,7 +146,7 @@ namespace CTRE.Phoenix
         {
             return _ll.GetGeneralInput((CANifier_LowLevel.GeneralPin)inputPin);
         }
-        public ErrorCode SetStatusFramePeriod(CANifierStatusFrame statusFrame, uint newPeriodMs, uint timeoutMs = 0 = 0)
+        public ErrorCode SetStatusFramePeriod(CANifierStatusFrame statusFrame, uint newPeriodMs, uint timeoutMs = 0)
         {
             return (ErrorCode) _ll.SetStatusFramePeriod(statusFrame, newPeriodMs, timeoutMs);
         }
@@ -549,7 +549,7 @@ namespace CTRE.Phoenix
         }
         public ErrorCode ConfigAllSettings(ref CANifierConfiguration allConfigs, int timeoutMs = 50) {
         
-            ErrorCollection errorCollection;
+            ErrorCollection errorCollection = new ErrorCollection();
         
             errorCollection.NewError(ConfigVelocityMeasurementPeriod(allConfigs.velocityMeasurementPeriod, timeoutMs));
             errorCollection.NewError(ConfigVelocityMeasurementWindow(allConfigs.velocityMeasurementWindow, timeoutMs));
@@ -560,7 +560,8 @@ namespace CTRE.Phoenix
         }
         
         public void GetAllConfigs(out CANifierConfiguration allConfigs, int timeoutMs = 50) {
-        
+            allConfigs = new CANifierConfiguration();
+
             allConfigs.velocityMeasurementPeriod = (CANifierVelocityMeasPeriod) ConfigGetParameter(ParamEnum.eSampleVelocityPeriod, 0,  timeoutMs);
             allConfigs.velocityMeasurementWindow = (int) ConfigGetParameter(ParamEnum.eSampleVelocityWindow, 0,  timeoutMs); 
             allConfigs.customParam_0 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 0,  timeoutMs);
@@ -569,8 +570,8 @@ namespace CTRE.Phoenix
         }
         
         public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
-            CANifierConfiguration defaults;
-            return ConfigAllSettings(defaults, timeoutMs);
+            CANifierConfiguration defaults = new CANifierConfiguration();
+            return ConfigAllSettings(ref defaults, timeoutMs);
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using CTRE.Phoenix.LowLevel;
 using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl.CAN
@@ -6,14 +7,14 @@ namespace CTRE.Phoenix.MotorControl.CAN
     
     public class TalonSRXPIDSetConfiguration : BasePIDSetConfiguration {
         public FeedbackDevice selectedFeedbackSensor;
-    
+
         public TalonSRXPIDSetConfiguration() {
             selectedFeedbackSensor = FeedbackDevice.QuadEncoder;
-        {
+        }
         public string ToString(string prependString) {
     
             string retstr = prependString + ".selectedFeedbackSensor = " + FeedbackDeviceRoutines.ToString(selectedFeedbackSensor) + ";\n";
-            retstr += base.ToString(prependString);
+            retstr += base.ToString(ref prependString);
             return retstr;
         }
     
@@ -42,9 +43,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
             peakCurrentLimit = 1;
             peakCurrentDuration = 1;
             continuousCurrentLimit = 1;
-        {
         }
-        public string ToString(string prependString) {
+        public new string ToString(string prependString) {
     
     
             string retstr = primaryPID.ToString(prependString + ".primaryPID");
@@ -177,15 +177,15 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
         //------ Current Lim ----------//
-        public ErrorCode ConfigPeakCurrentLimit(int amps, int timeoutMs = 0 = 0)
+        public ErrorCode ConfigPeakCurrentLimit(int amps, int timeoutMs = 0)
         {
             return _ll.ConfigPeakCurrentLimit(amps, timeoutMs);
         }
-        public ErrorCode ConfigPeakCurrentDuration(int milliseconds, int timeoutMs = 0 = 0)
+        public ErrorCode ConfigPeakCurrentDuration(int milliseconds, int timeoutMs = 0)
         {
             return _ll.ConfigPeakCurrentDuration(milliseconds, timeoutMs);
         }
-        public ErrorCode ConfigContinuousCurrentLimit(int amps, int timeoutMs = 0 = 0)
+        public ErrorCode ConfigContinuousCurrentLimit(int amps, int timeoutMs = 0)
         {
             return _ll.ConfigPeakCurrentDuration(amps, timeoutMs);
         }
@@ -198,42 +198,47 @@ namespace CTRE.Phoenix.MotorControl.CAN
     
         public ErrorCode ConfigurePID(ref TalonSRXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50) {
 
-            ErrorCollection errorCollection;
+            ErrorCollection errorCollection = new ErrorCollection();
 
             //------ sensor selection ----------//      
 
-            errorCollection.NewError(BaseConfigurePID(pid, pidIdx, timeoutMs));
+            errorCollection.NewError(BaseConfigurePID<TalonSRXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs));
             errorCollection.NewError(ConfigSelectedFeedbackSensor(pid.selectedFeedbackSensor, pidIdx, timeoutMs));
 
             return errorCollection._worstError;
         }
         public void GetPIDConfigs(out TalonSRXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)
         {
-            BaseGetPIDConfigs(pid, pidIdx, timeoutMs);
+            pid = new TalonSRXPIDSetConfiguration();
+
+            BaseGetPIDConfigs<TalonSRXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs);
             pid.selectedFeedbackSensor = (FeedbackDevice) ConfigGetParameter(ParamEnum.eFeedbackSensorType, pidIdx, timeoutMs);
 
         }
         public ErrorCode ConfigAllSettings(ref TalonSRXConfiguration allConfigs, int timeoutMs = 50) {
 
-            ErrorCollection errorCollection;
+            ErrorCollection errorCollection = new ErrorCollection();
 
-            errorCollection.NewError(BaseConfigAllSettings(allConfigs, timeoutMs));
+           
+            errorCollection.NewError(BaseConfigAllSettings<TalonSRXConfiguration>(ref allConfigs, timeoutMs));
 
             //------ limit switch ----------//   
-            errorCollection.NewError(c_MotController_ConfigForwardLimitSwitchSource(m_handle, allConfigs.forwardLimitSwitchSource,
-                    allConfigs.forwardLimitSwitchNormal, allConfigs.forwardLimitSwitchDeviceID, timeoutMs));
-            errorCollection.NewError(c_MotController_ConfigReverseLimitSwitchSource(m_handle, allConfigs.reverseLimitSwitchSource,
-                    allConfigs.reverseLimitSwitchNormal, allConfigs.reverseLimitSwitchDeviceID, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)allConfigs.forwardLimitSwitchSource, 0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.forwardLimitSwitchNormal, 0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.forwardLimitSwitchDeviceID, 0, 0, timeoutMs));
 
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)allConfigs.reverseLimitSwitchSource, 0, 1, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.reverseLimitSwitchNormal, 0, 1, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.reverseLimitSwitchDeviceID, 0, 1, timeoutMs));
 
             //--------PIDs---------------//
 
-            errorCollection.NewError(ConfigurePID(allConfigs.primaryPID, 0, timeoutMs));
-            errorCollection.NewError(ConfigurePID(allConfigs.auxilaryPID, 1, timeoutMs));
-            errorCollection.NewError(ConfigSensorTerm(SensorTerm_Sum0, allConfigs.sum_0, timeoutMs));
-            errorCollection.NewError(ConfigSensorTerm(SensorTerm_Sum1, allConfigs.sum_1, timeoutMs));
-            errorCollection.NewError(ConfigSensorTerm(SensorTerm_Diff0, allConfigs.diff_0, timeoutMs));
-            errorCollection.NewError(ConfigSensorTerm(SensorTerm_Diff1, allConfigs.diff_1, timeoutMs));
+            errorCollection.NewError(ConfigurePID(ref allConfigs.primaryPID, 0, timeoutMs));
+            errorCollection.NewError(ConfigurePID(ref allConfigs.auxilaryPID, 1, timeoutMs));
+            errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum0, allConfigs.sum_0, timeoutMs));
+            errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum1, allConfigs.sum_1, timeoutMs));
+            errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Diff0, allConfigs.diff_0, timeoutMs));
+            errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Diff1, allConfigs.diff_1, timeoutMs));
 
             //--------Current Limiting-----//
             errorCollection.NewError(ConfigPeakCurrentLimit(allConfigs.peakCurrentLimit, timeoutMs));
@@ -244,11 +249,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
             return errorCollection._worstError;
         }
         public void GetAllConfigs(out TalonSRXConfiguration allConfigs, int timeoutMs = 50) {
+            allConfigs = new TalonSRXConfiguration();
 
-            BaseGetAllConfigs(allConfigs, timeoutMs);
+            BaseGetAllConfigs<TalonSRXConfiguration>(ref allConfigs, timeoutMs);
 
-            GetPIDConfigs(allConfigs.primaryPID, 0, timeoutMs);
-            GetPIDConfigs(allConfigs.auxilaryPID, 1, timeoutMs);
+            GetPIDConfigs(out allConfigs.primaryPID, 0, timeoutMs);
+            GetPIDConfigs(out allConfigs.auxilaryPID, 1, timeoutMs);
             allConfigs.sum_0 = (FeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 0, timeoutMs);
             allConfigs.sum_1 = (FeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 1, timeoutMs);
             allConfigs.diff_0 = (FeedbackDevice) ConfigGetParameter(ParamEnum.eSensorTerm, 2, timeoutMs);
@@ -264,8 +270,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
         public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
-            TalonSRXConfiguration defaults;
-            return ConfigAllSettings(defaults, timeoutMs);
+            TalonSRXConfiguration defaults = new TalonSRXConfiguration();
+            return ConfigAllSettings(ref defaults, timeoutMs);
         }
     }
 }

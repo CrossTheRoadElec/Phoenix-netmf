@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.SPOT;
 using CTRE.Phoenix.LowLevel;
 
@@ -7,7 +7,7 @@ namespace CTRE.Phoenix
      public class CustomParamConfiguration {
         public int customParam_0;
         public int customParam_1;
-        CustomParamConfiguration() {
+        public CustomParamConfiguration() {
             customParam_0 = 0;
             customParam_1 = 0;
         }
