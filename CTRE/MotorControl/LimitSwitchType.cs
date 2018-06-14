@@ -47,5 +47,34 @@ namespace CTRE.Phoenix.MotorControl
         {
             return (LimitSwitchSource)limitSwitchSource;
         }
+    public static string ToString(LimitSwitchSource value) {
+        switch(value) {
+            case LimitSwitchSource.FeedbackConnector : return "LimitSwitchSource.FeedbackConnector";
+            case LimitSwitchSource.RemoteTalonSRX : return "LimitSwitchSource.RemoteTalonSRX";
+            case LimitSwitchSource.RemoteCANifier : return "LimitSwitchSource.RemoteCANifier";
+            case LimitSwitchSource.Deactivated : return "LimitSwitchSource.Deactivated";
+            default : return "InvalidValue";
+        }
+
+    }
+    public static string ToString(RemoteLimitSwitchSource value) {
+        switch(value) {
+            case RemoteLimitSwitchSource.RemoteTalonSRX : return "RemoteLimitSwitchSource.RemoteTalonSRX";
+            case RemoteLimitSwitchSource.RemoteCANifier : return "RemoteLimitSwitchSource.RemoteCANifier";
+            case RemoteLimitSwitchSource.Deactivated : return "RemoteLimitSwitchSource.Deactivated";
+            default : return "InvalidValue";
+        }
+
+    }
+    public static string ToString(LimitSwitchNormal value) {
+        switch(value) {
+            case LimitSwitchNormal.NormallyOpen : return "LimitSwitchNormal.NormallyOpen";
+            case LimitSwitchNormal.NormallyClosed : return "LimitSwitchNormal.NormallyClosed";
+            case LimitSwitchNormal.Disabled : return "LimitSwitchNormal.Disabled";
+            default : return "InvalidValue";
+        }
+
+    }
+
     }
 }

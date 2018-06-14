@@ -45,5 +45,37 @@ namespace CTRE.Phoenix.MotorControl
         //14
         RemoteFeedbackDevice_SoftwareEmulatedSensor = 15,
     }
+public class FeedbackDeviceRoutines {
+    public static string ToString(FeedbackDevice value) {
+        switch(value) {
+            case FeedbackDevice.None : return "FeedbackDevice.None";
+            case FeedbackDevice.QuadEncoder : return "FeedbackDevice.QuadEncoder";
+            case FeedbackDevice.Analog : return "FeedbackDevice.Analog";
+            case FeedbackDevice.Tachometer : return "FeedbackDevice.Tachometer";
+            case FeedbackDevice.PulseWidthEncodedPosition : return "FeedbackDevice.PulseWidthEncodedPosition";
+            case FeedbackDevice.SensorSum : return "FeedbackDevice.SensorSum";
+            case FeedbackDevice.SensorDifference : return "FeedbackDevice.SensorDifference";
+            case FeedbackDevice.RemoteSensor0 : return "FeedbackDevice.RemoteSensor0";
+            case FeedbackDevice.RemoteSensor1 : return "FeedbackDevice.RemoteSensor1";
+            case FeedbackDevice.SoftwareEmulatedSensor : return "FeedbackDevice.SoftwareEmulatedSensor";
+            default : return "InvalidValue";
+
+        }
+
+    }
+
+    public static string ToString(RemoteFeedbackDevice value) {
+        switch(value) {
+            case RemoteFeedbackDevice.None : return "RemoteFeedbackDevice.None";
+            case RemoteFeedbackDevice.SensorSum : return "RemoteFeedbackDevice.SensorSum";
+            case RemoteFeedbackDevice.SensorDifference : return "RemoteFeedbackDevice.SensorDifference";
+            case RemoteFeedbackDevice.RemoteSensor0 : return "RemoteFeedbackDevice.RemoteSensor0";
+            case RemoteFeedbackDevice.RemoteSensor1 : return "RemoteFeedbackDevice.RemoteSensor1";
+            case RemoteFeedbackDevice.SoftwareEmulatedSensor : return "RemoteFeedbackDevice.SoftwareEmulatedSensor";
+            default : return "InvalidValue";
+        }
+
+    }
+};
 
 }
