@@ -13,7 +13,7 @@ namespace CTRE.Phoenix
             velocityMeasurementPeriod = CANifierVelocityMeasPeriod.Period_100Ms;
             velocityMeasurementWindow = 64;
         }
-        string ToString(string prependString) {
+        public string ToString(string prependString) {
     
             string retstr = prependString + ".velocityMeasurementPeriod = " + CANifierVelocityMeasPeriodRoutines.ToString(velocityMeasurementPeriod) + ";\n";
             retstr += prependString + ".velocityMeasurementWindow = " + velocityMeasurementWindow.ToString() + ";\n";
@@ -547,7 +547,7 @@ namespace CTRE.Phoenix
         {
             return (int)_ll.GetDeviceNumber();
         }
-        public ErrorCode ConfigAllSettings(ref CANifierConfiguration allConfigs, int timeoutMs = 50) {
+        public ErrorCode ConfigAllSettings(CANifierConfiguration allConfigs, int timeoutMs = 50) {
         
             ErrorCollection errorCollection = new ErrorCollection();
         
@@ -571,7 +571,7 @@ namespace CTRE.Phoenix
         
         public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
             CANifierConfiguration defaults = new CANifierConfiguration();
-            return ConfigAllSettings(ref defaults, timeoutMs);
+            return ConfigAllSettings(defaults, timeoutMs);
         }
 
     }

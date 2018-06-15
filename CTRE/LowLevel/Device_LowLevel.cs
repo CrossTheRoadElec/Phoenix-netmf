@@ -274,7 +274,7 @@ namespace CTRE.Phoenix.LowLevel
                     byte value_0 = (byte)(data >> 0x28);
                     byte subValue = (byte)(data >> 0x38);
                     /* decode sigs */
-                    UInt32 value = value_3;
+                    int value = value_3;
                     value <<= 8;
                     value |= value_2;
                     value <<= 8;
@@ -468,6 +468,15 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode retval = ConfigGetParameter(paramEnum, 0, out value, 0x00, ordinal, timeoutMs);
             return retval;
         }
+        private float calcSecondsFromNeutralToFull(int percPer10Ms) {
+            /* if percPer10Ms is zero(or negative) that means disable ramp */
+            if (percPer10Ms <= 0.0f) {
+                return 0.0f;
+            }
+            /* ramp is enabled*/
+            return 1.0f / ( (float) percPer10Ms / 1023.0f * 100.0f);
+        }
+
         public ErrorCode ConfigGetParameter(ParamEnum paramEnum, out float value, int ordinal = 0, int timeoutMs = Constants.GetParamTimeoutMs)
         {
             int valueInt;
@@ -486,6 +495,27 @@ namespace CTRE.Phoenix.LowLevel
                     break;
                 case ParamEnum.eProfileParamSlot_PeakOutput:
                     value = ((float)valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eOpenloopRamp:
+                    value = calcSecondsFromNeutralToFull(valueInt);
+                    break;
+                case ParamEnum.eClosedloopRamp:
+                    value = calcSecondsFromNeutralToFull(valueInt);
+                    break;
+                case ParamEnum.ePeakPosOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNominalPosOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.ePeakNegOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNominalNegOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNeutralDeadband:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
                     break;
                 case ParamEnum.eSelectedSensorCoefficient:
                     value = ((float)valueInt) * 1.0f / 65536.0f;
@@ -555,9 +585,7 @@ namespace CTRE.Phoenix.LowLevel
             }
             else
             {
-                Object value = _sigs_Value[(uint)paramEnum];
-                uint temp = (uint)value;
-                rawBits = (int)temp;
+                rawBits = (int)_sigs_Value[(uint)paramEnum];
             }
             return retval;
         }

@@ -772,7 +772,7 @@ namespace CTRE
                     return m_deviceNumber;
                 }
             
-                public ErrorCode ConfigAllSettings(ref PigeonIMUConfiguration allConfigs, int timeoutMs = 50) {
+                public ErrorCode ConfigAllSettings(PigeonIMUConfiguration allConfigs, int timeoutMs = 50) {
                     ErrorCollection errorCollection = new ErrorCollection();
                     errorCollection.NewError(ConfigTemperatureCompensationDisable(allConfigs.temperatureCompensationDisable, timeoutMs));
                     errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_0, 0, timeoutMs));
@@ -790,7 +790,7 @@ namespace CTRE
                 
                 public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
                     PigeonIMUConfiguration defaults = new PigeonIMUConfiguration();
-                    return ConfigAllSettings(ref defaults, timeoutMs);
+                    return ConfigAllSettings(defaults, timeoutMs);
                 }
 
 

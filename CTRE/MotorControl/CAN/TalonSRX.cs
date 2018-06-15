@@ -34,6 +34,9 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public int peakCurrentDuration;
         public int continuousCurrentLimit;
         public TalonSRXConfiguration() {
+            primaryPID = new TalonSRXPIDSetConfiguration();
+            auxilaryPID = new TalonSRXPIDSetConfiguration();
+
             forwardLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
             reverseLimitSwitchSource = LimitSwitchSource.FeedbackConnector;
             sum_0  = FeedbackDevice.QuadEncoder;
@@ -196,13 +199,14 @@ namespace CTRE.Phoenix.MotorControl.CAN
         //------ Local sensor collection ----------//
         public SensorCollection SensorCollection { get { return _sensorColl; } }
     
-        public ErrorCode ConfigurePID(ref TalonSRXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50) {
+        public ErrorCode ConfigurePID(TalonSRXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)
+        {
 
             ErrorCollection errorCollection = new ErrorCollection();
 
             //------ sensor selection ----------//      
 
-            errorCollection.NewError(BaseConfigurePID<TalonSRXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs));
+            errorCollection.NewError(BaseConfigurePID(pid, pidIdx, timeoutMs));
             errorCollection.NewError(ConfigSelectedFeedbackSensor(pid.selectedFeedbackSensor, pidIdx, timeoutMs));
 
             return errorCollection._worstError;
@@ -211,16 +215,17 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             pid = new TalonSRXPIDSetConfiguration();
 
-            BaseGetPIDConfigs<TalonSRXPIDSetConfiguration>(ref pid, pidIdx, timeoutMs);
+            BaseGetPIDConfigs(pid, pidIdx, timeoutMs);
             pid.selectedFeedbackSensor = (FeedbackDevice) ConfigGetParameter(ParamEnum.eFeedbackSensorType, pidIdx, timeoutMs);
 
         }
-        public ErrorCode ConfigAllSettings(ref TalonSRXConfiguration allConfigs, int timeoutMs = 50) {
+        public ErrorCode ConfigAllSettings(TalonSRXConfiguration allConfigs, int timeoutMs = 50)
+        {
 
             ErrorCollection errorCollection = new ErrorCollection();
 
            
-            errorCollection.NewError(BaseConfigAllSettings<TalonSRXConfiguration>(ref allConfigs, timeoutMs));
+            errorCollection.NewError(BaseConfigAllSettings(allConfigs, timeoutMs));
 
             //------ limit switch ----------//   
             errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)allConfigs.forwardLimitSwitchSource, 0, 0, timeoutMs));
@@ -233,8 +238,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
             //--------PIDs---------------//
 
-            errorCollection.NewError(ConfigurePID(ref allConfigs.primaryPID, 0, timeoutMs));
-            errorCollection.NewError(ConfigurePID(ref allConfigs.auxilaryPID, 1, timeoutMs));
+            errorCollection.NewError(ConfigurePID(allConfigs.primaryPID, 0, timeoutMs));
+            errorCollection.NewError(ConfigurePID(allConfigs.auxilaryPID, 1, timeoutMs));
             errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum0, allConfigs.sum_0, timeoutMs));
             errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Sum1, allConfigs.sum_1, timeoutMs));
             errorCollection.NewError(ConfigSensorTerm(SensorTerm.SensorTerm_Diff0, allConfigs.diff_0, timeoutMs));
@@ -242,8 +247,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
             //--------Current Limiting-----//
             errorCollection.NewError(ConfigPeakCurrentLimit(allConfigs.peakCurrentLimit, timeoutMs));
-                errorCollection.NewError(ConfigPeakCurrentDuration(allConfigs.peakCurrentDuration, timeoutMs));
-                errorCollection.NewError(ConfigContinuousCurrentLimit(allConfigs.continuousCurrentLimit, timeoutMs));
+            errorCollection.NewError(ConfigPeakCurrentDuration(allConfigs.peakCurrentDuration, timeoutMs));
+            errorCollection.NewError(ConfigContinuousCurrentLimit(allConfigs.continuousCurrentLimit, timeoutMs));
 
 
             return errorCollection._worstError;
@@ -251,7 +256,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public void GetAllConfigs(out TalonSRXConfiguration allConfigs, int timeoutMs = 50) {
             allConfigs = new TalonSRXConfiguration();
 
-            BaseGetAllConfigs<TalonSRXConfiguration>(ref allConfigs, timeoutMs);
+            BaseGetAllConfigs(allConfigs, timeoutMs);
 
             GetPIDConfigs(out allConfigs.primaryPID, 0, timeoutMs);
             GetPIDConfigs(out allConfigs.auxilaryPID, 1, timeoutMs);
@@ -271,7 +276,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
         public ErrorCode ConfigFactoryDefault(int timeoutMs = 50) {
             TalonSRXConfiguration defaults = new TalonSRXConfiguration();
-            return ConfigAllSettings(ref defaults, timeoutMs);
+            return ConfigAllSettings(defaults, timeoutMs);
         }
     }
 }

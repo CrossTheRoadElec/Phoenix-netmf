@@ -14,7 +14,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
             selectedFeedbackCoefficient = 1.0F;
         
         }
-        public string ToString(ref string prependString) {
+        protected string ToString(ref string prependString) {
             return prependString + ".selectedFeedbackCoefficient = " + selectedFeedbackCoefficient.ToString() + ";\n";
     
         }
@@ -116,6 +116,14 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public int pulseWidthPeriod_FilterWindowSz;
     
         public BaseMotorControllerConfiguration() {
+            slot_0 = new SlotConfiguration();
+            slot_1 = new SlotConfiguration();
+            slot_2 = new SlotConfiguration();
+            slot_3 = new SlotConfiguration();
+
+            filter_0 = new FilterConfiguration();
+            filter_1 = new FilterConfiguration();
+
             openloopRamp = 0.0F;
             closedloopRamp = 0.0F;
             peakOutputForward = 1.0F;
@@ -150,7 +158,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
             pulseWidthPeriod_FilterWindowSz = 1;
     
         }
-        public string ToString(string prependString) {
+        protected string ToString(string prependString) {
     
             string retstr = prependString + ".openloopRamp = " + openloopRamp.ToString() + ";\n";
             retstr += prependString + ".closedloopRamp = " + closedloopRamp.ToString() + ";\n";
@@ -1027,7 +1035,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
 
-        public ErrorCode ConfigureSlot(ref SlotConfiguration slot, int slotIdx = 0, int timeoutMs = 50) {
+        public ErrorCode ConfigureSlot(SlotConfiguration slot, int slotIdx = 0, int timeoutMs = 50) {
         
             ErrorCollection errorCollection = new ErrorCollection();
             //------ General Close loop ----------//    
@@ -1061,7 +1069,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
         
         
-        public ErrorCode ConfigureFilter(ref FilterConfiguration filter, int ordinal, int timeoutMs = 50) {
+        public ErrorCode ConfigureFilter(FilterConfiguration filter, int ordinal, int timeoutMs = 50) {
         
             return ConfigRemoteFeedbackFilter(filter.remoteSensorDeviceID, filter.remoteSensorSource, ordinal, timeoutMs);
         
@@ -1075,21 +1083,17 @@ namespace CTRE.Phoenix.MotorControl.CAN
             filter.remoteSensorSource = (RemoteSensorSource) ConfigGetParameter(ParamEnum.eRemoteSensorSource, ordinal, timeoutMs);
         
         }
-        protected ErrorCode BaseConfigurePID<T>(ref T pid, int pidIdx = 0, int timeoutMs = 50) where T : BasePIDSetConfiguration
-        {
+        protected ErrorCode BaseConfigurePID(BasePIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)      {
         
             return ConfigSelectedFeedbackCoefficient(pid.selectedFeedbackCoefficient, pidIdx, timeoutMs);
         
         }
-        protected void BaseGetPIDConfigs<T>(ref T pid, int pidIdx = 0, int timeoutMs = 50) where T : BasePIDSetConfiguration
+        protected void BaseGetPIDConfigs(BasePIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50) 
         {
 
             pid.selectedFeedbackCoefficient = (float) ConfigGetParameter(ParamEnum.eSelectedSensorCoefficient, pidIdx, timeoutMs);
         }
-        
-        
-        
-        protected ErrorCode BaseConfigAllSettings<T>(ref T allConfigs, int timeoutMs = 50) where T : BaseMotorControllerConfiguration
+        protected ErrorCode BaseConfigAllSettings(BaseMotorControllerConfiguration allConfigs, int timeoutMs = 50)
         {
         
             ErrorCollection errorCollection = new ErrorCollection();
@@ -1126,18 +1130,18 @@ namespace CTRE.Phoenix.MotorControl.CAN
         
             //--------Slots---------------//
         
-            errorCollection.NewError(ConfigureSlot(ref allConfigs.slot_0, 0, timeoutMs));
-            errorCollection.NewError(ConfigureSlot(ref allConfigs.slot_1, 1, timeoutMs));
-            errorCollection.NewError(ConfigureSlot(ref allConfigs.slot_2, 2, timeoutMs));
-            errorCollection.NewError(ConfigureSlot(ref allConfigs.slot_3, 3, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_0, 0, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_1, 1, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_2, 2, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_3, 3, timeoutMs));
         
             //---------Auxilary Closed Loop Polarity-------------//
         
             errorCollection.NewError(ConfigAuxPIDPolarity(allConfigs.auxPIDPolarity, timeoutMs));
         
             //----------Remote Feedback Filters----------//
-            errorCollection.NewError(ConfigureFilter(ref allConfigs.filter_0, 0, timeoutMs));
-            errorCollection.NewError(ConfigureFilter(ref allConfigs.filter_1, 1, timeoutMs));
+            errorCollection.NewError(ConfigureFilter(allConfigs.filter_0, 0, timeoutMs));
+            errorCollection.NewError(ConfigureFilter(allConfigs.filter_1, 1, timeoutMs));
         
             //------ Motion Profile Settings used in Motion Magic  ----------//
             errorCollection.NewError(ConfigMotionCruiseVelocity(allConfigs.motionCruiseVelocity, timeoutMs));
@@ -1163,7 +1167,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
             return errorCollection._worstError;
         }
         
-        protected void BaseGetAllConfigs<T>(ref T allConfigs, int timeoutMs = 50) where T : BaseMotorControllerConfiguration
+        protected void BaseGetAllConfigs(BaseMotorControllerConfiguration allConfigs, int timeoutMs = 50)
         {
         
             allConfigs.openloopRamp = (float) ConfigGetParameter(ParamEnum.eOpenloopRamp, 0, timeoutMs);
