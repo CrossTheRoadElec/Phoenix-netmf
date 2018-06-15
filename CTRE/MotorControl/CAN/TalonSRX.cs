@@ -190,7 +190,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
         public ErrorCode ConfigContinuousCurrentLimit(int amps, int timeoutMs = 0)
         {
-            return _ll.ConfigPeakCurrentDuration(amps, timeoutMs);
+            return _ll.ConfigContinuousCurrentLimit(amps, timeoutMs);
         }
         public void EnableCurrentLimit(bool enable)
         {
@@ -280,7 +280,3 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
     }
 }
-
-
-
-
