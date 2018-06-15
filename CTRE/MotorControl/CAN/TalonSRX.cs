@@ -229,12 +229,8 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
             //------ limit switch ----------//   
             errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)allConfigs.forwardLimitSwitchSource, 0, 0, timeoutMs));
-            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.forwardLimitSwitchNormal, 0, 0, timeoutMs));
-            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.forwardLimitSwitchDeviceID, 0, 0, timeoutMs));
 
             errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchSource, (float)allConfigs.reverseLimitSwitchSource, 0, 1, timeoutMs));
-            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.reverseLimitSwitchNormal, 0, 1, timeoutMs));
-            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.reverseLimitSwitchDeviceID, 0, 1, timeoutMs));
 
             //--------PIDs---------------//
 

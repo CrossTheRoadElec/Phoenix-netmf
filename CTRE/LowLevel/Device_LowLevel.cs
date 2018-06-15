@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SPOT;
+using System;
 using System.Text;
 
 namespace CTRE.Phoenix.LowLevel
@@ -274,7 +275,7 @@ namespace CTRE.Phoenix.LowLevel
                     byte value_0 = (byte)(data >> 0x28);
                     byte subValue = (byte)(data >> 0x38);
                     /* decode sigs */
-                    int value = value_3;
+                    UInt32 value = value_3;
                     value <<= 8;
                     value |= value_2;
                     value <<= 8;
@@ -285,6 +286,16 @@ namespace CTRE.Phoenix.LowLevel
                     paramEnum <<= 4;
                     paramEnum |= paramEnum_l4;
                     /* save latest signal */
+                    if(paramEnum == 422 && ordinal == 1)
+                    {
+                        //Debug.Print("lowest yet at 1: " + value.ToString());
+                    }
+                    if (paramEnum == 422 && ordinal == 0)
+                    {
+                        //Debug.Print("lowest yet at 0: " + value.ToString());
+                    }
+
+
                     _sigs_Value[paramEnum] = value;
                     _sigs_SubValue[paramEnum] = subValue;
                 }
@@ -443,6 +454,7 @@ namespace CTRE.Phoenix.LowLevel
             /* wait for response frame */
             if (timeoutMs > 0)
             {
+
                 /* loop until timeout or receive if caller wants to check */
                 while (timeoutMs > 0)
                 {
@@ -450,7 +462,18 @@ namespace CTRE.Phoenix.LowLevel
                     System.Threading.Thread.Sleep(1);
                     /* see if response was received */
                     if (0 == PollForParamResponse(paramEnum, out valueReceived))
+                    {
+                        if(paramEnum == ParamEnum.eLimitSwitchNormClosedAndDis && ordinal == 1)
+                        {
+
+                            //Debug.Print(valueReceived.ToString());
+                        }
+
+
                         break; /* leave inner loop */
+
+                    }
+                        
                     /* decrement */
                     --timeoutMs;
                 }
@@ -567,7 +590,30 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode status = (ErrorCode)CTRE.Native.CAN.Send(PARAM_REQUEST | GetDeviceNumber(), frame, 8, 0);
             return status;
         }
+        private static Int32 Sterilize(UInt32 value)
+        {
+            Int32 retval;
+            /* test top bit */
+            if ((value & 0x80000000) == 0)
+            {
+                /* positive or zero - do nothing */
+                retval = (Int32)value;
+            }
+            else
+            {
+                /* negative */
+                long temp = (UInt32)value; /* copy bottom 32 bits */
 
+                /* sign extend */
+                temp <<= 32;
+                temp >>= 32;
+
+                /* back to caller */
+                retval = (Int32)temp;
+            }
+            /* send fixed value back to caller */
+            return retval;
+        }
         /**
          * Checks cached CAN frames and updating solicited signals.
          */
@@ -585,7 +631,15 @@ namespace CTRE.Phoenix.LowLevel
             }
             else
             {
-                rawBits = (int)_sigs_Value[(uint)paramEnum];
+                
+                Object value = _sigs_Value[(uint)paramEnum];
+                uint temp = (uint)value;
+                rawBits = Sterilize(temp);
+                if (paramEnum == ParamEnum.eLimitSwitchNormClosedAndDis)
+                {
+                    //Debug.Print("lowest: " + rawBits.ToString());
+                }
+
             }
             return retval;
         }
