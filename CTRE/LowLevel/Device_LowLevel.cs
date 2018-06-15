@@ -443,6 +443,11 @@ namespace CTRE.Phoenix.LowLevel
             /* wait for response frame */
             if (timeoutMs > 0)
             {
+                
+                /* remove stale entry*/
+                _sigs_Value.Remove((uint)paramEnum);
+                _sigs_SubValue.Remove((uint)paramEnum);
+	
                 /* loop until timeout or receive if caller wants to check */
                 while (timeoutMs > 0)
                 {
