@@ -434,6 +434,13 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode err1;
             ErrorCode err2 = ErrorCode.OK;
             
+            if (timeoutMs != 0)
+            {
+                /* remove stale entry if caller wants to wait for response. */
+                _sigs_Value.Remove((uint)paramEnum);
+                _sigs_SubValue.Remove((uint)paramEnum);
+            }
+
             /* send request */
             err1 = RequestParam(paramEnum, valueToSend, subValue, ordinal);
 
@@ -443,11 +450,6 @@ namespace CTRE.Phoenix.LowLevel
             /* wait for response frame */
             if (timeoutMs > 0)
             {
-                
-                /* remove stale entry*/
-                _sigs_Value.Remove((uint)paramEnum);
-                _sigs_SubValue.Remove((uint)paramEnum);
-	
                 /* loop until timeout or receive if caller wants to check */
                 while (timeoutMs > 0)
                 {
