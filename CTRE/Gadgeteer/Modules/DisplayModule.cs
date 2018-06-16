@@ -599,7 +599,10 @@ namespace CTRE
                 private void AddSprite(Sprite sprite)
                 {
                     /* add it to coll */
-                    _sprites.Add(sprite);
+                    lock (_sprites)
+                    {
+                        _sprites.Add(sprite);
+                    }
                     /* signal thread to react */
                     _dirtyEvent.Set();
                 }
@@ -623,11 +626,17 @@ namespace CTRE
                 }
                 public void ClearSprite(Sprite sprite)
                 {
-                    _sprites.Remove(sprite);
+                    lock (_sprites)
+                    {
+                        _sprites.Remove(sprite);
+                    }
                 }
                 public void ClearSprites()
                 {
-                    _sprites.Clear();
+                    lock (_sprites)
+                    {
+                        _sprites.Clear();
+                    }
                 }
 
                 private void RenderThread()
@@ -647,17 +656,20 @@ namespace CTRE
                                 ClearScreen();
                             }
                             /* loop through sprites and update them */
-                            foreach (Sprite sprite in _sprites)
+                            lock (_sprites)
                             {
-                                if (sprite.Dirty)
+                                foreach (Sprite sprite in _sprites)
                                 {
-                                    if (sprite.ReadyToMove)
+                                    if (sprite.Dirty)
                                     {
-                                        sprite.MoveRepaint(vram);
-                                    }
-                                    else
-                                    {
-                                        sprite.Paint(vram);
+                                        if (sprite.ReadyToMove)
+                                        {
+                                            sprite.MoveRepaint(vram);
+                                        }
+                                        else
+                                        {
+                                            sprite.Paint(vram);
+                                        }
                                     }
                                 }
                             }
