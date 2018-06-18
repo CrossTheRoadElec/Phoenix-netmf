@@ -1,5 +1,4 @@
-﻿using Microsoft.SPOT;
-using System;
+﻿using System;
 using System.Text;
 
 namespace CTRE.Phoenix.LowLevel
@@ -286,16 +285,6 @@ namespace CTRE.Phoenix.LowLevel
                     paramEnum <<= 4;
                     paramEnum |= paramEnum_l4;
                     /* save latest signal */
-                    if(paramEnum == 422 && ordinal == 1)
-                    {
-                        //Debug.Print("lowest yet at 1: " + value.ToString());
-                    }
-                    if (paramEnum == 422 && ordinal == 0)
-                    {
-                        //Debug.Print("lowest yet at 0: " + value.ToString());
-                    }
-
-
                     _sigs_Value[paramEnum] = value;
                     _sigs_SubValue[paramEnum] = subValue;
                 }
@@ -469,17 +458,7 @@ namespace CTRE.Phoenix.LowLevel
                     System.Threading.Thread.Sleep(1);
                     /* see if response was received */
                     if (0 == PollForParamResponse(paramEnum, out valueReceived))
-                    {
-                        if(paramEnum == ParamEnum.eLimitSwitchNormClosedAndDis && ordinal == 1)
-                        {
-
-                            //Debug.Print(valueReceived.ToString());
-                        }
-
-
-                        break; /* leave inner loop */
-
-                    }
+                    { break; /* leave inner loop */ }
                         
                     /* decrement */
                     --timeoutMs;
@@ -642,11 +621,6 @@ namespace CTRE.Phoenix.LowLevel
                 Object value = _sigs_Value[(uint)paramEnum];
                 uint temp = (uint)value;
                 rawBits = Sterilize(temp);
-                if (paramEnum == ParamEnum.eLimitSwitchNormClosedAndDis)
-                {
-                    //Debug.Print("lowest: " + rawBits.ToString());
-                }
-
             }
             return retval;
         }

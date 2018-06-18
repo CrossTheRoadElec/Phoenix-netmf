@@ -1189,17 +1189,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
             allConfigs.reverseLimitSwitchDeviceID = (int) ConfigGetParameter(ParamEnum.eLimitSwitchRemoteDevID, 1, timeoutMs);
             allConfigs.forwardLimitSwitchNormal = (LimitSwitchNormal) ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0, timeoutMs);
             allConfigs.reverseLimitSwitchNormal = (LimitSwitchNormal) ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1, timeoutMs);
-            /*if(((int)allConfigs.reverseLimitSwitchNormal) == 1)
-            {
-
-                Debug.Print("normalf: " + ((int)allConfigs.forwardLimitSwitchNormal).ToString() + " normalf: " + ((int)allConfigs.reverseLimitSwitchNormal).ToString());
-                allConfigs.forwardLimitSwitchNormal = (LimitSwitchNormal)ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0, timeoutMs);
-
-                allConfigs.reverseLimitSwitchNormal = (LimitSwitchNormal)ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1, timeoutMs);
-                Debug.Print("normalf2: " + ((int)allConfigs.forwardLimitSwitchNormal).ToString() + " normalf2: " + ((int)allConfigs.reverseLimitSwitchNormal).ToString());
-            }*/
-
-            
 
             allConfigs.forwardSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eForwardSoftLimitThreshold, 0, timeoutMs);
             allConfigs.reverseSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eReverseSoftLimitThreshold, 0, timeoutMs);
