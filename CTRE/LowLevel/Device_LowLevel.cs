@@ -445,6 +445,13 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode err1;
             ErrorCode err2 = ErrorCode.OK;
             
+            if (timeoutMs != 0)
+            {
+                /* remove stale entry if caller wants to wait for response. */
+                _sigs_Value.Remove((uint)paramEnum);
+                _sigs_SubValue.Remove((uint)paramEnum);
+            }
+
             /* send request */
             err1 = RequestParam(paramEnum, valueToSend, subValue, ordinal);
 
