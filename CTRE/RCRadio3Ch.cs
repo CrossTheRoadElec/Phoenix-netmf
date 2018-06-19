@@ -82,10 +82,10 @@ namespace CTRE.Phoenix
 
         public void Process()
         {
-            _errorCodes[0] = _canifier.GetPwmInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel0, _dutyCycleAndPeriods[0]);
-            _errorCodes[1] = _canifier.GetPwmInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel1, _dutyCycleAndPeriods[1]);
-            _errorCodes[2] = _canifier.GetPwmInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel2, _dutyCycleAndPeriods[2]);
-            _errorCodes[3] = _canifier.GetPwmInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel3, _dutyCycleAndPeriods[3]);
+            _errorCodes[0] = _canifier.GetPWMInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel0, _dutyCycleAndPeriods[0]);
+            _errorCodes[1] = _canifier.GetPWMInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel1, _dutyCycleAndPeriods[1]);
+            _errorCodes[2] = _canifier.GetPWMInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel2, _dutyCycleAndPeriods[2]);
+            _errorCodes[3] = _canifier.GetPWMInput(CTRE.Phoenix.CANifier.PWMChannel.PWMChannel3, _dutyCycleAndPeriods[3]);
 
 
             Status health = Status.Ok;
