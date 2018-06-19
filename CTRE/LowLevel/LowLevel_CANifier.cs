@@ -374,7 +374,7 @@ namespace CTRE.Phoenix
 
             return retval;
         }
-        public int GetPWMInput(uint pwmChannel, float [] dutyCycleAndPeriod)
+        public int GetPWMInput(uint pwmChannel, float [] pulseWidthAndPeriod)
         {
             uint[] temp = new uint[2] { 0, 0 };
             int retval = (int)Codes.CAN_INVALID_PARAM;
@@ -404,8 +404,8 @@ namespace CTRE.Phoenix
             periodUs = periodRaw * 0.256f; /* convert to microseconds */
             pulseWidthUs = pulseWidthFrac * 0.000244140625f * periodUs;
 
-            dutyCycleAndPeriod[0] = pulseWidthUs;
-            dutyCycleAndPeriod[1] = periodUs;
+            pulseWidthAndPeriod[0] = pulseWidthUs;
+            pulseWidthAndPeriod[1] = periodUs;
 
             return HandleError(retval);
         }
