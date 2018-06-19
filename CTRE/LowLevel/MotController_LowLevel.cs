@@ -641,7 +641,7 @@ namespace CTRE.Phoenix.LowLevel
             raw |= L;
             raw <<= (32 - 11);
             raw >>= (32 - 11);
-            param = (int)raw;
+            param = ((float)raw) / 1023.0F;
             return SetLastError(retval);
         }
         public ErrorCode GetOutputCurrent(out float param)
