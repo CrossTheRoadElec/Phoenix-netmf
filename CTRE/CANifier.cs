@@ -146,14 +146,14 @@ namespace CTRE.Phoenix
         }
 
         [Obsolete("Use GetPWMInput instead (different capitalization).")]
-        public ErrorCode GetPwmInput(PWMChannel pwmChannel, float[] dutyCycleAndPeriod)
+        public ErrorCode GetPwmInput(PWMChannel pwmChannel, float[] pulseWidthAndPeriod)
         {
-            return GetPWMInput(pwmChannel, dutyCycleAndPeriod);
+            return GetPWMInput(pwmChannel, pulseWidthAndPeriod);
         }
         
-        public ErrorCode GetPWMInput(PWMChannel pwmChannel, float[] dutyCycleAndPeriod)
+        public ErrorCode GetPWMInput(PWMChannel pwmChannel, float[] pulseWidthAndPeriod)
         {
-            return (ErrorCode)_ll.GetPWMInput((uint)pwmChannel, dutyCycleAndPeriod);
+            return (ErrorCode)_ll.GetPWMInput((uint)pwmChannel, pulseWidthAndPeriod);
         }
 
         /**
