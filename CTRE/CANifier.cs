@@ -66,9 +66,15 @@ namespace CTRE.Phoenix
 
         private int[] _tempPins = new int[11];
 
+        [Obsolete("Use single parameter constructor instead.")]
         public CANifier(UInt16 deviceId, bool externalEnable = false)
         {
             _ll = new CANifier_LowLevel(deviceId, externalEnable);
+        }
+
+        public CANifier(UInt16 deviceId)
+        {
+            _ll = new CANifier_LowLevel(deviceId, false);
         }
 
         public ErrorCode SetLEDOutput(float percentOutput, LEDChannel ledChannel)

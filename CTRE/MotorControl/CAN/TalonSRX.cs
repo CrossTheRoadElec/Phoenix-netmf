@@ -8,7 +8,13 @@ namespace CTRE.Phoenix.MotorControl.CAN
         SensorCollection _sensorColl;
 
         // : CANBusDevice TODO CLEANUP and package CAN stuff  /* all CAN stuff here */
+        [Obsolete("Use single parameter constructor instead.")]
         public TalonSRX(int deviceNumber, bool externalEnable = false) : base(deviceNumber | 0x02040000, externalEnable)
+        {
+            _sensorColl = new SensorCollection(_ll);
+        }
+
+        public TalonSRX(int deviceNumber) : base(deviceNumber | 0x02040000, false)
         {
             _sensorColl = new SensorCollection(_ll);
         }
