@@ -9,15 +9,24 @@ namespace CTRE.Phoenix
     public class CANifierConfiguration : CustomParamConfiguration{
         public CANifierVelocityMeasPeriod velocityMeasurementPeriod;
         public int velocityMeasurementWindow;
+        public bool clearPositionOnLimitF;
+        public bool clearPositionOnLimitR;
+        public bool clearPositionOnQuadIdx;
         public CANifierConfiguration() {
             velocityMeasurementPeriod = CANifierVelocityMeasPeriod.Period_100Ms;
             velocityMeasurementWindow = 64;
+            clearPositionOnLimitF = false;
+            clearPositionOnLimitR = false;
+            clearPositionOnQuadIdx = false;
         }
         public string ToString(string prependString) {
     
             string retstr = prependString + ".velocityMeasurementPeriod = " + CANifierVelocityMeasPeriodRoutines.ToString(velocityMeasurementPeriod) + ";\n";
             retstr += prependString + ".velocityMeasurementWindow = " + velocityMeasurementWindow.ToString() + ";\n";
-    
+            retstr += prependString + ".clearPositionOnLimitF = " + clearPositionOnLimitF.ToString() + ";\n";
+            retstr += prependString + ".clearPositionOnLimitR = " + clearPositionOnLimitR.ToString() + ";\n";
+            retstr += prependString + ".clearPositionOnQuadIdx = " + clearPositionOnQuadIdx.ToString() + ";\n";
+ 
             retstr += base.ToString(ref prependString);
     
             return retstr;
@@ -564,6 +573,10 @@ namespace CTRE.Phoenix
         
             errorCollection.NewError(ConfigVelocityMeasurementPeriod(allConfigs.velocityMeasurementPeriod, timeoutMs));
             errorCollection.NewError(ConfigVelocityMeasurementWindow(allConfigs.velocityMeasurementWindow, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eClearPositionOnLimitF, allConfigs.clearPositionOnLimitF ? 1.0F : 0.0F, 0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eClearPositionOnLimitR, allConfigs.clearPositionOnLimitR ? 1.0F : 0.0F, 0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eClearPositionOnQuadIdx, allConfigs.clearPositionOnQuadIdx ? 1.0F : 0.0F, 0, 0, timeoutMs));
+
             errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_0, 0, timeoutMs));
             errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_1, 1, timeoutMs));
         
@@ -584,6 +597,9 @@ namespace CTRE.Phoenix
 
             allConfigs.velocityMeasurementPeriod = (CANifierVelocityMeasPeriod) ConfigGetParameter(ParamEnum.eSampleVelocityPeriod, 0,  timeoutMs);
             allConfigs.velocityMeasurementWindow = (int) ConfigGetParameter(ParamEnum.eSampleVelocityWindow, 0,  timeoutMs); 
+            allConfigs.clearPositionOnLimitF = ConfigGetParameter(ParamEnum.eClearPositionOnLimitF, 0, timeoutMs) != 0.0;
+            allConfigs.clearPositionOnLimitR = ConfigGetParameter(ParamEnum.eClearPositionOnLimitR, 0, timeoutMs) != 0.0;
+            allConfigs.clearPositionOnQuadIdx = ConfigGetParameter(ParamEnum.eClearPositionOnQuadIdx, 0, timeoutMs) != 0.0;
             allConfigs.customParam_0 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 0,  timeoutMs);
             allConfigs.customParam_1 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 1,  timeoutMs);
         
