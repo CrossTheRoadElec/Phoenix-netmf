@@ -294,6 +294,11 @@ namespace CTRE.Phoenix.LowLevel
                     b7 = SetClrBit(b7, 4 + (int)pwmChannel, bEnable);
                     break;
             }
+
+            /* Insert byte 7 into cache */
+            _cache &= ~0xff00000000000000;
+            _cache |= ((ulong)b7 << 56) & 0xff00000000000000;
+
             /* save it */
             CTRE.Native.CAN.Send(CANifier_Control_2_PwmOutput | _baseArbId, _cache, 8, 0xFFFFFFFF);
             return SetLastError(retval);
