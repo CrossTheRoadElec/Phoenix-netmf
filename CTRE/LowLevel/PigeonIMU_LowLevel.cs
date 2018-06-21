@@ -134,11 +134,11 @@ public PigeonIMU_LowLevel(int baseArbId) :
             return SetLastError(errCode);
         }
         /**
-         * Enable/Disable Temp compensation.  Pigeon defaults with this on at boot.
+         * Enable/Disable Temp compensation.  Pigeon has compensation enabled at boot.
          * @param tempCompEnable
          * @return nonzero for error, zero for success.
          */
-        public ErrorCode ConfigTemperatureCompensationDisable(bool bTempCompDisable, int timeoutMs)
+        public ErrorCode SetTemperatureCompensationDisable(bool bTempCompDisable, int timeoutMs)
         {
             ErrorCode errCode = ConfigSetWrapper(ParamEnum.eTempCompDisable, bTempCompDisable ? 1 : 0, timeoutMs);
             return SetLastError(errCode);
