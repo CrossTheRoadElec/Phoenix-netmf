@@ -135,7 +135,7 @@ namespace CTRE.Phoenix
                     shortDescripToFill =
                             "CANifier Quadrature requires firm vers 0.42";
                     break;
-                case ErrorCode.TalonFeatureRequiresHigherFirm:
+                case ErrorCode.MotorControllerFeatureRequiresHigherFirm:
                     longDescripToFill =
                             "Motor Controller Remote/Arc features require firmware version 3.8 or higher to use";
                     shortDescripToFill =
