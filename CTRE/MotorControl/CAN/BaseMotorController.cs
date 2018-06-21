@@ -167,6 +167,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
             return (int)_ll.GetDeviceNumber();
         }
 
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs = 0)
+        {
+            return _ll.ConfigFactoryDefault(timeoutMs);
+        }
+
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs = 0)
         {

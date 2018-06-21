@@ -345,12 +345,12 @@ namespace CTRE.Phoenix.LowLevel
         }
 
         /**
- * @param mode
- * @param demand0	If open loop, [-1,+1]
- *					If closed loop, units or units/100ms.
- * @param demand1	if open-loop, [-1,+1]
- * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
- */
+         * @param mode
+         * @param demand0	If open loop, [-1,+1]
+         *					If closed loop, units or units/100ms.
+         * @param demand1	if open-loop, [-1,+1]
+         * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
+         */
         public ErrorCode Set(ControlMode mode, double demand0, double demand1, int demand1Type)
         {
             ErrorCode retval = ErrorCode.OKAY;
@@ -565,7 +565,11 @@ namespace CTRE.Phoenix.LowLevel
             if (param < 1) { return 1; }
             return param;
         }
-
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
+        }
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
