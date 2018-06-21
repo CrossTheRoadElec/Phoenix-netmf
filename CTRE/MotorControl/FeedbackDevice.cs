@@ -9,7 +9,8 @@ namespace CTRE.Phoenix.MotorControl
      */
     public enum FeedbackDevice
     {
-        None = -1,
+        //NOTE: None was removed as it doesn't exist in firmware
+        //TODO: Add None to firmware and add None back in
 
         QuadEncoder = 0,
         //1
@@ -33,9 +34,11 @@ namespace CTRE.Phoenix.MotorControl
     /**
      *  All Motor controllers can select remote signals over CAN Bus (Talon SRX and Cyclone)
      */
+
     public enum RemoteFeedbackDevice
     {
-        RemoteFeedbackDevice_None = -1,
+        //NOTE: RemoteFeedbackDevice_None was removed as it doesn't exist in firmware
+        //TODO: Add RemoteFeedbackDevice_None to firmware and add RemoteFeedbackDevice_None back in
 
         RemoteFeedbackDevice_SensorSum = 9,
         RemoteFeedbackDevice_SensorDifference = 10,
@@ -48,7 +51,6 @@ namespace CTRE.Phoenix.MotorControl
 public class FeedbackDeviceRoutines {
     public static string ToString(FeedbackDevice value) {
         switch(value) {
-            case FeedbackDevice.None : return "FeedbackDevice.None";
             case FeedbackDevice.QuadEncoder : return "FeedbackDevice.QuadEncoder";
             case FeedbackDevice.Analog : return "FeedbackDevice.Analog";
             case FeedbackDevice.Tachometer : return "FeedbackDevice.Tachometer";
@@ -66,7 +68,7 @@ public class FeedbackDeviceRoutines {
 
     public static string ToString(RemoteFeedbackDevice value) {
         switch(value) {
-            case RemoteFeedbackDevice.RemoteFeedbackDevice_None: return "RemoteFeedbackDevice.RemoteFeedbackDevice_None";
+            case 0 : return "None (factory default value)"; 
             case RemoteFeedbackDevice.RemoteFeedbackDevice_SensorSum: return "RemoteFeedbackDevice.RemoteFeedbackDevice_SensorSum";
             case RemoteFeedbackDevice.RemoteFeedbackDevice_SensorDifference: return "RemoteFeedbackDevice.RemoteFeedbackDevice_SensorDifference";
             case RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0: return "RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0";

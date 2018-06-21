@@ -8,7 +8,10 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public RemoteFeedbackDevice selectedFeedbackSensor;
     
         public VictorSPXPIDSetConfiguration() {
-            selectedFeedbackSensor = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
+            selectedFeedbackSensor = RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0;
+            //NOTE: while the factory default value is 0, this value can't 
+            //be set by the API. Thus, RemoteSensor0 is the default
+
         }
         public string ToString(string prependString) {
     
@@ -35,10 +38,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
             
             forwardLimitSwitchSource = RemoteLimitSwitchSource.Deactivated;
             reverseLimitSwitchSource = RemoteLimitSwitchSource.Deactivated;
-            sum_0  = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
-            sum_1  = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
-            diff_0 = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
-            diff_1 = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
+            sum_0  = RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0; 
+            sum_1  = RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0; 
+            diff_0 = RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0;
+            diff_1 = RemoteFeedbackDevice.RemoteFeedbackDevice_RemoteSensor0;
+            //NOTE: while the factory default value is 0, this value can't 
+            //be set by the API. Thus, RemoteSensor0 is the default
         }
         public new string ToString(string prependString) {
             string retstr = primaryPID.ToString(prependString + ".primaryPID");

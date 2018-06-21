@@ -43,16 +43,12 @@ namespace CTRE.Phoenix.Mechanical
         {
             _unitsPerRevolution = unitsPerRevolution;
             _rotationsPerUnit = 1f / _unitsPerRevolution;
-            _remoteFeedbackDevice = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
-
             /* child class takes care of sensor */
         }
         protected RemoteSensoredGearbox(float unitsPerRevolution, IMotorController master) : base(master)
         {
             _unitsPerRevolution = unitsPerRevolution;
             _rotationsPerUnit = 1f / _unitsPerRevolution;
-            _remoteFeedbackDevice = RemoteFeedbackDevice.RemoteFeedbackDevice_None;
-
             /* child class takes care of sensor */
         }
 
