@@ -13,35 +13,6 @@ namespace CTRE.Phoenix.LowLevel
     /** A mot controller with buffer low level. */
     public class MotControllerWithBuffer_LowLevel : MotController_LowLevel
     {
-        //const UInt32 STATUS_01 = 0x041400;
-        //const UInt32 STATUS_02 = 0x041440;
-        //const UInt32 STATUS_03 = 0x041480;
-        //const UInt32 STATUS_04 = 0x0414C0;
-        //const UInt32 STATUS_05 = 0x041500;
-        //const UInt32 STATUS_06 = 0x041540;
-        //const UInt32 STATUS_07 = 0x041580;
-        //const UInt32 STATUS_08 = 0x0415C0;
-        //const UInt32 STATUS_09 = 0x041600;
-        //const UInt32 STATUS_10 = 0x041640;
-        //const UInt32 STATUS_11 = 0x041680;
-        //const UInt32 STATUS_12 = 0x0416C0;
-        //const UInt32 STATUS_13 = 0x041700;
-        //const UInt32 STATUS_14 = 0x041740;
-        //const UInt32 STATUS_15 = 0x041780;
-
-        //const UInt32 CONTROL_1 = 0x040000;
-        //const UInt32 CONTROL_2 = 0x040040;
-        //const UInt32 CONTROL_3 = 0x040080;
-        //const UInt32 CONTROL_5 = 0x040100;
-        //const UInt32 CONTROL_6 = 0x040140;
-
-        //const UInt32 PARAM_REQ = 0x041800;
-        //const UInt32 PARAM_RESP = 0x041840;
-        //const UInt32 PARAM_SET = 0x041880;
-
-        //const UInt32 kParamArbIdValue = PARAM_RESPONSE;
-        //const UInt32 kParamArbIdMask = 0xFFFFFFFF;
-
         /** The float to fxp 10 22. */
         const float FLOAT_TO_FXP_10_22 = (float)0x400000;
         /** The fxp to float 10 22. */
@@ -52,14 +23,6 @@ namespace CTRE.Phoenix.LowLevel
         /** The fxp to float 0 8. */
         const float FXP_TO_FLOAT_0_8 = 0.00390625f;
 
-        /* status frame rate types */
-        //const int kStatusFrame_General = 0;
-        //const int kStatusFrame_Feedback = 1;
-        //const int kStatusFrame_Encoder = 2;
-        //const int kStatusFrame_AnalogTempVbat = 3;
-        //const int kStatusFrame_PulseWidthMeas = 4;
-        //const int kStatusFrame_MotionProfile = 5;
-        //const int kStatusFrame_MotionMagic = 6;
         /* Motion Profile status bits */
         /** The motion profile flag act traj is valid. */
         const int kMotionProfileFlag_ActTraj_IsValid = 0x1;
@@ -92,11 +55,6 @@ namespace CTRE.Phoenix.LowLevel
         /** The length. */
         private UInt32 _len;
 
-        //ErrorCode _lastError = ErrorCode.OK;
-
-
-
-       
         //--------------------- Buffering Motion Profile ---------------------------//
 
         /**
@@ -133,15 +91,6 @@ namespace CTRE.Phoenix.LowLevel
         {
 
         }
-
-        //public MotControllerCCI(UInt32 deviceId, bool externalEnable = false) 
-        //    : base(deviceId, deviceId | STATUS_5, PARAM_REQUEST, PARAM_RESPONSE, PARAM_SET)
-        //{
-        //    if (false == externalEnable)
-        //        CTRE.Native.CAN.Send(CONTROL_1 | _baseArbId, 0x00, 2, 50);
-        //    CTRE.Native.CAN.Send(CONTROL_3 | _baseArbId, 0x00, 8, 10);
-        //    SetOverrideLimitSwitchEn(1);
-        //}
 
         /**
          * Gets control 6.

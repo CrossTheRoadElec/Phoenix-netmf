@@ -23,9 +23,9 @@ using CTRE.Phoenix.LowLevel;
 namespace CTRE.Phoenix.MotorControl
 {
     /**
-     * Generic Motor Controller for all CTRE ESCs (Cyclone and Talon SRX).
+     * Generic Motor Controller for all CTRE ESCs (Cyclone,Talon SRX, and Victor SPX).
      */
-    public interface IMotorController : IFollower //: Signals.IOutputSignal , IFollower, IInvertable, ICANAddressable, IHasRemoteLimitSwitches
+    public interface IMotorController : IFollower
     {
         //------ Set output routines. ----------//
         void Set(ControlMode Mode, double demand);

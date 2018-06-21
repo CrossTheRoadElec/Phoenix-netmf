@@ -7,7 +7,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
     {
         SensorCollection _sensorColl;
 
-        // : CANBusDevice TODO CLEANUP and package CAN stuff  /* all CAN stuff here */
         public TalonSRX(int deviceNumber, bool externalEnable = false) : base(deviceNumber | 0x02040000, externalEnable)
         {
             _sensorColl = new SensorCollection(_ll);
@@ -131,7 +130,3 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public SensorCollection SensorCollection { get { return _sensorColl; } }
     }
 }
-
-
-
-

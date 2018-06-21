@@ -1,11 +1,11 @@
 ////software pid Pigeon heading => talon (VelClosedLoop, PercentOutput, Voltage).
 //using System;
 //using Microsoft.SPOT;
-//using CTRE.Drive;
-//using CTRE.Tasking;
-//using CTRE.MotorControllers;
+//using CTRE.Phoenix.Drive;
+//using CTRE.Phoenix.Tasking;
+//using CTRE.Phoenix.MotorControllers;
 
-//namespace CTRE.Motion
+//namespace CTRE.Phoenix.Motion
 //{
 //    public class ServoGoStraightWithImuSmart : ILoopable
 //    {

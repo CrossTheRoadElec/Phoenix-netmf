@@ -117,7 +117,6 @@
     <Compile Include="LowLevel\Pcm_LowLevel.cs" />
     <Compile Include="LowLevel\MotControllerWithBuffer_LowLevel.cs" />
     <Compile Include="LowLevel\MotController_LowLevel.cs" />
-    <Compile Include="LowLevel\ParamContainer.cs" />
     <Compile Include="LowLevel\ParamEnum.cs" />
     <Compile Include="LowLevel\PigeonIMU_LowLevel.cs" />
     <Compile Include="LowLevel\ResetStats.cs" />
@@ -182,7 +181,6 @@
     <Compile Include="Sensors\PigeonIMUData.cs" />
     <Compile Include="Sensors\PigeonIMU_ControlFrame.cs" />
     <Compile Include="Sensors\PigeonIMU_StatusFrame.cs" />
-    <Compile Include="ServoParameters.cs" />
     <Compile Include="Signals\IBoolInputSignal.cs" />
     <Compile Include="Signals\IInputSignal.cs" />
     <Compile Include="Signals\IBoolOutputSignal.cs" />

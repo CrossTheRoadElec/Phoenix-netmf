@@ -221,18 +221,6 @@ namespace CTRE.Phoenix
             CTRE.Native.CAN.Send(CONTROL_1 | _deviceNumber, _cache, 8, 0xFFFFFFFF);
             return retval;
         }
-        //public int SetClearStickyFaults(bool param)
-        //{
-        //    int retval = CTRE.Native.CAN.GetSendBuffer(CONTROL_1 | _deviceNumber, ref _cache);
-        //    if (retval != 0)
-        //        return retval;
-        //    if (param == false)
-        //        _cache &= ~(1ul << 31);
-        //    else
-        //        _cache |= 1ul << 31;
-        //    CTRE.Native.CAN.Send(CONTROL_1 | _deviceNumber, _cache, 8, 0xFFFFFFFF);
-        //    return retval;
-        //}
 
         /* Clears PCM sticky faults (indicators of past faults
          *
