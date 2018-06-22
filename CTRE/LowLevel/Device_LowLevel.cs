@@ -556,9 +556,12 @@ namespace CTRE.Phoenix.LowLevel
             do
             {
                 status = (ErrorCode)CTRE.Native.CAN.Send(baseId | GetDeviceNumber(), frame, 8, 0);
+                /* If transmit successful, exit while loop */
+                if (status == 0)
+                    break;
 
                 --retryMax;
-            } while (retryMax <= 0);
+            } while (retryMax >= 0);
 
             return status;
         }
