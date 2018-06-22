@@ -5,7 +5,13 @@ namespace CTRE.Phoenix.MotorControl.CAN
 {
     public class VictorSPX : BaseMotorController, IMotorController
     {
-        public VictorSPX(int deviceNumber, bool externalEnable = false) : base(deviceNumber | 0x01040000, externalEnable)
+        [Obsolete("Use single parameter constructor instead.")]
+        public VictorSPX(int deviceNumber, bool externalEnable) : base(deviceNumber | 0x01040000)
+        {
+            
+        }
+
+        public VictorSPX(int deviceNumber) : base(deviceNumber | 0x01040000)
         {
             
         }
