@@ -183,11 +183,8 @@ namespace CTRE.Phoenix.LowLevel
         /**
          * Constructor for the CAN Enabled CTRE motor controller.
          * @param deviceNumber The CAN ID of the CTRE motor controller.
-         * @param externalEnable Has no effect (originally was used to 
-         *                      allow individual enable signal from 
-         *                      external source). Defaults to false.
          */
-        public MotController_LowLevel(int baseArbId, bool externalEnable = false)
+        public MotController_LowLevel(int baseArbId)
             : base((uint)baseArbId, (uint)baseArbId | STATUS_05, (uint)baseArbId | PARAM_REQ, (uint)baseArbId | PARAM_RESP, (uint)baseArbId | PARAM_SET, (uint)baseArbId | STATUS_15)
         {
             /* 
@@ -647,7 +644,7 @@ namespace CTRE.Phoenix.LowLevel
             raw |= L;
             raw <<= (32 - 11);
             raw >>= (32 - 11);
-            param = (int)raw;
+            param = ((float)raw) / 1023.0F;
             return SetLastError(retval);
         }
         public ErrorCode GetOutputCurrent(out float param)

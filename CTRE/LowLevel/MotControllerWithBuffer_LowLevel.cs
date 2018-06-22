@@ -124,24 +124,12 @@ namespace CTRE.Phoenix.LowLevel
          * Constructor for the CANTalon device.
          *
          * @param   baseArbId       The CAN ID of the Talon SRX.
-         * @param   externalEnable  (Optional) pass true to prevent sending enable frames. This can be
-         *                          useful when having one device enable the Talon, and another to
-         *                          control it.
          */
 
-        public MotControllerWithBuffer_LowLevel(int baseArbId, bool externalEnable = false) : base(baseArbId,externalEnable)
+        public MotControllerWithBuffer_LowLevel(int baseArbId) : base(baseArbId)
         {
 
         }
-
-        //public MotControllerCCI(UInt32 deviceId, bool externalEnable = false) 
-        //    : base(deviceId, deviceId | STATUS_5, PARAM_REQUEST, PARAM_RESPONSE, PARAM_SET)
-        //{
-        //    if (false == externalEnable)
-        //        CTRE.Native.CAN.Send(CONTROL_1 | _baseArbId, 0x00, 2, 50);
-        //    CTRE.Native.CAN.Send(CONTROL_3 | _baseArbId, 0x00, 8, 10);
-        //    SetOverrideLimitSwitchEn(1);
-        //}
 
         /**
          * Gets control 6.
