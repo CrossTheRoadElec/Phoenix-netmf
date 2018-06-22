@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl.CAN
@@ -7,7 +7,13 @@ namespace CTRE.Phoenix.MotorControl.CAN
     {
         SensorCollection _sensorColl;
 
-        public TalonSRX(int deviceNumber, bool externalEnable = false) : base(deviceNumber | 0x02040000, externalEnable)
+        [Obsolete("Use single parameter constructor instead.")]
+        public TalonSRX(int deviceNumber, bool externalEnable) : base(deviceNumber | 0x02040000)
+        {
+            _sensorColl = new SensorCollection(_ll);
+        }
+
+        public TalonSRX(int deviceNumber) : base(deviceNumber | 0x02040000)
         {
             _sensorColl = new SensorCollection(_ll);
         }

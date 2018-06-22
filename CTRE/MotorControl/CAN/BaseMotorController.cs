@@ -24,14 +24,11 @@ namespace CTRE.Phoenix.MotorControl.CAN
         /**
          * Constructor for the CANTalon device.
          * @param deviceNumber The CAN ID of the Talon SRX
-         * @param externalEnable pass true to prevent sending enable frames.
-         *  	This can be useful when having one device enable the Talon, and
-         * 		another to control it.
          */
-        public BaseMotorController(int arbId, bool externalEnable = false)
+        public BaseMotorController(int arbId)
         {
             _arbId = arbId;
-            _ll = new MotControllerWithBuffer_LowLevel(arbId, externalEnable);
+            _ll = new MotControllerWithBuffer_LowLevel(arbId);
             _sensorColl = new SensorCollection(_ll);
         }
         //------ Set output routines. ----------//

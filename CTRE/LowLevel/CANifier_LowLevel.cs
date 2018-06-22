@@ -57,13 +57,10 @@ namespace CTRE.Phoenix.LowLevel
 
         bool _SendingPwmOutput = false;
 
-        public CANifier_LowLevel(UInt16 deviceId, bool externalEnable = false) : 
-            base((uint)0x03040000 | deviceId, STATUS_7 | deviceId, PARAM_REQUEST | deviceId, PARAM_RESPONSE | deviceId, PARAM_SET | deviceId, (uint)0x03041600 | deviceId) // todo startup frame
+        public CANifier_LowLevel(UInt16 deviceId) : 
+            base((uint)0x03040000 | deviceId, STATUS_7 | deviceId, PARAM_REQUEST | deviceId, PARAM_RESPONSE | deviceId, PARAM_SET | deviceId, (uint)0x03041600 | deviceId)
         {
-            if (false == externalEnable)
-            {
-                CTRE.Native.CAN.Send(CANifier_Control_1_General_20Ms | _baseArbId, 0x00, 8, 20);
-            }
+            CTRE.Native.CAN.Send(CANifier_Control_1_General_20Ms | _baseArbId, 0x00, 8, 20);
         }
         new void CheckFirmVers(int minMajor = kMinFirmwareVersionMajor, int minMinor = kMinFirmwareVersionMinor, ErrorCode failCode = ErrorCode.FirmwareTooOld)
         {
