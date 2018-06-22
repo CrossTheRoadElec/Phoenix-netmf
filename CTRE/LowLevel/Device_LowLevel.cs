@@ -456,6 +456,12 @@ namespace CTRE.Phoenix.LowLevel
             /* Open a stream to request param and wait for response */
             if (0 == _can_h) { OpenSessionIfNeedBe(); }
 
+            if (timeoutMs != 0)
+            {
+                /* remove stale entry if caller wants to wait for response. */
+                _sigs_Value.Remove((uint)paramEnum);
+                _sigs_SubValue.Remove((uint)paramEnum);
+            }
             /* send request */
             err1 = RequestParam(paramEnum, valueToSend, subValue, ordinal);
 
