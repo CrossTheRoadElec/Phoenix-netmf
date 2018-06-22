@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl.CAN
@@ -7,7 +7,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
     {
         SensorCollection _sensorColl;
 
-        // : CANBusDevice TODO CLEANUP and package CAN stuff  /* all CAN stuff here */
         [Obsolete("Use single parameter constructor instead.")]
         public TalonSRX(int deviceNumber, bool externalEnable) : base(deviceNumber | 0x02040000)
         {
