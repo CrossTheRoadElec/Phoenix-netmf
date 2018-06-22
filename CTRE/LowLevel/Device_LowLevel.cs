@@ -22,11 +22,6 @@ namespace CTRE.Phoenix.LowLevel
         UInt32 kParamArbIdValue;
         UInt32 kParamArbIdMask;
 
-        //UInt64 _cache;
-        //UInt32 _len;
-        UInt32 _can_h = 0;
-        int _can_stat = 0;
-
         ResetStats _resetStats = new ResetStats();
         int _firmVers = -1; /* invalid */
         int _failedVersionChecks = 0;
@@ -222,29 +217,23 @@ namespace CTRE.Phoenix.LowLevel
         protected abstract ErrorCode SetLastError(ErrorCode errorCode);
 
         //------------------- Session management ----------------------------//
-        private void OpenSessionIfNeedBe()
+        private ErrorCode OpenSession(ref uint handle)
         {
-            _can_stat = 0;
-            if (_can_h == 0)
-            {
-                /* bit30 - bit8 must match $000002XX.  Top bit is not masked to get remote frames */
-                uint arbId = kParamArbIdValue | GetDeviceNumber();
-                _can_stat = CTRE.Native.CAN.OpenStream(ref _can_h, kParamArbIdMask, arbId);
-                if (_can_stat == 0)
-                {
-                    /* success */
-                }
-                else
-                {
-                    /* something went wrong, try again later */
-                    _can_h = 0;
-                }
-            }
+            handle = 0;
+          
+            /* bit30 - bit8 must match $000002XX.  Top bit is not masked to get remote frames */
+            uint arbId = kParamArbIdValue | GetDeviceNumber();
+            int status = CTRE.Native.CAN.OpenStream(ref handle, kParamArbIdMask, arbId);
+           
+            return (ErrorCode)status;
         }
-
-        private void ProcessStreamMessages()
+		/**
+		 * If stream has been opened, buffered messages are emptied and processed.
+		 * If stream is no open, this routine has no effect.
+         * @param handle Handle to stream to empty and process.
+		 */
+        private void ProcessStreamMessages(uint handle)
         {
-            if (0 == _can_h) { OpenSessionIfNeedBe(); }
             /* process receive messages */
             UInt32 i;
             UInt32 messagesRead = 0;
@@ -253,15 +242,14 @@ namespace CTRE.Phoenix.LowLevel
             UInt32 len = 0;
             UInt32 msgsRead = 0;
             /* read out latest bunch of messages */
-            _can_stat = 0;
-            if (_can_h != 0)
+            if (handle != 0)
             {
-                CTRE.Native.CAN.GetStreamSize(_can_h, ref messagesRead);
+                CTRE.Native.CAN.GetStreamSize(handle, ref messagesRead);
             }
             /* loop thru each message of interest */
             for (i = 0; i < messagesRead; ++i)
             {
-                CTRE.Native.CAN.ReadStream(_can_h, ref arbId, ref data, ref len, ref msgsRead);
+                CTRE.Native.CAN.ReadStream(handle, ref arbId, ref data, ref len, ref msgsRead);
                 if (arbId == (PARAM_RESPONSE | GetDeviceNumber()))
                 {
                     /*decode pieces */
@@ -290,7 +278,40 @@ namespace CTRE.Phoenix.LowLevel
                 }
             }
         }
+        /**
+         * Caller must ensure timeoutMs is nonzero.
+         * @param timeoutMs How long to wait for response.
+         * @param handle Handle to CAN Rx Stream.
+         * @param paramEnum Parameter to look for.
+         * @param valueReceived [out] Value received in response frame, or zero if not received.
+         * @return nonzero for error code, zero for OK.
+         */
+        private ErrorCode WaitForParamResponse(int timeoutMs, uint handle, ParamEnum paramEnum, out int valueReceived)
+        {
+            ErrorCode status = 0;
 
+            /* init the outputs to default values */
+            valueReceived = 0;
+
+            /* loop until timeout or receive if caller wants to check */
+            while (timeoutMs > 0)
+            {
+                /* wait a bit */
+                System.Threading.Thread.Sleep(1);
+                /* process received param events. Caller should have opened 
+                    the stream already. */
+                ProcessStreamMessages(handle);
+                /* see if response was received */
+                if (0 == PollForParamResponse(paramEnum, out valueReceived))
+                    break; /* leave inner loop */
+                           /* decrement */
+                --timeoutMs;
+            }
+            /* if we get here then we timed out */
+            if (timeoutMs == 0) { status = ErrorCode.SIG_NOT_UPDATED; }
+
+            return status;
+        }
         //------------------------------------- ConfigSet* interface -----------------------------------------//
         /**
          * Send a one shot frame to set an arbitrary signal.
@@ -306,68 +327,51 @@ namespace CTRE.Phoenix.LowLevel
          */
         private ErrorCode ConfigSetParameterRaw(ParamEnum paramEnum, int value, byte subValue, int ordinal = 0, int timeoutMs = 0)
         {
+            ErrorCode statusTx = ErrorCode.OK; //!< Status code for transmit set request
+            ErrorCode statusRx = ErrorCode.OK; //!< Status code for receive (if timeoutMs is nonzero)
+            uint handle = 0; //!< Handle to CAN stream (if timeoutMs is nonzero)
+
             /* sterilize inputs */
-            if ((int)paramEnum > 0xFFF)
-                return ErrorCode.CAN_INVALID_PARAM;
-            if (ordinal > 0xF)
-                return ErrorCode.CAN_INVALID_PARAM;
-            /* splits */
-            byte btnParamEnum_h8 = (byte)((int)paramEnum >> 4);
-            byte btnParamEnum_l4 = (byte)((int)paramEnum & 0xF);
-            /* caller is using param API.  Open session if it hasn'T been done. */
-            if (0 == _can_h) OpenSessionIfNeedBe();
+            if ((int)paramEnum > 0xFFF) { return ErrorCode.CAN_INVALID_PARAM; }
+            if (ordinal > 0xF) { return ErrorCode.CAN_INVALID_PARAM; }
+
+                                                
+            /* If we need to monitor for response, create rx stream */
             /* wait for response frame */
-            if (timeoutMs != 0)
+            if (timeoutMs > 0)
             {
+                /* create a session to get filter rx frames. */
+                statusRx = OpenSession(ref handle);
                 /* remove stale entry if caller wants to wait for response. */
                 _sigs_Value.Remove((uint)paramEnum);
                 _sigs_SubValue.Remove((uint)paramEnum);
             }
-            /* frame set request and send it */
-            ushort temp16;
-            temp16 = (ushort)paramEnum;
-            temp16 <<= 4;
-            temp16 |= (ushort)ordinal;
-            /* build frame */
-            UInt64 frame;
-            frame = subValue; // b7
-            frame <<= 8;
-            frame |= 0; // b6
-            frame <<= 8;
-            frame |= (byte)(value >> 0x00); // b5
-            frame <<= 8;
-            frame |= (byte)(value >> 0x08);// b4
-            frame <<= 8;
-            frame |= (byte)(value >> 0x10);// b3
-            frame <<= 8;
-            frame |= (byte)(value >> 0x18);// b2
-            frame <<= 8;
-            frame |= (byte)((btnParamEnum_l4 << 4) | ordinal);// b1
-            frame <<= 8;
-            frame |= btnParamEnum_h8;// b0
-            /* send it */
-            uint arbId = PARAM_SET | GetDeviceNumber();
-            int status = CTRE.Native.CAN.Send(arbId, frame, 8, 0);
-            /* wait for response frame */
+
+            /* attempt to send request.  Save status code */
+            statusTx = RequestOrSetParam(true, paramEnum, value, subValue, ordinal, 5); /* max tries is 5 */
+
+            /* If caller wants to block,  wait for response frame and save status code */
             if (timeoutMs > 0)
             {
-                int readBits;
-                /* loop until timeout or receive if caller wants to check */
-                while (timeoutMs > 0)
+                /* caller wants to get response, check our stream health */
+                if (statusRx != 0)
                 {
-                    /* wait a bit */
-                    System.Threading.Thread.Sleep(1);
-                    /* see if response was received */
-                    if (0 == PollForParamResponse(paramEnum, out readBits))
-                        break; /* leave inner loop */
-                    /* decrement */
-                    --timeoutMs;
+                    /* stream could not be allocated, this error code will likely 
+                     * be passed to caller below (assuming tx was succesful) */
                 }
-                /* if we get here then we timed out */
-                if (timeoutMs == 0)
-                    status = (int)ErrorCode.SIG_NOT_UPDATED;
+                else
+                {
+                    /* stream open did not report an error, continue to poll for response */
+                    int valueReceived;
+                    statusRx = WaitForParamResponse(timeoutMs, handle, paramEnum, out valueReceived);
+                }
             }
-            return (ErrorCode)status;
+            /* Close stream */
+            if (handle != 0) { CTRE.Native.CAN.CloseStream(handle); }
+            /* return the transmit code first, if this fails then nothing else matters  */
+            if (statusTx != 0)
+				return (ErrorCode)statusTx;
+            return (ErrorCode)statusRx;
         }
 
         public ErrorCode ConfigSetParameter(ParamEnum paramEnum, float value, byte subValue, int ordinal = 0, int timeoutMs = 0)
@@ -431,43 +435,49 @@ namespace CTRE.Phoenix.LowLevel
         /** private get config with all params, status frame requires this */
         private ErrorCode ConfigGetParameter(ParamEnum paramEnum, int valueToSend, out int valueReceived, byte subValue, int ordinal, int timeoutMs)
         {
-            ErrorCode err1;
-            ErrorCode err2 = ErrorCode.OK;
-            
-            if (timeoutMs != 0)
-            {
-                /* remove stale entry if caller wants to wait for response. */
-                _sigs_Value.Remove((uint)paramEnum);
-                _sigs_SubValue.Remove((uint)paramEnum);
-            }
+            ErrorCode statusTx = ErrorCode.OK; //!< Status code for transmit set request
+            ErrorCode statusRx = ErrorCode.OK; //!< Status code for receive (if timeoutMs is nonzero)
+            uint handle = 0; //!< Handle to CAN stream (if timeoutMs is nonzero)
 
-            /* send request */
-            err1 = RequestParam(paramEnum, valueToSend, subValue, ordinal);
-
-            /* initialize outputs */
+            /* init the outputs */
             valueReceived = 0;
 
-            /* wait for response frame */
-            if (timeoutMs > 0)
+            /* sterilize inputs */
+            if ((int)paramEnum > 0xFFF) { return ErrorCode.CAN_INVALID_PARAM; }
+            if (ordinal > 0xF) { return ErrorCode.CAN_INVALID_PARAM; }
+
+            if (timeoutMs < Constants.GetParamTimeoutMs) /* we must have a minimum wait */
+                timeoutMs = Constants.GetParamTimeoutMs;
+
+            /* create a session to get filter rx frames. */
+            statusRx = OpenSession(ref handle);
+
+            /* remove stale entry if caller wants to wait for response. */
+            _sigs_Value.Remove((uint)paramEnum);
+            _sigs_SubValue.Remove((uint)paramEnum);
+      
+            /* attempt to request.  Save status code */
+            statusTx = RequestOrSetParam(false, paramEnum, valueToSend, subValue, ordinal, 5); /* max tries is 5 */
+
+            /* caller wants to get response, check our stream health */
+            if (statusRx != 0)
             {
-                /* loop until timeout or receive if caller wants to check */
-                while (timeoutMs > 0)
-                {
-                    /* wait a bit */
-                    System.Threading.Thread.Sleep(1);
-                    /* see if response was received */
-                    if (0 == PollForParamResponse(paramEnum, out valueReceived))
-                        break; /* leave inner loop */
-                    /* decrement */
-                    --timeoutMs;
-                }
-                /* if we get here then we timed out */
-                if (timeoutMs == 0) { err2 = ErrorCode.SIG_NOT_UPDATED; }
+                /* stream could not be allocated, this error code will likely 
+                    * be passed to caller below (assuming tx was succesful) */
+            }
+            else
+            {
+                /* stream open did not report an error, continue to poll for response */
+                statusRx = WaitForParamResponse(timeoutMs, handle, paramEnum, out valueReceived);
             }
 
-            /* return the first one */
-            if (err1 == ErrorCode.OK) { return(err2); }
-            else { return (err1); }
+            /* Close stream */
+            if (handle != 0) { CTRE.Native.CAN.CloseStream(handle); }
+
+            /* return the transmit code first, if this fails then nothing else matters  */
+            if (statusTx != 0)
+                return (ErrorCode)statusTx;
+            return (ErrorCode)statusRx;
         }
 
         public ErrorCode ConfigGetParameter(ParamEnum paramEnum, out int value, int ordinal = 0, int timeoutMs = Constants.GetParamTimeoutMs)
@@ -510,14 +520,13 @@ namespace CTRE.Phoenix.LowLevel
          * for signals that are not sent periodically.
          * This can be useful for reading params that rarely change like Limit Switch
          * settings and PIDF values.
-          * @param param to request.
+          * @param paramEnum parameter to request.
+          * @param value 
+          * @param subValue
+          * @param ordinal
          */
-        private ErrorCode RequestParam(ParamEnum paramEnum, int value, byte subValue, int ordinal)
+        private ErrorCode RequestOrSetParam(bool bIsSet, ParamEnum paramEnum, int value, byte subValue, int ordinal, int retryMax)
         {
-            /* process received param events. We don't expect many since this API is not
-             * used often. */
-            ProcessStreamMessages();
-
             if (ordinal < 0x0) { return ErrorCode.CAN_INVALID_PARAM; }
             if (ordinal > 0xF) { return ErrorCode.CAN_INVALID_PARAM; }
 
@@ -541,7 +550,16 @@ namespace CTRE.Phoenix.LowLevel
             frame <<= 8;
             frame |= (byte)(paramEnum_h8);
 
-            ErrorCode status = (ErrorCode)CTRE.Native.CAN.Send(PARAM_REQUEST | GetDeviceNumber(), frame, 8, 0);
+            uint baseId = bIsSet ? PARAM_SET : PARAM_REQUEST;
+
+            ErrorCode status = ErrorCode.OK;
+            do
+            {
+                status = (ErrorCode)CTRE.Native.CAN.Send(baseId | GetDeviceNumber(), frame, 8, 0);
+
+                --retryMax;
+            } while (retryMax <= 0);
+
             return status;
         }
 
@@ -551,9 +569,6 @@ namespace CTRE.Phoenix.LowLevel
         int PollForParamResponse(ParamEnum paramEnum, out Int32 rawBits)
         {
             int retval = 0;
-            /* process received param events. We don't expect many since this API is not
-             * used often. */
-            ProcessStreamMessages();
             /* grab the solicited signal value */
             if (_sigs_Value.Contains((uint)paramEnum) == false)
             {
