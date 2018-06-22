@@ -59,6 +59,7 @@ namespace CTRE.Phoenix.MotorControl
     }
     public static string ToString(RemoteLimitSwitchSource value) {
         switch(value) {
+            case 0 : return "None (factory default value)";
             case RemoteLimitSwitchSource.RemoteTalonSRX : return "RemoteLimitSwitchSource.RemoteTalonSRX";
             case RemoteLimitSwitchSource.RemoteCANifier : return "RemoteLimitSwitchSource.RemoteCANifier";
             case RemoteLimitSwitchSource.Deactivated : return "RemoteLimitSwitchSource.Deactivated";

@@ -1283,15 +1283,15 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
             allConfigs.forwardSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eForwardSoftLimitThreshold, 0, timeoutMs);
             allConfigs.reverseSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eReverseSoftLimitThreshold, 0, timeoutMs);
-            allConfigs.forwardSoftLimitEnable = ConfigGetParameter(ParamEnum.eForwardSoftLimitEnable, 0, timeoutMs) == 1.0F;
-            allConfigs.reverseSoftLimitEnable = ConfigGetParameter(ParamEnum.eReverseSoftLimitEnable, 0, timeoutMs) == 1.0F;
+            allConfigs.forwardSoftLimitEnable = ConfigGetParameter(ParamEnum.eForwardSoftLimitEnable, 0, timeoutMs) != 0.0F;
+            allConfigs.reverseSoftLimitEnable = ConfigGetParameter(ParamEnum.eReverseSoftLimitEnable, 0, timeoutMs) != 0.0F;
         
             GetSlotConfigs(out allConfigs.slot_0, 0, timeoutMs);
             GetSlotConfigs(out allConfigs.slot_1, 1, timeoutMs);
             GetSlotConfigs(out allConfigs.slot_2, 2, timeoutMs);
             GetSlotConfigs(out allConfigs.slot_3, 3, timeoutMs);
         
-            allConfigs.auxPIDPolarity = ConfigGetParameter(ParamEnum.ePIDLoopPolarity, 1, timeoutMs) == 1.0F;
+            allConfigs.auxPIDPolarity = ConfigGetParameter(ParamEnum.ePIDLoopPolarity, 1, timeoutMs) != 0.0F;
         
             GetFilterConfigs(out allConfigs.filter_0, 0, timeoutMs);
             GetFilterConfigs(out allConfigs.filter_1, 1, timeoutMs);
@@ -1303,13 +1303,13 @@ namespace CTRE.Phoenix.MotorControl.CAN
             allConfigs.customParam_1 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 1,  timeoutMs);
         
         
-            allConfigs.feedbackNotContinuous = ConfigGetParameter(ParamEnum.eFeedbackNotContinuous, 0, timeoutMs) == 1.0F;
-            allConfigs.remoteSensorClosedLoopDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eRemoteSensorClosedLoopDisableNeutralOnLOS, 0, timeoutMs) == 1.0F;
-            allConfigs.clearPositionOnLimitF = ConfigGetParameter(ParamEnum.eClearPositionOnLimitF, 0, timeoutMs) == 1.0F;
-            allConfigs.clearPositionOnLimitR = ConfigGetParameter(ParamEnum.eClearPositionOnLimitR, 0, timeoutMs) == 1.0F;
-            allConfigs.clearPositionOnQuadIdx = ConfigGetParameter(ParamEnum.eClearPositionOnQuadIdx, 0, timeoutMs) == 1.0F;
-            allConfigs.limitSwitchDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eLimitSwitchDisableNeutralOnLOS, 0, timeoutMs) == 1.0F;
-            allConfigs.softLimitDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eSoftLimitDisableNeutralOnLOS, 0, timeoutMs) == 1.0F;
+            allConfigs.feedbackNotContinuous = ConfigGetParameter(ParamEnum.eFeedbackNotContinuous, 0, timeoutMs) != 0.0F;
+            allConfigs.remoteSensorClosedLoopDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eRemoteSensorClosedLoopDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnLimitF = ConfigGetParameter(ParamEnum.eClearPositionOnLimitF, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnLimitR = ConfigGetParameter(ParamEnum.eClearPositionOnLimitR, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnQuadIdx = ConfigGetParameter(ParamEnum.eClearPositionOnQuadIdx, 0, timeoutMs) != 0.0F;
+            allConfigs.limitSwitchDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eLimitSwitchDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
+            allConfigs.softLimitDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eSoftLimitDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
             allConfigs.pulseWidthPeriod_EdgesPerRot = (int) ConfigGetParameter(ParamEnum.ePulseWidthPeriod_EdgesPerRot, 0, timeoutMs);
             allConfigs.pulseWidthPeriod_FilterWindowSz = (int) ConfigGetParameter(ParamEnum.ePulseWidthPeriod_FilterWindowSz, 0, timeoutMs);
         
