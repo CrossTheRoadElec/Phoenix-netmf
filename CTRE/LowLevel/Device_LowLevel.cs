@@ -33,9 +33,6 @@ namespace CTRE.Phoenix.LowLevel
 
         internal ErrorCodeVar _lastError = ErrorCode.OK;
 
-        System.Collections.Hashtable _sigs_Value = new System.Collections.Hashtable();
-        System.Collections.Hashtable _sigs_SubValue = new System.Collections.Hashtable();
-
         const UInt32 kFullMessageIDMask = 0x1fffffff;
         const float FLOAT_TO_FXP_10_22 = (float)0x400000;
         const float FXP_TO_FLOAT_10_22 = 0.0000002384185791015625f;
@@ -242,55 +239,6 @@ namespace CTRE.Phoenix.LowLevel
             }
         }
 
-        private void ProcessStreamMessages()
-        {
-            if (0 == _can_h) { OpenSessionIfNeedBe(); }
-            /* process receive messages */
-            UInt32 i;
-            UInt32 messagesRead = 0;
-            UInt32 arbId = 0;
-            UInt64 data = 0;
-            UInt32 len = 0;
-            UInt32 msgsRead = 0;
-            /* read out latest bunch of messages */
-            _can_stat = 0;
-            if (_can_h != 0)
-            {
-                CTRE.Native.CAN.GetStreamSize(_can_h, ref messagesRead);
-            }
-            /* loop thru each message of interest */
-            for (i = 0; i < messagesRead; ++i)
-            {
-                CTRE.Native.CAN.ReadStream(_can_h, ref arbId, ref data, ref len, ref msgsRead);
-                if (arbId == (PARAM_RESPONSE | GetDeviceNumber()))
-                {
-                    /*decode pieces */
-                    byte paramEnum_h8 = (byte)(data);
-                    byte paramEnum_l4 = (byte)((data >> 12) & 0xF);
-                    byte ordinal = (byte)((data >> 8) & 0xF);
-                    byte value_3 = (byte)(data >> 0x10);
-                    byte value_2 = (byte)(data >> 0x18);
-                    byte value_1 = (byte)(data >> 0x20);
-                    byte value_0 = (byte)(data >> 0x28);
-                    byte subValue = (byte)(data >> 0x38);
-                    /* decode sigs */
-                    UInt32 value = value_3;
-                    value <<= 8;
-                    value |= value_2;
-                    value <<= 8;
-                    value |= value_1;
-                    value <<= 8;
-                    value |= value_0;
-                    UInt32 paramEnum = paramEnum_h8;
-                    paramEnum <<= 4;
-                    paramEnum |= paramEnum_l4;
-                    /* save latest signal */
-                    _sigs_Value[paramEnum] = value;
-                    _sigs_SubValue[paramEnum] = subValue;
-                }
-            }
-        }
-
         //------------------------------------- ConfigSet* interface -----------------------------------------//
         /**
          * Send a one shot frame to set an arbitrary signal.
@@ -317,12 +265,7 @@ namespace CTRE.Phoenix.LowLevel
             /* caller is using param API.  Open session if it hasn'T been done. */
             if (0 == _can_h) OpenSessionIfNeedBe();
             /* wait for response frame */
-            if (timeoutMs != 0)
-            {
-                /* remove stale entry if caller wants to wait for response. */
-                _sigs_Value.Remove((uint)paramEnum);
-                _sigs_SubValue.Remove((uint)paramEnum);
-            }
+            
             /* frame set request and send it */
             ushort temp16;
             temp16 = (ushort)paramEnum;
@@ -358,7 +301,7 @@ namespace CTRE.Phoenix.LowLevel
                     /* wait a bit */
                     System.Threading.Thread.Sleep(1);
                     /* see if response was received */
-                    if (0 == PollForParamResponse(paramEnum, out readBits))
+                    if (PollForParamResponse(paramEnum, subValue, ordinal, out readBits))
                         break; /* leave inner loop */
                     /* decrement */
                     --timeoutMs;
@@ -434,13 +377,6 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode err1;
             ErrorCode err2 = ErrorCode.OK;
             
-            if (timeoutMs != 0)
-            {
-                /* remove stale entry if caller wants to wait for response. */
-                _sigs_Value.Remove((uint)paramEnum);
-                _sigs_SubValue.Remove((uint)paramEnum);
-            }
-
             /* send request */
             err1 = RequestParam(paramEnum, valueToSend, subValue, ordinal);
 
@@ -456,7 +392,7 @@ namespace CTRE.Phoenix.LowLevel
                     /* wait a bit */
                     System.Threading.Thread.Sleep(1);
                     /* see if response was received */
-                    if (0 == PollForParamResponse(paramEnum, out valueReceived))
+                    if (PollForParamResponse(paramEnum, subValue, ordinal, out valueReceived))
                         break; /* leave inner loop */
                     /* decrement */
                     --timeoutMs;
@@ -516,7 +452,7 @@ namespace CTRE.Phoenix.LowLevel
         {
             /* process received param events. We don't expect many since this API is not
              * used often. */
-            ProcessStreamMessages();
+            //ProcessStreamMessages(); This function no longer exists in this form
 
             if (ordinal < 0x0) { return ErrorCode.CAN_INVALID_PARAM; }
             if (ordinal > 0xF) { return ErrorCode.CAN_INVALID_PARAM; }
@@ -548,25 +484,76 @@ namespace CTRE.Phoenix.LowLevel
         /**
          * Checks cached CAN frames and updating solicited signals.
          */
-        int PollForParamResponse(ParamEnum paramEnum, out Int32 rawBits)
+        bool PollForParamResponse(ParamEnum paramEnum, byte subValue, int ordinal, out Int32 rawBits)
         {
-            int retval = 0;
-            /* process received param events. We don't expect many since this API is not
-             * used often. */
-            ProcessStreamMessages();
             /* grab the solicited signal value */
-            if (_sigs_Value.Contains((uint)paramEnum) == false)
+            if (0 == _can_h) { OpenSessionIfNeedBe(); }
+            /* process receive messages */
+            UInt32 i;
+            UInt32 messagesRead = 0;
+            UInt32 arbId = 0;
+            UInt64 data = 0;
+            UInt32 len = 0;
+            UInt32 msgsRead = 0;
+            /* read out latest bunch of messages */
+            _can_stat = 0;
+            if (_can_h != 0)
             {
-                retval = (int)ErrorCode.SIG_NOT_UPDATED;
-                rawBits = 0; /* default value if signal was not received */
+                CTRE.Native.CAN.GetStreamSize(_can_h, ref messagesRead);
             }
-            else
+            /* loop thru each message of interest */
+            for (i = 0; i < messagesRead; ++i)
             {
-                Object value = _sigs_Value[(uint)paramEnum];
-                uint temp = (uint)value;
-                rawBits = (int)temp;
+                CTRE.Native.CAN.ReadStream(_can_h, ref arbId, ref data, ref len, ref msgsRead);
+                if (arbId == (PARAM_RESPONSE | GetDeviceNumber()))
+                {
+                    /*decode pieces */
+                    byte paramEnum_h8 = (byte)(data);
+                    byte paramEnum_l4 = (byte)((data >> 12) & 0xF);
+                    
+                    UInt32 paramEnumCheck = paramEnum_h8;
+                    paramEnumCheck <<= 4;
+                    paramEnumCheck |= paramEnum_l4;
+                
+                    if(paramEnumCheck != (int) paramEnum)
+                    {
+                        continue;
+                    }
+                    
+                    byte ordinalCheck = (byte)((data >> 8) & 0xF);
+                    
+                    if(ordinalCheck != ordinal)
+                    {
+                        continue;
+                    }
+
+                    
+                    byte subValueCheck = (byte)(data >> 0x38);
+
+                    if(subValueCheck != subValue)
+                    {
+                        continue;
+                    }
+                    
+                    byte value_3 = (byte)(data >> 0x10);
+                    byte value_2 = (byte)(data >> 0x18);
+                    byte value_1 = (byte)(data >> 0x20);
+                    byte value_0 = (byte)(data >> 0x28);
+                    
+                    /* decode sigs */
+                    rawBits = value_3;
+                    rawBits <<= 8;
+                    rawBits |= value_2;
+                    rawBits <<= 8;
+                    rawBits |= value_1;
+                    rawBits <<= 8;
+                    rawBits |= value_0;
+                
+                    return true;
+                }
             }
-            return retval;
+            rawBits = 0;
+            return false;
         }
 
         //------------------------------------- Status Frame Rate -----------------------------------------//
