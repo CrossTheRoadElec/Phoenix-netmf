@@ -63,7 +63,8 @@ namespace CTRE
 
         //Firmware Versions
         FeatureRequiresHigherFirm = -700,
-        TalonFeatureRequiresHigherFirm = -701,
+        MotorControllerFeatureRequiresHigherFirm = -701,
+        TalonFeatureRequiresHigherFirm = MotorControllerFeatureRequiresHigherFirm,
 
         //CAN Related
         PulseWidthSensorNotPresent = 10,    //!< Special Code for "isSensorPresent"

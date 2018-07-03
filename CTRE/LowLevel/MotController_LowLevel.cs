@@ -231,7 +231,7 @@ namespace CTRE.Phoenix.LowLevel
             if (_usingAdvancedFeatures > 0)
             {
                 --_usingAdvancedFeatures;
-                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+                CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             }
             /* feature below not implemented yet, just save the error code */
             switch (mode)
@@ -356,7 +356,7 @@ namespace CTRE.Phoenix.LowLevel
             if (_usingAdvancedFeatures > 0)
             {
                 --_usingAdvancedFeatures;
-                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+                CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             }
             /* feature below not implemented yet, just save the error code */
             switch (mode)
@@ -681,7 +681,7 @@ namespace CTRE.Phoenix.LowLevel
             {
                 case FeedbackDevice.RemoteSensor0:
                 case FeedbackDevice.RemoteSensor1:
-                    CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm); //Must use latest firmware
+                    CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm); //Must use latest firmware
                     _usingAdvancedFeatures = 100;
                     break;
                 case FeedbackDevice.QuadEncoder:
@@ -702,7 +702,7 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigSelectedFeedbackCoefficient(
         float coefficient, int pidIdx, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
 
             return ConfigSetParameter(ParamEnum.eSelectedSensorCoefficient, coefficient, 0, pidIdx, timeoutMs);
@@ -712,7 +712,7 @@ namespace CTRE.Phoenix.LowLevel
         RemoteSensorSource remoteSensorSource, int remoteOrdinal, int timeoutMs)
         {
 
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             if (remoteOrdinal < 0) { return ErrorCode.InvalidParamValue; }
             if (remoteOrdinal > 1) { return ErrorCode.InvalidParamValue; }
@@ -732,7 +732,7 @@ namespace CTRE.Phoenix.LowLevel
 
         public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
 
             int ordinal = (int)sensorTerm;
@@ -1071,13 +1071,13 @@ namespace CTRE.Phoenix.LowLevel
 
         public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             return ConfigSetParameter(ParamEnum.eProfileParamSlot_PeakOutput, percentOut, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             return ConfigSetParameter(ParamEnum.ePIDLoopPeriod, loopTimeMs, 0x00, slotIdx, timeoutMs);
         }
