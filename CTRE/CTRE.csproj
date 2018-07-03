@@ -78,6 +78,7 @@
   <ItemGroup>
     <Compile Include="CANifier.cs" />
     <Compile Include="CANifierControlFrame.cs" />
+    <Compile Include="CustomParamConfiguration.cs" />
     <Compile Include="CANifierFaults.cs" />
     <Compile Include="CANifierStatusFrame.cs" />
     <Compile Include="CANifierStickyFaults.cs" />
