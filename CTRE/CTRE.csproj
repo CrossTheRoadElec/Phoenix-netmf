@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <AssemblyName>CTRE</AssemblyName>
@@ -82,7 +82,6 @@
     <Compile Include="CANifierStatusFrame.cs" />
     <Compile Include="CANifierStickyFaults.cs" />
     <Compile Include="CANifierVelocityMeasPeriod.cs" />
-    <Compile Include="CustomParamConfiguration.cs" />
     <Compile Include="ErrorStrings.cs" />
     <Compile Include="LowLevel\Device_LowLevel.cs" />
     <Compile Include="Containers\ByteRingBuffer.cs" />
@@ -118,7 +117,6 @@
     <Compile Include="LowLevel\Pcm_LowLevel.cs" />
     <Compile Include="LowLevel\MotControllerWithBuffer_LowLevel.cs" />
     <Compile Include="LowLevel\MotController_LowLevel.cs" />
-    <Compile Include="LowLevel\ParamContainer.cs" />
     <Compile Include="LowLevel\ParamEnum.cs" />
     <Compile Include="LowLevel\PigeonIMU_LowLevel.cs" />
     <Compile Include="LowLevel\ResetStats.cs" />
@@ -183,7 +181,6 @@
     <Compile Include="Sensors\PigeonIMUData.cs" />
     <Compile Include="Sensors\PigeonIMU_ControlFrame.cs" />
     <Compile Include="Sensors\PigeonIMU_StatusFrame.cs" />
-    <Compile Include="ServoParameters.cs" />
     <Compile Include="Signals\IBoolInputSignal.cs" />
     <Compile Include="Signals\IInputSignal.cs" />
     <Compile Include="Signals\IBoolOutputSignal.cs" />

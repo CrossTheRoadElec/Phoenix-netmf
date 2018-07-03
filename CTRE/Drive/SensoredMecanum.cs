@@ -1,8 +1,8 @@
 ////4X Mecanum
 //using System;
 //using Microsoft.SPOT;
-//using CTRE.Mechanical;
-//using CTRE.MotorControllers;
+//using CTRE.Phoenix.Mechanical;
+//using CTRE.Phoenix.MotorControllers;
 
 //namespace CTRE.Phoenix.Drive
 //{

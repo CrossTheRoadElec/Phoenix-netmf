@@ -216,7 +216,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
          */
         public ErrorCode ConfigurePID(TalonSRXPIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)
         {
-
             ErrorCollection errorCollection = new ErrorCollection();
 
             //------ sensor selection ----------//      

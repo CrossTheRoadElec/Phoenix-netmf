@@ -24,7 +24,7 @@ namespace CTRE.Phoenix.MotorControl
     /**
      * Advanced Motor Controller for CTRE ESCs with advanced features (Talon SRX with 2018 firmware).
      */
-    public interface IMotorControllerEnhanced : IMotorController //, IHasLimitSwitches, IGadgeteerUartClient
+    public interface IMotorControllerEnhanced : IMotorController
     {
         //------ Set output routines. ----------//
         /* in parent */

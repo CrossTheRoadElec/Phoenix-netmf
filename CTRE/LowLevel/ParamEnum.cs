@@ -21,11 +21,8 @@ namespace CTRE.Phoenix.LowLevel
         eOnBoot_BrakeMode = 31,
         eQuadFilterEn = 91,
         eQuadIdxPolarity = 108,
-        eClearPositionOnIdx = 100,
         eMotionProfileHasUnderrunErr = 119,
         eMotionProfileTrajectoryPointDurationMs = 120,
-        eClearPosOnLimitF = 144,
-        eClearPosOnLimitR = 145,
 
         eStatusFramePeriod = 300,
         eOpenloopRamp = 301,
@@ -49,6 +46,13 @@ namespace CTRE.Phoenix.LowLevel
         eClearPositionOnLimitF = 320,
         eClearPositionOnLimitR = 321,
         eClearPositionOnQuadIdx = 322,
+
+        [Obsolete("Obsolete, use eClearPositionOnLimitF instead")]
+        eClearPosOnLimitF = eClearPositionOnLimitF,
+        [Obsolete("Obsolete, use eClearPositionOnLimitR instead")]
+        eClearPosOnLimitR = eClearPositionOnLimitR,
+        [Obsolete("Obsolete, use eClearPositionOnQuadIdx instead")]
+        eClearPositionOnIdx = eClearPositionOnQuadIdx,
 
         eSampleVelocityPeriod = 325,
         eSampleVelocityWindow = 326,
@@ -117,74 +121,7 @@ namespace CTRE.Phoenix.LowLevel
         eMotionMeas_shake_reject_thresh = 178,
         eMotionMeas_shake_reject_time = 179,
         eMotionMeas_shake_reject_timeout = 180,
-
         eDefaultConfig = 500,
-
-#if false //Pre-Phoenix params
-        eProfileParamSlot_P = 2,
-        eProfileParamSlot_I = 3,
-        eProfileParamSlot_D = 4,
-        eProfileParamSlot_F = 5,
-        eProfileParamSlot_IZone = 6,
-        eProfileParamSlot_AllowableClosedLoopErr = 111,
-        eProfileParamSlot1_AllowableClosedLoopErr = 117,
-
-        eProfileParamSoftLimitForThreshold = 21,
-        eProfileParamSoftLimitRevThreshold = 22,
-        eProfileParamSoftLimitForEnable = 23,
-        eProfileParamSoftLimitRevEnable = 24,
-        eOnBoot_BrakeMode = 31,
-        eOnBoot_LimitSwitch_Forward_NormallyClosed = 32,
-        eOnBoot_LimitSwitch_Reverse_NormallyClosed = 33,
-        eOnBoot_LimitSwitch_Forward_Disable = 34,
-        eOnBoot_LimitSwitch_Reverse_Disable = 35,
-
-        eRevMotDuringCloseLoopEn = 64,
-        eRevFeedbackSensor = 68,
-   
-        eRampThrottle = 67,
-        eLimitSwitchEn = 69,
-        eLimitSwitchClosedFor = 70,
-        eLimitSwitchClosedRev = 71,
-        eBrakeIsEnabled = 76,
-        eQuadFilterEn = 91,
-        eClearPositionOnIdx = 100,
-
-        //ePeakPosOutput = 104,
-        //eNominalPosOutput = 105,
-        //ePeakNegOutput = 106,
-        //eNominalNegOutput = 107,
-        eQuadIdxPolarity = 108,
-      
-        eAllowPosOverflow = 110,
-        eNumberPotTurns = 112,
-        eNumberEncoderCPR = 113,
-
-        eProfileParamVcompRate = 116,
-        
-        eMotMag_Accel = 122,
-        eMotMag_VelCruise = 123,
-        
-        eCurrentLimThreshold = 125,
-        eCustomParam = 137,
-        ePersStorageSaving = 139,
-
-        eClearPositionOnLimitF = 144,
-        eClearPositionOnLimitR = 145,
-        eNominalBatteryVoltage = 146,
-        eSampleVelocityPeriod = 147,
-        eSampleVelocityWindow = 148,
-
-        eMotionProfileHasUnderrunErr = 119,
-        eEncPosition = 77,
-        eSensorPosition = 73,
-
-        ePwdPosition = 114,
-        eEncIndexRiseEvents = 79,
-        ePidIaccum = 93,
-        eCustomParam0 = 137,
-        eCustomParam1 = 138,
-#endif
     };
 
     public static class MotionProf_DurationMs

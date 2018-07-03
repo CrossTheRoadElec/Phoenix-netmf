@@ -1,9 +1,9 @@
 //using System;
 //using Microsoft.SPOT;
-//using CTRE.Signals;
-//using CTRE.Tasking;
+//using CTRE.Phoenix.Signals;
+//using CTRE.Phoenix.Tasking;
 
-//namespace CTRE.Plot
+//namespace CTRE.Phoenix.Plot
 //{
 //    /* smartdash plotting is garbage, we need something good */
 //    public class Plotter : IProcessable, ILoopable
