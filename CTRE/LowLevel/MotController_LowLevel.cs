@@ -565,7 +565,7 @@ namespace CTRE.Phoenix.LowLevel
         //----- Factory Default Config -----//
         public ErrorCode ConfigFactoryDefault(int timeoutMs)
         {
-            CheckFirmVers(11, 10, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 10, ErrorCode.ConfigFactoryDefaultRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
         }
