@@ -137,10 +137,17 @@ namespace CTRE.Phoenix
                     break;
                 case ErrorCode.MotorControllerFeatureRequiresHigherFirm:
                     longDescripToFill =
-                            "Motor Controller Remote/Arc features require firmware version 3.8 or higher to use";
+                            "Motor Controller Remote/Arc features require firmware version 11.8 or higher to use";
                     shortDescripToFill =
-                            "Motor Controller Remote/Arc features require firmware >=3.8";
+                            "Motor Controller Remote/Arc features require firmware >=11.8";
                     break;
+                case ErrorCode.ConfigFactoryDefaultRequiresHigherFirm:
+                    longDescripToFill =
+                            "Config factory default features require firmware version 11.10 or higher to use";
+                    shortDescripToFill =
+                            "Config factory default features require firmware >=11.10";
+                    break;
+
                 case ErrorCode.ControlModeNotSupportedYet:
                     longDescripToFill =
                             "This control mode is not supported yet.  A future release will supported this soon.";
