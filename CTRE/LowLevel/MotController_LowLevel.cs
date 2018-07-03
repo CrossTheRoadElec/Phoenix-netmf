@@ -231,7 +231,7 @@ namespace CTRE.Phoenix.LowLevel
             if (_usingAdvancedFeatures > 0)
             {
                 --_usingAdvancedFeatures;
-                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+                CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             }
             /* feature below not implemented yet, just save the error code */
             switch (mode)
@@ -342,12 +342,12 @@ namespace CTRE.Phoenix.LowLevel
         }
 
         /**
- * @param mode
- * @param demand0	If open loop, [-1,+1]
- *					If closed loop, units or units/100ms.
- * @param demand1	if open-loop, [-1,+1]
- * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
- */
+         * @param mode
+         * @param demand0	If open loop, [-1,+1]
+         *					If closed loop, units or units/100ms.
+         * @param demand1	if open-loop, [-1,+1]
+         * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
+         */
         public ErrorCode Set(ControlMode mode, double demand0, double demand1, int demand1Type)
         {
             ErrorCode retval = ErrorCode.OKAY;
@@ -356,7 +356,7 @@ namespace CTRE.Phoenix.LowLevel
             if (_usingAdvancedFeatures > 0)
             {
                 --_usingAdvancedFeatures;
-                CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+                CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             }
             /* feature below not implemented yet, just save the error code */
             switch (mode)
@@ -562,7 +562,13 @@ namespace CTRE.Phoenix.LowLevel
             if (param < 1) { return 1; }
             return param;
         }
-
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs)
+        {
+            CheckFirmVers(11, 10, ErrorCode.TalonFeatureRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+            return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
+        }
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
@@ -681,7 +687,7 @@ namespace CTRE.Phoenix.LowLevel
             {
                 case FeedbackDevice.RemoteSensor0:
                 case FeedbackDevice.RemoteSensor1:
-                    CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm); //Must use latest firmware
+                    CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm); //Must use latest firmware
                     _usingAdvancedFeatures = 100;
                     break;
                 case FeedbackDevice.QuadEncoder:
@@ -702,7 +708,7 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigSelectedFeedbackCoefficient(
         float coefficient, int pidIdx, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
 
             return ConfigSetParameter(ParamEnum.eSelectedSensorCoefficient, coefficient, 0, pidIdx, timeoutMs);
@@ -712,7 +718,7 @@ namespace CTRE.Phoenix.LowLevel
         RemoteSensorSource remoteSensorSource, int remoteOrdinal, int timeoutMs)
         {
 
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             if (remoteOrdinal < 0) { return ErrorCode.InvalidParamValue; }
             if (remoteOrdinal > 1) { return ErrorCode.InvalidParamValue; }
@@ -732,7 +738,7 @@ namespace CTRE.Phoenix.LowLevel
 
         public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
 
             int ordinal = (int)sensorTerm;
@@ -919,7 +925,7 @@ namespace CTRE.Phoenix.LowLevel
             return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, param, 0, 0, timeoutMs);
         }
         //------ ALL limit switch ----------//
-        ErrorCode ConfigSingleLimitSwitchSource(
+        protected ErrorCode ConfigSingleLimitSwitchSource(
                 LimitSwitchSource limitSwitchSource, LimitSwitchNormal normalOpenOrClose,
                 int deviceIDIfApplicable, int timeoutMs, bool isForward)
         {
@@ -1071,13 +1077,13 @@ namespace CTRE.Phoenix.LowLevel
 
         public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             return ConfigSetParameter(ParamEnum.eProfileParamSlot_PeakOutput, percentOut, 0x00, slotIdx, timeoutMs);
         }
         public ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs)
         {
-            CheckFirmVers(11, 8, ErrorCode.TalonFeatureRequiresHigherFirm);
+            CheckFirmVers(11, 8, ErrorCode.MotorControllerFeatureRequiresHigherFirm);
             _usingAdvancedFeatures = 100;
             return ConfigSetParameter(ParamEnum.ePIDLoopPeriod, loopTimeMs, 0x00, slotIdx, timeoutMs);
         }
@@ -1173,6 +1179,43 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigMotionAcceleration(int sensorUnitsPer100msPerSec, int timeoutMs)
         {
             return ConfigSetParameter(ParamEnum.eMotMag_Accel, sensorUnitsPer100msPerSec, 0, 0, timeoutMs);
+        }
+
+        public ErrorCode ConfigFeedbackNotContinuous(bool feedbackNotContinuous, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eFeedbackNotContinuous, feedbackNotContinuous ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigRemoteSensorClosedLoopDisableNeutralOnLOS(bool remoteSensorClosedLoopDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eRemoteSensorClosedLoopDisableNeutralOnLOS, remoteSensorClosedLoopDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitF(bool clearPositionOnLimitF, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitF, clearPositionOnLimitF ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitR(bool clearPositionOnLimitR, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitR, clearPositionOnLimitR ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnQuadIdx(bool clearPositionOnQuadIdx, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnQuadIdx, clearPositionOnQuadIdx ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigLimitSwitchDisableNeutralOnLOS(bool limitSwitchDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eLimitSwitchDisableNeutralOnLOS, limitSwitchDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigSoftLimitDisableNeutralOnLOS(bool softLimitDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eSoftLimitDisableNeutralOnLOS, softLimitDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigPulseWidthPeriod_EdgesPerRot(int pulseWidthPeriod_EdgesPerRot, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.ePulseWidthPeriod_EdgesPerRot, pulseWidthPeriod_EdgesPerRot, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigPulseWidthPeriod_FilterWindowSz(int pulseWidthPeriod_FilterWindowSz, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.ePulseWidthPeriod_FilterWindowSz, pulseWidthPeriod_FilterWindowSz, 0, 0, timeoutMs);
         }
 
         public ErrorCode GetClosedLoopTarget(out int value, int pidIdx)

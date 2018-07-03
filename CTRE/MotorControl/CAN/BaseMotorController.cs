@@ -6,6 +6,209 @@ using CTRE.Phoenix.LowLevel;
 
 namespace CTRE.Phoenix.MotorControl.CAN
 {
+    public class BasePIDSetConfiguration {
+    
+        public float selectedFeedbackCoefficient;
+    
+        public BasePIDSetConfiguration() { 
+            selectedFeedbackCoefficient = 1.0F;
+        
+        }
+        protected string ToString(ref string prependString) {
+            return prependString + ".selectedFeedbackCoefficient = " + selectedFeedbackCoefficient.ToString() + ";\n";
+    
+        }
+    };// struct BasePIDSetConfiguration
+    public class FilterConfiguration {
+    
+        public int remoteSensorDeviceID;
+        public RemoteSensorSource remoteSensorSource;
+    
+        public FilterConfiguration() {
+            remoteSensorDeviceID = 0;
+            remoteSensorSource = RemoteSensorSource.RemoteSensorSource_Off;
+        }
+        public string ToString(string prependString) {
+            string retstr = prependString + ".remoteSensorDeviceID = " + remoteSensorDeviceID.ToString() + ";\n";
+            retstr += prependString + ".remoteSensorSource = " + RemoteSensorSourceRoutines.ToString(remoteSensorSource) + ";\n";
+            return retstr;
+        }
+    
+    }; // struct FilterConfiguration
+    public class SlotConfiguration{
+    
+        public float kP;
+        public float kI;
+        public float kD;
+        public float kF;
+        public int integralZone;
+        public int allowableClosedloopError;
+        public float maxIntegralAccumulator;
+        public float closedLoopPeakOutput;
+        public int closedLoopPeriod;
+    
+        public SlotConfiguration() {
+            kP = 0.0F;
+            kI = 0.0F;
+            kD = 0.0F;
+            kF = 0.0F;
+            integralZone = 0;
+            allowableClosedloopError = 0;
+            maxIntegralAccumulator = 0.0F;
+            closedLoopPeakOutput = 1.0F;
+            closedLoopPeriod = 1;
+        }
+        public string ToString(string prependString) {
+    
+            string retstr = prependString + ".kP = " + kP.ToString() + ";\n";
+            retstr += prependString + ".kI = " + kI.ToString() + ";\n";
+            retstr += prependString + ".kD = " + kD.ToString() + ";\n";
+            retstr += prependString + ".kF = " + kF.ToString() + ";\n";
+            retstr += prependString + ".integralZone = " + integralZone.ToString() + ";\n";
+            retstr += prependString + ".allowableClosedloopError = " + allowableClosedloopError.ToString() + ";\n";
+            retstr += prependString + ".maxIntegralAccumulator = " + maxIntegralAccumulator.ToString() + ";\n";
+            retstr += prependString + ".closedLoopPeakOutput = " + closedLoopPeakOutput.ToString() + ";\n";
+            retstr += prependString + ".closedLoopPeriod = " + closedLoopPeriod.ToString() + ";\n";
+    
+            return retstr;
+    
+        }
+    };// struct BaseSlotConfiguration
+    
+    public class BaseMotorControllerConfiguration : CustomParamConfiguration {
+        public float openloopRamp;
+        public float closedloopRamp;
+        public float peakOutputForward;
+        public float peakOutputReverse;
+        public float nominalOutputForward;
+        public float nominalOutputReverse;
+        public float neutralDeadband;
+        public float voltageCompSaturation;
+        public int voltageMeasurementFilter;
+        public VelocityMeasPeriod velocityMeasurementPeriod;
+        public int velocityMeasurementWindow;
+        public int forwardLimitSwitchDeviceID; //Limit Switch device id isn't used unless device is a remote
+        public int reverseLimitSwitchDeviceID;
+        public LimitSwitchNormal forwardLimitSwitchNormal;
+        public LimitSwitchNormal reverseLimitSwitchNormal;
+        public int forwardSoftLimitThreshold;
+        public int reverseSoftLimitThreshold;
+        public bool forwardSoftLimitEnable;
+        public bool reverseSoftLimitEnable;
+        public SlotConfiguration slot_0;
+        public SlotConfiguration slot_1;
+        public SlotConfiguration slot_2;
+        public SlotConfiguration slot_3;
+        public bool auxPIDPolarity;
+        public FilterConfiguration filter_0;
+        public FilterConfiguration filter_1;
+        public int motionCruiseVelocity;
+        public int motionAcceleration;
+        public int motionProfileTrajectoryPeriod;
+        public bool feedbackNotContinuous;
+        public bool remoteSensorClosedLoopDisableNeutralOnLOS;
+        public bool clearPositionOnLimitF;
+        public bool clearPositionOnLimitR;
+        public bool clearPositionOnQuadIdx;
+        public bool limitSwitchDisableNeutralOnLOS;
+        public bool softLimitDisableNeutralOnLOS;
+        public int pulseWidthPeriod_EdgesPerRot;
+        public int pulseWidthPeriod_FilterWindowSz;
+    
+        public BaseMotorControllerConfiguration() {
+            slot_0 = new SlotConfiguration();
+            slot_1 = new SlotConfiguration();
+            slot_2 = new SlotConfiguration();
+            slot_3 = new SlotConfiguration();
+
+            filter_0 = new FilterConfiguration();
+            filter_1 = new FilterConfiguration();
+
+            openloopRamp = 0.0F;
+            closedloopRamp = 0.0F;
+            peakOutputForward = 1.0F;
+            peakOutputReverse = -1.0F;
+            nominalOutputForward = 0.0F;
+            nominalOutputReverse = 0.0F;
+            neutralDeadband = 0.04F;
+            voltageCompSaturation = 0.0F;
+            voltageMeasurementFilter = 32;
+            velocityMeasurementPeriod = VelocityMeasPeriod.Period_100Ms;
+            velocityMeasurementWindow = 64;
+            forwardLimitSwitchDeviceID = 0;
+            reverseLimitSwitchDeviceID = 0;
+            forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+            reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+            forwardSoftLimitThreshold = 0;
+            reverseSoftLimitThreshold = 0;
+            forwardSoftLimitEnable = false;
+            reverseSoftLimitEnable = false;
+            auxPIDPolarity = false;
+            motionCruiseVelocity = 0;
+            motionAcceleration = 0;
+            motionProfileTrajectoryPeriod = 0;
+            feedbackNotContinuous = false;
+            remoteSensorClosedLoopDisableNeutralOnLOS = false;
+            clearPositionOnLimitF = false;
+            clearPositionOnLimitR = false;
+            clearPositionOnQuadIdx = false;
+            limitSwitchDisableNeutralOnLOS = false;
+            softLimitDisableNeutralOnLOS = false;
+            pulseWidthPeriod_EdgesPerRot = 1;
+            pulseWidthPeriod_FilterWindowSz = 1;
+    
+        }
+        protected string ToString(string prependString) {
+    
+            string retstr = prependString + ".openloopRamp = " + openloopRamp.ToString() + ";\n";
+            retstr += prependString + ".closedloopRamp = " + closedloopRamp.ToString() + ";\n";
+            retstr += prependString + ".peakOutputForward = " + peakOutputForward.ToString() + ";\n";
+            retstr += prependString + ".peakOutputReverse = " + peakOutputReverse.ToString() + ";\n";
+            retstr += prependString + ".nominalOutputForward = " + nominalOutputForward.ToString() + ";\n";
+            retstr += prependString + ".nominalOutputReverse = " + nominalOutputReverse.ToString() + ";\n";
+            retstr += prependString + ".neutralDeadband = " + neutralDeadband.ToString() + ";\n";
+            retstr += prependString + ".voltageCompSaturation = " + voltageCompSaturation.ToString() + ";\n";
+            retstr += prependString + ".voltageMeasurementFilter = " + voltageMeasurementFilter.ToString() + ";\n";
+            retstr += prependString + ".velocityMeasurementPeriod = " + VelocityMeasPeriodRoutines.ToString(velocityMeasurementPeriod) + ";\n";
+            retstr += prependString + ".velocityMeasurementWindow = " + velocityMeasurementWindow.ToString() + ";\n";
+            retstr += prependString + ".forwardLimitSwitchDeviceID = " + forwardLimitSwitchDeviceID.ToString() + ";\n";
+            retstr += prependString + ".reverseLimitSwitchDeviceID = " + reverseLimitSwitchDeviceID.ToString() + ";\n";
+            retstr += prependString + ".forwardLimitSwitchNormal = " + LimitSwitchRoutines.ToString(forwardLimitSwitchNormal) + ";\n";
+            retstr += prependString + ".reverseLimitSwitchNormal = " + LimitSwitchRoutines.ToString(reverseLimitSwitchNormal) + ";\n";
+            retstr += prependString + ".forwardSoftLimitThreshold = " + forwardSoftLimitThreshold.ToString() + ";\n";
+            retstr += prependString + ".reverseSoftLimitThreshold = " + reverseSoftLimitThreshold.ToString() + ";\n";
+            retstr += prependString + ".forwardSoftLimitEnable = " + forwardSoftLimitEnable.ToString() + ";\n";
+            retstr += prependString + ".reverseSoftLimitEnable = " + reverseSoftLimitEnable.ToString() + ";\n";
+            retstr += slot_0.ToString(prependString + ".slot_0");
+            retstr += slot_1.ToString(prependString + ".slot_1");
+            retstr += slot_2.ToString(prependString + ".slot_2");
+            retstr += slot_3.ToString(prependString + ".slot_3");
+            retstr += prependString + ".auxPIDPolarity = " + auxPIDPolarity.ToString() + ";\n";
+            retstr += filter_0.ToString(prependString + ".filter_0");
+            retstr += filter_1.ToString(prependString + ".filter_1");
+            retstr += prependString + ".motionCruiseVelocity = " + motionCruiseVelocity.ToString() + ";\n";
+            retstr += prependString + ".motionAcceleration = " + motionAcceleration.ToString() + ";\n";
+            retstr += prependString + ".motionProfileTrajectoryPeriod = " + motionProfileTrajectoryPeriod.ToString() + ";\n";
+            retstr += prependString + ".feedbackNotContinuous = " + feedbackNotContinuous.ToString() + ";\n";
+            retstr += prependString + ".remoteSensorClosedLoopDisableNeutralOnLOS = " + remoteSensorClosedLoopDisableNeutralOnLOS.ToString() + ";\n";
+            retstr += prependString + ".clearPositionOnLimitF = " + clearPositionOnLimitF.ToString() + ";\n";
+            retstr += prependString + ".clearPositionOnLimitR = " + clearPositionOnLimitR.ToString() + ";\n";
+            retstr += prependString + ".clearPositionOnQuadIdx = " + clearPositionOnQuadIdx.ToString() + ";\n";
+            retstr += prependString + ".limitSwitchDisableNeutralOnLOS = " + limitSwitchDisableNeutralOnLOS.ToString() + ";\n";
+            retstr += prependString + ".softLimitDisableNeutralOnLOS = " + softLimitDisableNeutralOnLOS.ToString() + ";\n";
+            retstr += prependString + ".pulseWidthPeriod_EdgesPerRot = " + pulseWidthPeriod_EdgesPerRot.ToString() + ";\n";
+            retstr += prependString + ".pulseWidthPeriod_FilterWindowSz = " + pulseWidthPeriod_FilterWindowSz.ToString() + ";\n";
+    
+            retstr += base.ToString(ref prependString);
+    
+            return retstr;
+        }
+    };// struct BaseMotorControllerConfiguration
+
+
+    
+
+
     public abstract class BaseMotorController : IMotorController
     {
         SensorCollection _sensorColl;
@@ -163,6 +366,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             return (int)_ll.GetDeviceNumber();
         }
+        
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs = 0)
+        {
+            return _ll.ConfigFactoryDefault(timeoutMs);
+        }
 
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs = 0)
@@ -244,16 +453,16 @@ namespace CTRE.Phoenix.MotorControl.CAN
         }
 
         //------ sensor selection ----------//
-        public ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0)
+        public ErrorCode ConfigSelectedFeedbackSensor(RemoteFeedbackDevice feedbackDevice, int pidIdx = 0, int timeoutMs = 0)
         {
             return _ll.ConfigSelectedFeedbackSensor((FeedbackDevice)feedbackDevice, pidIdx, timeoutMs);
         }
-        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int pidIdx, int timeoutMs = 0)
+        public ErrorCode ConfigSelectedFeedbackSensor(FeedbackDevice feedbackDevice, int pidIdx = 0, int timeoutMs = 0)
         {
             return _ll.ConfigSelectedFeedbackSensor(feedbackDevice, pidIdx, timeoutMs);
         }
 
-        public ErrorCode ConfigSelectedFeedbackCoefficient(float coefficient, int pidIdx, int timeoutMs)
+        public ErrorCode ConfigSelectedFeedbackCoefficient(float coefficient, int pidIdx = 0, int timeoutMs = 0)
         {
             return _ll.ConfigSelectedFeedbackCoefficient(coefficient, pidIdx, timeoutMs);
         }
@@ -277,7 +486,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	 * @return Error Code generated by function. 0 indicates no error.
 	 */
         public ErrorCode ConfigRemoteFeedbackFilter(int deviceID, RemoteSensorSource remoteSensorSource, int remoteOrdinal,
-                int timeoutMs)
+                int timeoutMs = 0)
         {
             return _ll.ConfigRemoteFeedbackFilter(deviceID, remoteSensorSource, remoteOrdinal,
                     timeoutMs);
@@ -297,25 +506,29 @@ namespace CTRE.Phoenix.MotorControl.CAN
          *            If zero, no blocking or checking is performed.
          * @return Error Code generated by function. 0 indicates no error.
          */
-        public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs)
+        public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, FeedbackDevice feedbackDevice, int timeoutMs = 0)
         {
             return _ll.ConfigSensorTerm(sensorTerm, feedbackDevice, timeoutMs);
         }
+        public ErrorCode ConfigSensorTerm(SensorTerm sensorTerm, RemoteFeedbackDevice feedbackDevice, int timeoutMs = 0)
+        {
+            return _ll.ConfigSensorTerm(sensorTerm, (FeedbackDevice) feedbackDevice, timeoutMs);
+        }
 
         //------- sensor status --------- //
-        public int GetSelectedSensorPosition(int pidIdx)
+        public int GetSelectedSensorPosition(int pidIdx = 0)
         {
             int retval;
             _ll.GetSelectedSensorPosition(out retval, pidIdx);
             return retval;
         }
-        public int GetSelectedSensorVelocity(int pidIdx)
+        public int GetSelectedSensorVelocity(int pidIdx = 0)
         {
             int retval;
             _ll.GetSelectedSensorVelocity(out retval, pidIdx);
             return retval;
         }
-        public ErrorCode SetSelectedSensorPosition(int sensorPos, int pidIdx, int timeoutMs = 0)
+        public ErrorCode SetSelectedSensorPosition(int sensorPos, int pidIdx = 0, int timeoutMs = 0)
         {
             return _ll.SetSelectedSensorPosition(sensorPos, pidIdx, timeoutMs);
         }
@@ -405,29 +618,64 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             return _ll.Config_kP(slotIdx, value, timeoutMs);
         }
+        public ErrorCode Config_kP(float value, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return Config_kP(slotIdx, value, timeoutMs);
+        }
         public ErrorCode Config_kI(int slotIdx, float value, int timeoutMs = 0)
         {
             return _ll.Config_kI(slotIdx, value, timeoutMs);
+        }
+        public ErrorCode Config_kI(float value, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return Config_kI(slotIdx, value, timeoutMs);
         }
         public ErrorCode Config_kD(int slotIdx, float value, int timeoutMs = 0)
         {
             return _ll.Config_kD(slotIdx, value, timeoutMs);
         }
+        public ErrorCode Config_kD(float value, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return Config_kD(slotIdx, value, timeoutMs);
+        }
         public ErrorCode Config_kF(int slotIdx, float value, int timeoutMs = 0)
         {
             return _ll.Config_kF(slotIdx, value, timeoutMs);
+        }
+        public ErrorCode Config_kF(float value, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return Config_kF(slotIdx, value, timeoutMs);
         }
         public ErrorCode Config_IntegralZone(int slotIdx, int izone, int timeoutMs = 0)
         {
             return _ll.Config_IntegralZone(slotIdx, izone, timeoutMs);
         }
+        public ErrorCode Config_IntegralZone(int izone, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return Config_IntegralZone(slotIdx, izone, timeoutMs);
+        }
         public ErrorCode ConfigAllowableClosedloopError(int slotIdx, int allowableCloseLoopError, int timeoutMs = 0)
         {
             return _ll.ConfigAllowableClosedloopError(slotIdx, allowableCloseLoopError, timeoutMs);
         }
+        public ErrorCode ConfigAllowableClosedloopError(int allowableCloseLoopError, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return ConfigAllowableClosedloopError(slotIdx, allowableCloseLoopError, timeoutMs);
+        }
         public ErrorCode ConfigMaxIntegralAccumulator(int slotIdx, float iaccum , int timeoutMs = 0)
         {
             return _ll.ConfigMaxIntegralAccumulator(slotIdx, iaccum, timeoutMs);
+        }
+        public ErrorCode ConfigMaxIntegralAccumulator(float iaccum , int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return ConfigMaxIntegralAccumulator(slotIdx, iaccum , timeoutMs);
         }
 
         /**
@@ -446,9 +694,14 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	     *            If zero, no blocking or checking is performed.
 	     * @return Error Code generated by function. 0 indicates no error.
 	     */
-        public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs)
+        public ErrorCode ConfigClosedLoopPeakOutput(int slotIdx, float percentOut, int timeoutMs = 0)
         {
             return _ll.ConfigClosedLoopPeakOutput(slotIdx, percentOut, timeoutMs);
+        }
+        public ErrorCode ConfigClosedLoopPeakOutput(float percentOut, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return ConfigClosedLoopPeakOutput(slotIdx, percentOut, timeoutMs);
         }
 
         /**
@@ -466,9 +719,14 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	     *            If zero, no blocking or checking is performed.
 	     * @return Error Code generated by function. 0 indicates no error.
 	     */
-        public ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs)
+        public ErrorCode ConfigClosedLoopPeriod(int slotIdx, int loopTimeMs, int timeoutMs = 0)
         {
             return _ll.ConfigClosedLoopPeriod(slotIdx, loopTimeMs, timeoutMs);
+        }
+        public ErrorCode ConfigClosedLoopPeriod(int loopTimeMs, int timeoutMs = 0)
+        {
+            int slotIdx = 0;
+            return ConfigClosedLoopPeriod(slotIdx, loopTimeMs, timeoutMs);
         }
 
         /**
@@ -490,7 +748,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	     *            blocking or checking is performed.
 	     * @return Error Code
 	     */
-        public ErrorCode ConfigAuxPIDPolarity(bool invert, int timeoutMs)
+        public ErrorCode ConfigAuxPIDPolarity(bool invert, int timeoutMs = 0)
         {
             return ConfigSetParameter(ParamEnum.ePIDLoopPolarity, invert ? 1 : 0, 0, 1, timeoutMs);
         }
@@ -500,19 +758,19 @@ namespace CTRE.Phoenix.MotorControl.CAN
             return _ll.SetIntegralAccumulator(iaccum, timeoutMs);
         }
 
-        public int GetClosedLoopError(int pidIdx)
+        public int GetClosedLoopError(int pidIdx = 0)
         {
             int closedLoopError;
             _ll.GetClosedLoopError(out closedLoopError, pidIdx);
             return closedLoopError;
         }
-        public float GetIntegralAccumulator(int pidIdx)
+        public float GetIntegralAccumulator(int pidIdx = 0)
         {
             float iaccum;
             _ll.GetIntegralAccumulator(out iaccum, pidIdx);
             return iaccum;
         }
-        public float GetErrorDerivative(int pidIdx)
+        public float GetErrorDerivative(int pidIdx = 0)
         {
             float derror;
             _ll.GetErrorDerivative(out derror, pidIdx);
@@ -522,7 +780,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
          * SRX has two available slots for PID.
          * @param slotIdx one or zero depending on which slot caller wants.
          */
-        public void SelectProfileSlot(int slotIdx, int pidIdx)
+        public void SelectProfileSlot(int slotIdx = 0, int pidIdx = 0)
         {
             _ll.SelectProfileSlot(slotIdx, pidIdx);
         }
@@ -534,7 +792,7 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	     *            0 for Primary closed-loop. 1 for auxiliary closed-loop.
 	     * @return The closed loop target.
 	     */
-        public int GetClosedLoopTarget(int pidIdx)
+        public int GetClosedLoopTarget(int pidIdx = 0)
         {
             int value;
             _ll.GetClosedLoopTarget(out value, pidIdx);
@@ -648,10 +906,152 @@ namespace CTRE.Phoenix.MotorControl.CAN
 	     *            If zero, no blocking or checking is performed.
 	     * @return Error Code generated by function. 0 indicates no error.
 	     */
-        public ErrorCode ConfigMotionProfileTrajectoryPeriod(int baseTrajDurationMs, int timeoutMs)
+        public ErrorCode ConfigMotionProfileTrajectoryPeriod(int baseTrajDurationMs, int timeoutMs = 0)
         {
             return _ll.ConfigMotionProfileTrajectoryPeriod(baseTrajDurationMs, timeoutMs);
         }
+
+        //------Feedback Device Interaction Settings---------//
+
+        /**
+         * Disables wrapping the position. If the signal goes from 1023 to 0 a motor 
+         * controller will by default go to 1024. If wrapping the position is disabled,
+         * it will go to 0;
+         *
+         * @param feedbackNotContinuous     disable wrapping the position. 
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigFeedbackNotContinuous(bool feedbackNotContinuous, int timeoutMs) {
+            return _ll.ConfigFeedbackNotContinuous(feedbackNotContinuous, timeoutMs);
+        }
+
+        /**
+         * Disables going to neutral (brake/coast) when a remote sensor is no longer detected.
+         *
+         * @param remoteSensorClosedLoopDisableNeutralOnLOS     disable going to neutral 
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigRemoteSensorClosedLoopDisableNeutralOnLOS(bool remoteSensorClosedLoopDisableNeutralOnLOS, int timeoutMs) {
+            return _ll.ConfigRemoteSensorClosedLoopDisableNeutralOnLOS(remoteSensorClosedLoopDisableNeutralOnLOS, timeoutMs);
+        }
+        /**
+         * Enables clearing the position of the feedback sensor when the forward 
+         * limit switch is triggered
+         *
+         * @param clearPositionOnLimitF     Whether clearing is enabled, defaults false
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigClearPositionOnLimitF(bool clearPositionOnLimitF, int timeoutMs) {
+            return _ll.ConfigClearPositionOnLimitF(clearPositionOnLimitF, timeoutMs);
+        }
+
+        /**
+         * Enables clearing the position of the feedback sensor when the reverse 
+         * limit switch is triggered
+         *
+         * @param clearPositionOnLimitR     Whether clearing is enabled, defaults false
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigClearPositionOnLimitR(bool clearPositionOnLimitR, int timeoutMs) {
+            return _ll.ConfigClearPositionOnLimitR(clearPositionOnLimitR, timeoutMs);
+        }
+
+        /**
+         * Enables clearing the position of the feedback sensor when the quadrature index signal
+         * is detected
+         *
+         * @param clearPositionOnQuadIdx    Whether clearing is enabled, defaults false
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigClearPositionOnQuadIdx(bool clearPositionOnQuadIdx, int timeoutMs) {
+            return _ll.ConfigClearPositionOnQuadIdx(clearPositionOnQuadIdx, timeoutMs);
+        }
+
+        /**
+         * Disables limit switches triggering (if enabled) when the sensor is no longer detected.
+         *
+         * @param limitSwitchDisableNeutralOnLOS    disable triggering
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigLimitSwitchDisableNeutralOnLOS(bool limitSwitchDisableNeutralOnLOS, int timeoutMs) {
+            return _ll.ConfigLimitSwitchDisableNeutralOnLOS(limitSwitchDisableNeutralOnLOS, timeoutMs);
+        }
+
+        /**
+         * Disables soft limits triggering (if enabled) when the sensor is no longer detected.
+         *
+         * @param softLimitDisableNeutralOnLOS    disable triggering
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigSoftLimitDisableNeutralOnLOS(bool softLimitDisableNeutralOnLOS, int timeoutMs) {
+            return _ll.ConfigSoftLimitDisableNeutralOnLOS(softLimitDisableNeutralOnLOS, timeoutMs);
+        }
+
+        /**
+         * Sets the edges per rotation of a pulse width sensor. (This should be set for 
+         * tachometer use).
+         *
+         * @param pulseWidthPeriod_EdgesPerRot    edges per rotation
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigPulseWidthPeriod_EdgesPerRot(int pulseWidthPeriod_EdgesPerRot, int timeoutMs) {
+            return _ll.ConfigPulseWidthPeriod_EdgesPerRot(pulseWidthPeriod_EdgesPerRot, timeoutMs);
+        }
+
+ 
+        /**
+         * Sets the number of samples to use in smoothing a pulse width sensor with a rolling 
+         * average. Default is 1 (no smoothing).
+         *
+         * @param pulseWidthPeriod_FilterWindowSz   samples for rolling avg
+         *
+         * @param timeoutMs
+         *            Timeout value in ms. If nonzero, function will wait for
+         *            config success and report an error if it times out.
+         *            If zero, no blocking or checking is performed.
+         * @return Error Code generated by function. 0 indicates no error.
+         */
+        public ErrorCode ConfigPulseWidthPeriod_FilterWindowSz(int pulseWidthPeriod_FilterWindowSz, int timeoutMs) {
+            return _ll.ConfigPulseWidthPeriod_FilterWindowSz(pulseWidthPeriod_FilterWindowSz, timeoutMs);
+        }
+ 
         //------ error ----------//
         public ErrorCode GetLastError()
         {
@@ -702,6 +1102,12 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             ErrorCode retval = _ll.ConfigGetParameter(param, out value, ordinal, timeoutMs);
 
+            return retval;
+        }
+        public float ConfigGetParameter(ParamEnum param, int ordinal = 0, int timeoutMs = Constants.GetParamTimeoutMs)
+        {
+            float retval;
+            ConfigGetParameter(param, out retval, ordinal, timeoutMs);
             return retval;
         }
         //------ Misc. ----------//
@@ -771,6 +1177,284 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public SensorCollection GetSensorCollection()
         {
             return _sensorColl;
+        }
+
+        
+        /**
+         * Configures all slot persistant settings.
+         *
+	     * @param slot        Object with all of the slot persistant settings
+	     * @param slotIdx     Parameter slot for the constant.
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         *
+         * @return Error Code generated by function. 0 indicates no error. 
+         */
+        public ErrorCode ConfigureSlot(SlotConfiguration slot, int slotIdx = 0, int timeoutMs = 50) {
+        
+            ErrorCollection errorCollection = new ErrorCollection();
+            //------ General Close loop ----------//    
+        
+            errorCollection.NewError(Config_kP(slotIdx, slot.kP, timeoutMs));
+            errorCollection.NewError(Config_kI(slotIdx, slot.kI, timeoutMs));
+            errorCollection.NewError(Config_kD(slotIdx, slot.kD, timeoutMs));
+            errorCollection.NewError(Config_kF(slotIdx, slot.kF, timeoutMs));
+            errorCollection.NewError(Config_IntegralZone(slotIdx, slot.integralZone, timeoutMs));
+            errorCollection.NewError(ConfigAllowableClosedloopError(slotIdx, slot.allowableClosedloopError, timeoutMs));
+            errorCollection.NewError(ConfigMaxIntegralAccumulator(slotIdx, slot.maxIntegralAccumulator, timeoutMs));
+            errorCollection.NewError(ConfigClosedLoopPeakOutput(slotIdx, slot.closedLoopPeakOutput, timeoutMs));
+            errorCollection.NewError(ConfigClosedLoopPeriod(slotIdx, slot.closedLoopPeriod, timeoutMs));
+        
+            return errorCollection._worstError;
+        
+        }
+        
+        /**
+         * Gets all slot persistant settings.
+         *
+	     * @param slot        Object with all of the slot persistant settings
+	     * @param slotIdx     Parameter slot for the constant.
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         */
+        public void GetSlotConfigs(out SlotConfiguration slot, int slotIdx = 0, int timeoutMs = 50) {
+            slot = new SlotConfiguration();
+
+            slot.kP = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_P, slotIdx, timeoutMs);
+            slot.kI = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_I, slotIdx, timeoutMs);
+            slot.kD = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_D, slotIdx, timeoutMs);
+            slot.kF = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_F, slotIdx, timeoutMs);
+            slot.integralZone = (int) ConfigGetParameter(ParamEnum.eProfileParamSlot_IZone, slotIdx, timeoutMs);
+            slot.allowableClosedloopError = (int) ConfigGetParameter(ParamEnum.eProfileParamSlot_AllowableErr, slotIdx, timeoutMs);
+            slot.maxIntegralAccumulator = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_MaxIAccum, slotIdx, timeoutMs);
+            slot.closedLoopPeakOutput = (float) ConfigGetParameter(ParamEnum.eProfileParamSlot_PeakOutput, slotIdx, timeoutMs);
+            slot.closedLoopPeriod = (int) ConfigGetParameter(ParamEnum.ePIDLoopPeriod, slotIdx, timeoutMs);
+        }
+        
+        
+        /**
+         * Configures all filter persistant settings.
+         *
+	     * @param filter        Object with all of the filter persistant settings
+         * @param ordinal       0 for remote sensor 0 and 1 for remote sensor 1.
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         *
+         * @return Error Code generated by function. 0 indicates no error. 
+         */
+        public ErrorCode ConfigureFilter(FilterConfiguration filter, int ordinal, int timeoutMs = 50) {
+        
+            return ConfigRemoteFeedbackFilter(filter.remoteSensorDeviceID, filter.remoteSensorSource, ordinal, timeoutMs);
+        
+        }
+        
+        /**
+         * Gets all filter persistant settings.
+         *
+	     * @param filter        Object with all of the filter persistant settings
+         * @param ordinal       0 for remote sensor 0 and 1 for remote sensor 1.
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         */
+        public void GetFilterConfigs(out FilterConfiguration filter, int ordinal, int timeoutMs = 50) {
+
+            filter = new FilterConfiguration();
+
+            filter.remoteSensorDeviceID = (int) ConfigGetParameter(ParamEnum.eRemoteSensorDeviceID, ordinal, timeoutMs);
+            filter.remoteSensorSource = (RemoteSensorSource) ConfigGetParameter(ParamEnum.eRemoteSensorSource, ordinal, timeoutMs);
+        
+        }
+        /**
+        * Configures all base PID set persistant settings.
+        *
+	    * @param pid           Object with all of the base PID set persistant settings
+        * @param pidIdx        0 for Primary closed-loop. 1 for auxiliary closed-loop.       
+        * @param timeoutMs
+        *              Timeout value in ms. If nonzero, function will wait for
+        *              config success and report an error if it times out.
+        *              If zero, no blocking or checking is performed.
+        *
+        * @return Error Code generated by function. 0 indicates no error. 
+        */
+        protected ErrorCode BaseConfigurePID(BasePIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50)      {
+        
+            return ConfigSelectedFeedbackCoefficient(pid.selectedFeedbackCoefficient, pidIdx, timeoutMs);
+        
+        }
+        /**
+         * Gets all base PID set persistant settings.
+         *
+	     * @param pid           Object with all of the base PID set persistant settings
+         * @param pidIdx        0 for Primary closed-loop. 1 for auxiliary closed-loop.       
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         */
+        protected void BaseGetPIDConfigs(BasePIDSetConfiguration pid, int pidIdx = 0, int timeoutMs = 50) 
+        {
+
+            pid.selectedFeedbackCoefficient = (float) ConfigGetParameter(ParamEnum.eSelectedSensorCoefficient, pidIdx, timeoutMs);
+        }
+        /**
+         * Configures all base persistant settings.
+         *
+	     * @param allConfigs        Object with all of the base persistant settings
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         *
+         * @return Error Code generated by function. 0 indicates no error. 
+         */
+        protected ErrorCode BaseConfigAllSettings(BaseMotorControllerConfiguration allConfigs, int timeoutMs = 50)
+        {
+        
+            ErrorCollection errorCollection = new ErrorCollection();
+        
+            errorCollection.NewError(ConfigFactoryDefault(timeoutMs));
+
+            //----- general output shaping ------------------//
+            errorCollection.NewError(ConfigOpenloopRamp(allConfigs.openloopRamp, timeoutMs));
+            errorCollection.NewError(ConfigClosedloopRamp(allConfigs.closedloopRamp, timeoutMs));
+            errorCollection.NewError(ConfigPeakOutputForward(allConfigs.peakOutputForward, timeoutMs));
+            errorCollection.NewError(ConfigPeakOutputReverse(allConfigs.peakOutputReverse, timeoutMs));
+            errorCollection.NewError(ConfigNominalOutputForward(allConfigs.nominalOutputForward, timeoutMs));
+            errorCollection.NewError(ConfigNominalOutputReverse(allConfigs.nominalOutputReverse, timeoutMs));
+            errorCollection.NewError(ConfigNeutralDeadband(allConfigs.neutralDeadband, timeoutMs));
+        
+            //------ Voltage Compensation ----------//
+            errorCollection.NewError(ConfigVoltageCompSaturation(allConfigs.voltageCompSaturation, timeoutMs));
+            errorCollection.NewError(ConfigVoltageMeasurementFilter(allConfigs.voltageMeasurementFilter, timeoutMs));
+        
+            //----- velocity signal conditionaing ------//
+            errorCollection.NewError(ConfigVelocityMeasurementPeriod(allConfigs.velocityMeasurementPeriod, timeoutMs));
+            errorCollection.NewError(ConfigVelocityMeasurementWindow(allConfigs.velocityMeasurementWindow, timeoutMs));
+        
+            //------ soft limit ----------//
+            errorCollection.NewError(ConfigForwardSoftLimitThreshold(allConfigs.forwardSoftLimitThreshold, timeoutMs));
+            errorCollection.NewError(ConfigReverseSoftLimitThreshold(allConfigs.reverseSoftLimitThreshold, timeoutMs));
+            ConfigForwardSoftLimitEnable(allConfigs.forwardSoftLimitEnable, timeoutMs);
+            ConfigReverseSoftLimitEnable(allConfigs.reverseSoftLimitEnable, timeoutMs);
+        
+        
+            //------ limit switch ----------//   
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.forwardLimitSwitchNormal, 0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.forwardLimitSwitchDeviceID, 0, 0, timeoutMs));
+            
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, (float)allConfigs.reverseLimitSwitchNormal, 0, 1, timeoutMs));
+            errorCollection.NewError(ConfigSetParameter(ParamEnum.eLimitSwitchRemoteDevID, allConfigs.reverseLimitSwitchDeviceID, 0, 1, timeoutMs));
+        
+            //------ Current Lim ----------//
+            /* not in base */
+        
+            //--------Slots---------------//
+        
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_0, 0, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_1, 1, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_2, 2, timeoutMs));
+            errorCollection.NewError(ConfigureSlot(allConfigs.slot_3, 3, timeoutMs));
+        
+            //---------Auxilary Closed Loop Polarity-------------//
+        
+            errorCollection.NewError(ConfigAuxPIDPolarity(allConfigs.auxPIDPolarity, timeoutMs));
+        
+            //----------Remote Feedback Filters----------//
+            errorCollection.NewError(ConfigureFilter(allConfigs.filter_0, 0, timeoutMs));
+            errorCollection.NewError(ConfigureFilter(allConfigs.filter_1, 1, timeoutMs));
+        
+            //------ Motion Profile Settings used in Motion Magic  ----------//
+            errorCollection.NewError(ConfigMotionCruiseVelocity(allConfigs.motionCruiseVelocity, timeoutMs));
+            errorCollection.NewError(ConfigMotionAcceleration(allConfigs.motionAcceleration, timeoutMs));
+        
+            //------ Motion Profile Buffer ----------//
+            errorCollection.NewError(ConfigMotionProfileTrajectoryPeriod(allConfigs.motionProfileTrajectoryPeriod, timeoutMs));
+        
+            //------ Custom Persistent Params ----------//
+            errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_0, 0, timeoutMs));
+            errorCollection.NewError(ConfigSetCustomParam(allConfigs.customParam_1, 1, timeoutMs));
+        
+            errorCollection.NewError(ConfigFeedbackNotContinuous(allConfigs.feedbackNotContinuous, timeoutMs));
+            errorCollection.NewError(ConfigRemoteSensorClosedLoopDisableNeutralOnLOS(allConfigs.remoteSensorClosedLoopDisableNeutralOnLOS, timeoutMs));
+            errorCollection.NewError(ConfigClearPositionOnLimitF(allConfigs.clearPositionOnLimitF, timeoutMs));
+            errorCollection.NewError(ConfigClearPositionOnLimitR(allConfigs.clearPositionOnLimitR, timeoutMs));
+            errorCollection.NewError(ConfigClearPositionOnQuadIdx(allConfigs.clearPositionOnQuadIdx, timeoutMs));
+            errorCollection.NewError(ConfigLimitSwitchDisableNeutralOnLOS(allConfigs.limitSwitchDisableNeutralOnLOS, timeoutMs));
+            errorCollection.NewError(ConfigSoftLimitDisableNeutralOnLOS(allConfigs.softLimitDisableNeutralOnLOS, timeoutMs));
+            errorCollection.NewError(ConfigPulseWidthPeriod_EdgesPerRot(allConfigs.pulseWidthPeriod_EdgesPerRot, timeoutMs));
+            errorCollection.NewError(ConfigPulseWidthPeriod_FilterWindowSz(allConfigs.pulseWidthPeriod_FilterWindowSz, timeoutMs));
+        
+            return errorCollection._worstError;
+        }
+        
+        /**
+         * Gets all base persistant settings.
+         *
+	     * @param allConfigs        Object with all of the base persistant settings
+         * @param timeoutMs
+         *              Timeout value in ms. If nonzero, function will wait for
+         *              config success and report an error if it times out.
+         *              If zero, no blocking or checking is performed.
+         */
+        protected void BaseGetAllConfigs(BaseMotorControllerConfiguration allConfigs, int timeoutMs = 50)
+        {
+        
+            allConfigs.openloopRamp = (float) ConfigGetParameter(ParamEnum.eOpenloopRamp, 0, timeoutMs);
+            allConfigs.closedloopRamp = (float) ConfigGetParameter(ParamEnum.eClosedloopRamp, 0, timeoutMs);
+            allConfigs.peakOutputForward = (float) ConfigGetParameter(ParamEnum.ePeakPosOutput, 0, timeoutMs);
+            allConfigs.peakOutputReverse = (float) ConfigGetParameter(ParamEnum.ePeakNegOutput, 0, timeoutMs);
+            allConfigs.nominalOutputForward = (float) ConfigGetParameter(ParamEnum.eNominalPosOutput, 0, timeoutMs);
+            allConfigs.nominalOutputReverse = (float) ConfigGetParameter(ParamEnum.eNominalNegOutput, 0, timeoutMs);
+            allConfigs.neutralDeadband = (float) ConfigGetParameter(ParamEnum.eNeutralDeadband, 0, timeoutMs);
+            allConfigs.voltageCompSaturation = (float) ConfigGetParameter(ParamEnum.eNominalBatteryVoltage, 0, timeoutMs);
+            allConfigs.voltageMeasurementFilter = (int) ConfigGetParameter(ParamEnum.eBatteryVoltageFilterSize, 0, timeoutMs);
+            allConfigs.velocityMeasurementPeriod = (VelocityMeasPeriod) ConfigGetParameter(ParamEnum.eSampleVelocityPeriod, 0, timeoutMs);
+            allConfigs.velocityMeasurementWindow = (int) ConfigGetParameter(ParamEnum.eSampleVelocityWindow, 0, timeoutMs);
+            allConfigs.forwardLimitSwitchDeviceID = (int) ConfigGetParameter(ParamEnum.eLimitSwitchRemoteDevID, 0, timeoutMs);
+            allConfigs.reverseLimitSwitchDeviceID = (int) ConfigGetParameter(ParamEnum.eLimitSwitchRemoteDevID, 1, timeoutMs);
+            allConfigs.forwardLimitSwitchNormal = (LimitSwitchNormal) ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0, timeoutMs);
+            allConfigs.reverseLimitSwitchNormal = (LimitSwitchNormal) ConfigGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1, timeoutMs);
+
+            allConfigs.forwardSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eForwardSoftLimitThreshold, 0, timeoutMs);
+            allConfigs.reverseSoftLimitThreshold = (int) ConfigGetParameter(ParamEnum.eReverseSoftLimitThreshold, 0, timeoutMs);
+            allConfigs.forwardSoftLimitEnable = ConfigGetParameter(ParamEnum.eForwardSoftLimitEnable, 0, timeoutMs) != 0.0F;
+            allConfigs.reverseSoftLimitEnable = ConfigGetParameter(ParamEnum.eReverseSoftLimitEnable, 0, timeoutMs) != 0.0F;
+        
+            GetSlotConfigs(out allConfigs.slot_0, 0, timeoutMs);
+            GetSlotConfigs(out allConfigs.slot_1, 1, timeoutMs);
+            GetSlotConfigs(out allConfigs.slot_2, 2, timeoutMs);
+            GetSlotConfigs(out allConfigs.slot_3, 3, timeoutMs);
+        
+            allConfigs.auxPIDPolarity = ConfigGetParameter(ParamEnum.ePIDLoopPolarity, 1, timeoutMs) != 0.0F;
+        
+            GetFilterConfigs(out allConfigs.filter_0, 0, timeoutMs);
+            GetFilterConfigs(out allConfigs.filter_1, 1, timeoutMs);
+        
+            allConfigs.motionCruiseVelocity = (int) ConfigGetParameter(ParamEnum.eMotMag_VelCruise, 0, timeoutMs);
+            allConfigs.motionAcceleration = (int) ConfigGetParameter(ParamEnum.eMotMag_Accel, 0, timeoutMs);
+            allConfigs.motionProfileTrajectoryPeriod = (int) ConfigGetParameter(ParamEnum.eMotionProfileTrajectoryPointDurationMs, 0, timeoutMs);
+            allConfigs.customParam_0 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 0,  timeoutMs);
+            allConfigs.customParam_1 = (int) ConfigGetParameter(ParamEnum.eCustomParam, 1,  timeoutMs);
+        
+        
+            allConfigs.feedbackNotContinuous = ConfigGetParameter(ParamEnum.eFeedbackNotContinuous, 0, timeoutMs) != 0.0F;
+            allConfigs.remoteSensorClosedLoopDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eRemoteSensorClosedLoopDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnLimitF = ConfigGetParameter(ParamEnum.eClearPositionOnLimitF, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnLimitR = ConfigGetParameter(ParamEnum.eClearPositionOnLimitR, 0, timeoutMs) != 0.0F;
+            allConfigs.clearPositionOnQuadIdx = ConfigGetParameter(ParamEnum.eClearPositionOnQuadIdx, 0, timeoutMs) != 0.0F;
+            allConfigs.limitSwitchDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eLimitSwitchDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
+            allConfigs.softLimitDisableNeutralOnLOS = ConfigGetParameter(ParamEnum.eSoftLimitDisableNeutralOnLOS, 0, timeoutMs) != 0.0F;
+            allConfigs.pulseWidthPeriod_EdgesPerRot = (int) ConfigGetParameter(ParamEnum.ePulseWidthPeriod_EdgesPerRot, 0, timeoutMs);
+            allConfigs.pulseWidthPeriod_FilterWindowSz = (int) ConfigGetParameter(ParamEnum.ePulseWidthPeriod_FilterWindowSz, 0, timeoutMs);
+        
         }
     }
 }

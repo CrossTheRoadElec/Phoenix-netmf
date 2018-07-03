@@ -347,7 +347,7 @@ namespace CTRE.Phoenix.LowLevel
             }
         }
 
-        private int GetPwmInput_X(uint ArbIDField, uint [] waveform)
+        private int GetPWMInput_X(uint ArbIDField, uint [] waveform)
         {
             uint pulseWidthFrac;
             uint periodRaw;
@@ -376,7 +376,7 @@ namespace CTRE.Phoenix.LowLevel
 
             return retval;
         }
-        public ErrorCode GetPwmInput(uint pwmChannel, float [] dutyCycleAndPeriod)
+        public ErrorCode GetPWMInput(uint pwmChannel, float [] pulseWidthAndPeriod)
         {
             uint[] temp = new uint[2] { 0, 0 };
             int retval = (int)ErrorCode.CAN_INVALID_PARAM;
@@ -387,16 +387,16 @@ namespace CTRE.Phoenix.LowLevel
             switch (pwmChannel)
             {
                 case 0:
-                    retval = GetPwmInput_X(STATUS_3, temp); // ref pulseWidthFrac, ref periodRaw);
+                    retval = GetPWMInput_X(STATUS_3, temp); // ref pulseWidthFrac, ref periodRaw);
                     break;
                 case 1:
-                    retval = GetPwmInput_X(STATUS_4, temp); //ref pulseWidthFrac, ref periodRaw);
+                    retval = GetPWMInput_X(STATUS_4, temp); //ref pulseWidthFrac, ref periodRaw);
                     break;
                 case 2:
-                    retval = GetPwmInput_X(STATUS_5, temp); // ref pulseWidthFrac, ref periodRaw);
+                    retval = GetPWMInput_X(STATUS_5, temp); // ref pulseWidthFrac, ref periodRaw);
                     break;
                 case 3:
-                    retval = GetPwmInput_X(STATUS_6, temp); //ref pulseWidthFrac, ref periodRaw);
+                    retval = GetPWMInput_X(STATUS_6, temp); //ref pulseWidthFrac, ref periodRaw);
                     break;
             }
 
@@ -406,8 +406,8 @@ namespace CTRE.Phoenix.LowLevel
             periodUs = periodRaw * 0.256f; /* convert to microseconds */
             pulseWidthUs = pulseWidthFrac * 0.000244140625f * periodUs;
 
-            dutyCycleAndPeriod[0] = pulseWidthUs;
-            dutyCycleAndPeriod[1] = periodUs;
+            pulseWidthAndPeriod[0] = pulseWidthUs;
+            pulseWidthAndPeriod[1] = periodUs;
 
             return SetLastError(retval);
         }
@@ -495,7 +495,20 @@ namespace CTRE.Phoenix.LowLevel
         {
             return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, windowSize, 0, 0, timeoutMs);
         }
-
+        
+        public ErrorCode ConfigClearPositionOnLimitF(bool clearPositionOnLimitF, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitF, clearPositionOnLimitF ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitR(bool clearPositionOnLimitR, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitR, clearPositionOnLimitR ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnQuadIdx(bool clearPositionOnQuadIdx, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnQuadIdx, clearPositionOnQuadIdx ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        
         public static String ToString(CANifier_LowLevel.GeneralPin gp)
         {
             String sig;

@@ -63,7 +63,8 @@ namespace CTRE
 
         //Firmware Versions
         FeatureRequiresHigherFirm = -700,
-        TalonFeatureRequiresHigherFirm = -701,
+        MotorControllerFeatureRequiresHigherFirm = -701,
+        TalonFeatureRequiresHigherFirm = MotorControllerFeatureRequiresHigherFirm,
 
         //CAN Related
         PulseWidthSensorNotPresent = 10,    //!< Special Code for "isSensorPresent"
@@ -83,6 +84,29 @@ namespace CTRE
         MotProfFirmThreshold = 109,
         MotProfFirmThreshold2 = 110,
     }
+
+    public class ErrorCollection {
+        public static ErrorCode worstOne(ErrorCode errorCode1, ErrorCode errorCode2) {
+            if (errorCode1 != 0)
+                return errorCode1;
+            return errorCode2;
+        }
+        public void NewError(ErrorCode err) {
+            _worstError = worstOne(_worstError, err);
+        }
+        public void NewError(int err) {
+            _worstError = worstOne(_worstError, (ErrorCode) err);
+        }
+        public ErrorCode _worstError;
+        public ErrorCollection() {
+            _worstError = ErrorCode.OK;
+        }
+    
+    
+    
+    
+    };
+
 
     internal struct ErrorCodeVar
     {

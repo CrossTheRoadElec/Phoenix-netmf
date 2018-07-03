@@ -459,17 +459,19 @@ namespace CTRE.Phoenix.LowLevel
             /* attempt to request.  Save status code */
             statusTx = RequestOrSetParam(false, paramEnum, valueToSend, subValue, ordinal, 5); /* max tries is 5 */
 
+
             /* caller wants to get response, check our stream health */
             if (statusRx != 0)
             {
                 /* stream could not be allocated, this error code will likely 
-                    * be passed to caller below (assuming tx was succesful) */
+                 * be passed to caller below (assuming tx was succesful) */
             }
             else
             {
                 /* stream open did not report an error, continue to poll for response */
                 statusRx = WaitForParamResponse(timeoutMs, handle, paramEnum, out valueReceived);
             }
+           
 
             /* Close stream */
             if (handle != 0) { CTRE.Native.CAN.CloseStream(handle); }
@@ -485,6 +487,15 @@ namespace CTRE.Phoenix.LowLevel
             ErrorCode retval = ConfigGetParameter(paramEnum, 0, out value, 0x00, ordinal, timeoutMs);
             return retval;
         }
+        private float calcSecondsFromNeutralToFull(int percPer10Ms) {
+            /* if percPer10Ms is zero(or negative) that means disable ramp */
+            if (percPer10Ms <= 0.0f) {
+                return 0.0f;
+            }
+            /* ramp is enabled*/
+            return 1.0f / ( (float) percPer10Ms / 1023.0f * 100.0f);
+        }
+
         public ErrorCode ConfigGetParameter(ParamEnum paramEnum, out float value, int ordinal = 0, int timeoutMs = Constants.GetParamTimeoutMs)
         {
             int valueInt;
@@ -503,6 +514,27 @@ namespace CTRE.Phoenix.LowLevel
                     break;
                 case ParamEnum.eProfileParamSlot_PeakOutput:
                     value = ((float)valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eOpenloopRamp:
+                    value = calcSecondsFromNeutralToFull(valueInt);
+                    break;
+                case ParamEnum.eClosedloopRamp:
+                    value = calcSecondsFromNeutralToFull(valueInt);
+                    break;
+                case ParamEnum.ePeakPosOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNominalPosOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.ePeakNegOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNominalNegOutput:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
+                    break;
+                case ParamEnum.eNeutralDeadband:
+                    value = ((float) valueInt) * 1.0f / 1023.0f;
                     break;
                 case ParamEnum.eSelectedSensorCoefficient:
                     value = ((float)valueInt) * 1.0f / 65536.0f;
@@ -565,7 +597,30 @@ namespace CTRE.Phoenix.LowLevel
 
             return status;
         }
+        private static Int32 Sterilize(UInt32 value)
+        {
+            Int32 retval;
+            /* test top bit */
+            if ((value & 0x80000000) == 0)
+            {
+                /* positive or zero - do nothing */
+                retval = (Int32)value;
+            }
+            else
+            {
+                /* negative */
+                long temp = (UInt32)value; /* copy bottom 32 bits */
 
+                /* sign extend */
+                temp <<= 32;
+                temp >>= 32;
+
+                /* back to caller */
+                retval = (Int32)temp;
+            }
+            /* send fixed value back to caller */
+            return retval;
+        }
         /**
          * Checks cached CAN frames and updating solicited signals.
          */
@@ -580,9 +635,10 @@ namespace CTRE.Phoenix.LowLevel
             }
             else
             {
+                
                 Object value = _sigs_Value[(uint)paramEnum];
                 uint temp = (uint)value;
-                rawBits = (int)temp;
+                rawBits = Sterilize(temp);
             }
             return retval;
         }
