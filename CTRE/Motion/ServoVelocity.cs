@@ -1,10 +1,10 @@
 //using System;
 //using Microsoft.SPOT;
-//using CTRE.Tasking;
-//using CTRE.Mechanical;
-//using CTRE.MotorControllers;
+//using CTRE.Phoenix.Tasking;
+//using CTRE.Phoenix.Mechanical;
+//using CTRE.Phoenix.MotorControllers;
 
-//namespace CTRE.Motion
+//namespace CTRE.Phoenix.Motion
 //{
 //    public class ServoVelocity : ILoopable
 //    {

@@ -136,7 +136,3 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public SensorCollection SensorCollection { get { return _sensorColl; } }
     }
 }
-
-
-
-

@@ -3,9 +3,8 @@ using Microsoft.SPOT;
 
 namespace CTRE.Phoenix.MotorControl
 {
-    public interface IFollower // : CANBusDevice TODO CLEANUP and package CAN stuff
+    public interface IFollower
     {
-        //void Follow(IMotorController masterToFollow, FollowerType followerType);
         void Follow(IMotorController masterToFollow);
         void ValueUpdated();
     }

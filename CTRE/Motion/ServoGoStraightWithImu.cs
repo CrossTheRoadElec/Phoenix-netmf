@@ -5,7 +5,7 @@
 //using CTRE.Phoenix.Tasking;
 //using CTRE.Phoenix.MotorControl;
 
-//namespace CTRE.Motion
+//namespace CTRE.Phoenix.Motion
 //{
 //    public class ServoGoStraightWithImu : ILoopable
 //    {
