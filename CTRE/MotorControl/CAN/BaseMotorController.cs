@@ -211,7 +211,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
 
     public abstract class BaseMotorController : IMotorController
     {
-        SensorCollection _sensorColl;
         protected MotControllerWithBuffer_LowLevel _ll;
         private int[] _motionProfStats = new int[11];
 
@@ -232,7 +231,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
         {
             _arbId = arbId;
             _ll = new MotControllerWithBuffer_LowLevel(arbId);
-            _sensorColl = new SensorCollection(_ll);
         }
         //------ Set output routines. ----------//
         // ------ Set output routines. ----------//
@@ -1169,14 +1167,6 @@ namespace CTRE.Phoenix.MotorControl.CAN
         public void ValueUpdated()
         {
             //do nothing
-        }
-
-        /**
-	 * @return object that can get/set individual raw sensor values.
-	 */
-        public SensorCollection GetSensorCollection()
-        {
-            return _sensorColl;
         }
 
         
