@@ -107,6 +107,6 @@ namespace CTRE.Phoenix.MotorControl
         /**
          * @retrieve object that can get/set individual RAW sensor values.
          */
-        SensorCollection SensorCollection { get; }
+        SensorCollection GetSensorCollection();
     }
 }

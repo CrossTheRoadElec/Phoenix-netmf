@@ -202,8 +202,10 @@ namespace CTRE.Phoenix.MotorControl.CAN
             _ll.EnableCurrentLimit(enable);
         }
         //------ Local sensor collection ----------//
-        public SensorCollection SensorCollection { get { return _sensorColl; } }
-    
+        public SensorCollection GetSensorCollection() {
+            return _sensorColl;
+        }
+
         /**
          * Gets all PID set persistant settings.
          *
