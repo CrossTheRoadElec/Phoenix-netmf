@@ -495,7 +495,20 @@ namespace CTRE.Phoenix.LowLevel
         {
             return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, windowSize, 0, 0, timeoutMs);
         }
-
+        
+        public ErrorCode ConfigClearPositionOnLimitF(bool clearPositionOnLimitF, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitF, clearPositionOnLimitF ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitR(bool clearPositionOnLimitR, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitR, clearPositionOnLimitR ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnQuadIdx(bool clearPositionOnQuadIdx, int timeoutMs)
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnQuadIdx, clearPositionOnQuadIdx ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        
         public static String ToString(CANifier_LowLevel.GeneralPin gp)
         {
             String sig;

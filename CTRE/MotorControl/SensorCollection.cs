@@ -11,8 +11,6 @@ namespace CTRE.Phoenix.MotorControl
         /** Low level object. */
         MotController_LowLevel _ll;
 
-        //SensorBiases _biases;
-
         /**
          * Constructor.
          *

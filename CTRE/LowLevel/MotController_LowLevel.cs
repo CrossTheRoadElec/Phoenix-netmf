@@ -342,12 +342,12 @@ namespace CTRE.Phoenix.LowLevel
         }
 
         /**
- * @param mode
- * @param demand0	If open loop, [-1,+1]
- *					If closed loop, units or units/100ms.
- * @param demand1	if open-loop, [-1,+1]
- * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
- */
+         * @param mode
+         * @param demand0	If open loop, [-1,+1]
+         *					If closed loop, units or units/100ms.
+         * @param demand1	if open-loop, [-1,+1]
+         * @param demand1Type 0 for off, 1 for AuxiliaryPID, 2 for feedforward
+         */
         public ErrorCode Set(ControlMode mode, double demand0, double demand1, int demand1Type)
         {
             ErrorCode retval = ErrorCode.OKAY;
@@ -562,7 +562,13 @@ namespace CTRE.Phoenix.LowLevel
             if (param < 1) { return 1; }
             return param;
         }
-
+        //----- Factory Default Config -----//
+        public ErrorCode ConfigFactoryDefault(int timeoutMs)
+        {
+            CheckFirmVers(11, 10, ErrorCode.ConfigFactoryDefaultRequiresHigherFirm);
+            _usingAdvancedFeatures = 100;
+            return ConfigSetParameter(ParamEnum.eDefaultConfig, 0xA5A5, 0, 0, timeoutMs);
+        }
         //----- general output shaping ------------------//
         public ErrorCode ConfigOpenloopRamp(float secondsFromNeutralToFull, int timeoutMs)
         {
@@ -919,7 +925,7 @@ namespace CTRE.Phoenix.LowLevel
             return ConfigSetParameter(ParamEnum.eSampleVelocityWindow, param, 0, 0, timeoutMs);
         }
         //------ ALL limit switch ----------//
-        ErrorCode ConfigSingleLimitSwitchSource(
+        protected ErrorCode ConfigSingleLimitSwitchSource(
                 LimitSwitchSource limitSwitchSource, LimitSwitchNormal normalOpenOrClose,
                 int deviceIDIfApplicable, int timeoutMs, bool isForward)
         {
@@ -1173,6 +1179,43 @@ namespace CTRE.Phoenix.LowLevel
         public ErrorCode ConfigMotionAcceleration(int sensorUnitsPer100msPerSec, int timeoutMs)
         {
             return ConfigSetParameter(ParamEnum.eMotMag_Accel, sensorUnitsPer100msPerSec, 0, 0, timeoutMs);
+        }
+
+        public ErrorCode ConfigFeedbackNotContinuous(bool feedbackNotContinuous, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eFeedbackNotContinuous, feedbackNotContinuous ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigRemoteSensorClosedLoopDisableNeutralOnLOS(bool remoteSensorClosedLoopDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eRemoteSensorClosedLoopDisableNeutralOnLOS, remoteSensorClosedLoopDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitF(bool clearPositionOnLimitF, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitF, clearPositionOnLimitF ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnLimitR(bool clearPositionOnLimitR, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnLimitR, clearPositionOnLimitR ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigClearPositionOnQuadIdx(bool clearPositionOnQuadIdx, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eClearPositionOnQuadIdx, clearPositionOnQuadIdx ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigLimitSwitchDisableNeutralOnLOS(bool limitSwitchDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eLimitSwitchDisableNeutralOnLOS, limitSwitchDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigSoftLimitDisableNeutralOnLOS(bool softLimitDisableNeutralOnLOS, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.eSoftLimitDisableNeutralOnLOS, softLimitDisableNeutralOnLOS ? 1.0F : 0.0F, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigPulseWidthPeriod_EdgesPerRot(int pulseWidthPeriod_EdgesPerRot, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.ePulseWidthPeriod_EdgesPerRot, pulseWidthPeriod_EdgesPerRot, 0, 0, timeoutMs);
+        }
+        public ErrorCode ConfigPulseWidthPeriod_FilterWindowSz(int pulseWidthPeriod_FilterWindowSz, int timeoutMs) 
+        {
+            return ConfigSetParameter(ParamEnum.ePulseWidthPeriod_FilterWindowSz, pulseWidthPeriod_FilterWindowSz, 0, 0, timeoutMs);
         }
 
         public ErrorCode GetClosedLoopTarget(out int value, int pidIdx)
