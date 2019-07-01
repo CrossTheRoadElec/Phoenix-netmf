@@ -666,7 +666,7 @@ namespace CTRE.Phoenix.LowLevel
         {
             int retval = CTRE.Native.CAN.Receive(STATUS_04 | _baseArbId, ref _cache, ref _len);
             byte L = (byte)(_cache >> 56);
-            L &= 0x3F;
+            L &= 0x7F;
             Int32 raw = 0;
             raw |= L;
             param = (float)raw;
