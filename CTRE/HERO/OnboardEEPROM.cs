@@ -35,7 +35,6 @@ namespace CTRE.HERO
         const int kMaxByteProgramTimeMs = 3;
         const int kMaxByteErase4KTimeMs = 25;
 
-        //byte kWriteStatusRegValue = 0x40; /* enable AAI */
         byte kWriteStatusRegValue = 0x00; /* enable byte mode*/
 
         private SPI _SPIDevice;
@@ -128,15 +127,6 @@ namespace CTRE.HERO
             Temp[0] = (byte)OpCode.WREN_WriteEn;
             _SPIDevice.Write(Temp);
         }
-
-        ////Disables the Write Enable latch
-        //private void WriteDisable()
-        //{
-        //    byte[] Temp = new byte[1];
-        //    Temp[0] = (byte)OpCode.WRDI_WriteDisable;
-        //    _SPIDevice.Write(Temp);
-        //}
-
 
         //---------------------- Info routines ---------------------//
         public ErrorCode ReadInfo(out int jedecID_BF_25_41, out byte ManufactureId_BF, out byte DeviceID_41)
@@ -315,117 +305,7 @@ namespace CTRE.HERO
         }
 
 
-#if false
-        private void Auto_Add_IncA(ulong Address, byte Data1, byte Data2)
-        {
-            byte[] Temp = new byte[6];
-            byte Byte1 = (byte)((Address & 0xFFFFFF) >> 16);
-            byte Byte2 = (byte)((Address & 0xFFFF) >> 8);
-            byte Byte3 = (byte)(Address & 0xFF);
-            Wait_Busy();
-            WREN();
-            Temp[0] = (byte)OpCode.AAIWordProgram;
-            Temp[1] = Byte1;
-            Temp[2] = Byte2;
-            Temp[3] = Byte3;
-            Temp[4] = Data1;
-            Temp[5] = Data2;
-            _SPIDevice.Write(Temp);
-            Delay();
-        }
 
-        private void Auto_Add_IncB(byte Data1, byte Data2)
-        {
-            WREN_AAI_Check();
-            byte[] Temp = new byte[3];
-            Temp[0] = (byte)OpCode.AAIWordProgram;
-            Temp[1] = Data1;
-            Temp[2] = Data2;
-            _SPIDevice.Write(Temp);
-            Delay();
-        }
-        //Must be first write and writes a single 4 bytes or int
-        public void WriteHisto(ulong Address, uint FirstData, uint[] DataToWrite, int length, uint Checksum)
-        {
-            byte[] Datas = new byte[4];
-            //Int Dat Conveted
-            Datas[0] = (byte)((FirstData >> 24) & 0xFF);
-            Datas[1] = (byte)((FirstData >> 16) & 0xFF);
-            Datas[2] = (byte)((FirstData >> 8) & 0xFF);
-            Datas[3] = (byte)(FirstData & 0xFF);
 
-            //Clear the Block protection bits to allow writes
-            WREN();
-            Delay();
-            WRSR(0x00);
-            Delay();
-            //WREN again and clear the sector...
-            Sector_Erase(Address);//Sector must be deleted prior to writing to it
-            Auto_Add_IncA(Address, Datas[0], Datas[1]);
-            Auto_Add_IncB(Datas[2], Datas[3]);
-
-            //public void WriteHistoData(uint[] DataToWrite, int length)        
-            for (int i = 0; i < length; i++)
-            {
-                uint CurrentData = DataToWrite[i];
-                byte[] temp = new byte[4];
-                temp[0] = (byte)((CurrentData >> 24) & 0xFF);
-                temp[1] = (byte)((CurrentData >> 16) & 0xFF);
-                temp[2] = (byte)((CurrentData >> 8) & 0xFF);
-                temp[3] = (byte)(CurrentData & 0xFF);
-                Auto_Add_IncB(temp[0], temp[1]);
-                Auto_Add_IncB(temp[2], temp[3]);
-            }
-
-            //public void WriteHistoFinish(uint Checksum)          
-            byte[] Data4 = new byte[4];
-            Data4[0] = (byte)((Checksum >> 24) & 0xFF);
-            Data4[1] = (byte)((Checksum >> 16) & 0xFF);
-            Data4[2] = (byte)((Checksum >> 8) & 0xFF);
-            Data4[3] = (byte)(Checksum & 0xFF);
-            Auto_Add_IncB(Data4[0], Data4[1]);
-            Auto_Add_IncB(Data4[2], Data4[3]);
-            //This is the reason why this function is differnt
-            WRDI();
-        }
-
-        //Checks the status register before proceeding
-        private void Wait_Busy(int timeout = 100)
-        {
-            while ((ReadStatusRegister() & 0x03) == 0x03) //Waste time until not busy
-            {
-                System.Threading.Thread.Sleep(10);
-
-                timeout -= 10;
-                if (timeout < 0)
-                {
-                    //Autobot.Instrum.FailEepromEvent(-1);
-                    break;
-                }
-            }
-        }
-
-        private void WREN_AAI_Check()
-        {
-            byte Byte;
-            Byte = ReadStatusRegister();  /* read the status register */
-            if (Byte != 0x42)       /* verify that AAI and WEL bit is set */
-            {
-                //while (true) // todo remove this, only print once.
-                {
-                    Debug.Print("Restart? Need to change check");
-                }
-            }
-        }
-
-        void DelayErase()
-        {
-            Thread.Sleep(100);
-        }
-        void Delay()
-        {
-            Thread.Sleep(1);
-        }
-#endif
     }
 }
