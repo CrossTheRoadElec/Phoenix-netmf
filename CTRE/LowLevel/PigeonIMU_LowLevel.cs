@@ -107,7 +107,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
         }
         public ErrorCode SetYaw(float angleDeg, int timeoutMs)
         {
-            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eYawOffset, TareType.SetValue, angleDeg, timeoutMs);
+            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eYawOffset, TareType.SetValue, angleDeg * 64, timeoutMs);
             return SetLastError(errCode);
         }
         /**
@@ -115,7 +115,7 @@ public PigeonIMU_LowLevel(int baseArbId) :
          */
         public ErrorCode AddYaw(float angleDeg, int timeoutMs)
         {
-            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eYawOffset, TareType.AddOffset, angleDeg, timeoutMs);
+            ErrorCode errCode = ConfigSetWrapper(ParamEnum.eYawOffset, TareType.AddOffset, angleDeg * 64, timeoutMs);
             return SetLastError(errCode);
         }
         public ErrorCode SetYawToCompass(int timeoutMs)
